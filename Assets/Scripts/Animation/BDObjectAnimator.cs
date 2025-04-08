@@ -20,7 +20,7 @@ namespace Animation
             RootObject = rootObject;
             modelDict = BdObjectHelper.SetDisplayIDDictionary(rootObject);
 
-            noParentTransform = GameManager.GetManager<BdObjectManager>().bdObjectParent;
+            noParentTransform = rootObject.transform;
 
             foreach (var obj in modelDict.Values)
             {
@@ -49,8 +49,9 @@ namespace Animation
             {
                 if (!modelDict.TryGetValue(obj.ID, out var model)) continue;
 
-                if (model.transform.parent == noParentTransform)
+                if (model.IsParentNull == true)
                 {
+                    model.IsParentNull = false;
                     model.transform.SetParent(model.parent.transform, true);
                 }
 
@@ -94,8 +95,9 @@ namespace Animation
                 // 모델 사전에서 해당 노드를 찾습니다.
                 if (!modelDict.TryGetValue(leafA.ID, out var model)) continue;
 
-                if (model.transform.parent == noParentTransform)
+                if (model.IsParentNull == true)
                 {
+                    model.IsParentNull = false;
                     model.transform.SetParent(model.parent.transform, true);
                 }
 
@@ -138,8 +140,9 @@ namespace Animation
                 if (!modelDict.TryGetValue(obj.ID, out var model)) continue;
 
                 var worldMat = targetFrame.GetWorldMatrix(obj.ID);
-                if (model.transform.parent != noParentTransform)
+                if (model.IsParentNull == false)
                 {
+                    model.IsParentNull = true;
                     model.transform.SetParent(noParentTransform);
                 }
 
@@ -158,8 +161,9 @@ namespace Animation
 
                 Matrix4x4 lerpedMatrix = InterpolateMatrixTRS(worldMatA, worldMatB, ratio);
 
-                if (model.transform.parent != noParentTransform)
+                if (model.IsParentNull == false)
                 {
+                    model.IsParentNull = true;
                     model.transform.SetParent(noParentTransform);
                 }
 

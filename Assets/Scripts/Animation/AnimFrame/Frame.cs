@@ -86,7 +86,7 @@ namespace Animation.AnimFrame
             {
                 return matrix;
             }
-            if (worldMatrixDict != null && worldMatrixDict.TryGetValue(id, out matrix))
+            if (worldMatrixDict.TryGetValue(id, out matrix))
             {
                 return matrix;
             }
@@ -155,7 +155,8 @@ namespace Animation.AnimFrame
                 interpolationRect.gameObject.SetActive(true);
 
                 var line = _timeline.GetTickLine(tick + interpolation, false);
-                line ??= _timeline.grid[_timeline.gridCount - 1];
+                if (line == null)
+                    line = _timeline.grid[_timeline.gridCount - 1];
 
                 // 1. line의 World Position 구함
                 Vector3 lineWorldPos = line.rect.position;
@@ -182,22 +183,19 @@ namespace Animation.AnimFrame
         {
             int idx = animObject.frames.IndexOfKey(tick);
             if (idx <= 0 || idx >= animObject.frames.Count - 1) return;
-            // ↑ 범위 밖이면 업데이트 불가
+            // 범위 밖이면 업데이트 불가
 
             // 다음 프레임
             Frame nextFrame = animObject.frames.Values[idx + 1];
-
 
             // (1) 점프 발생 여부 체크
             // "tick + interpolation > nextFrame.tick" → 보간점프 발생
             bool isJump = tick + interpolation > nextFrame.tick;
 
+            modelMatrixDict.Clear();
             if (!isJump)
             {
-                modelMatrixDict.Clear();
                 // (2) 점프가 아닌 경우
-                // "현재 leafObjects의 Transforms 그대로" or "일반 보간"
-                // 여기서는 예시로, "그냥 현재 상태 그대로"를 저장
                 foreach (var obj in leafObjects)
                 {
                     var current = obj;
@@ -207,18 +205,18 @@ namespace Animation.AnimFrame
                         if (modelMatrixDict.ContainsKey(current.ID))
                             break;
 
-                        // '현재' transform 행렬 그대로
+                        // 현재 transform 행렬 그대로
                         Matrix4x4 mat = current.Transforms.GetMatrix();
                         modelMatrixDict.Add(current.ID, mat);
 
                         current = current.Parent;
                     }
                 }
-                IsJump = isJump;
+                IsJump = false;
             }
-            else if (isJump)
+            else
             {
-                modelMatrixDict.Clear();
+                
                 float ratio = Mathf.Clamp01((nextFrame.tick - tick) / (float)interpolation);
                 Frame beforeFrame = animObject.frames.Values[idx - 1];
 
@@ -231,18 +229,15 @@ namespace Animation.AnimFrame
                     if (modelMatrixDict.ContainsKey(id))
                         continue;
 
-                    Matrix4x4 currentMatrix;
-                    Matrix4x4 beforeMatrix;
-
                     if (isStructureDifferent)
                     {
                         // 월드 행렬 기반 보간
-                        currentMatrix = GetWorldMatrix(id); // 현재 프레임의 ID별 월드행렬
-                        beforeMatrix = beforeFrame.GetWorldMatrix(id); // 이전 프레임의 ID별 월드행렬
+                        Matrix4x4 currentMatrix = GetWorldMatrix(id); // 현재 프레임의 ID별 월드행렬
+                        Matrix4x4 beforeMatrix = beforeFrame.GetWorldMatrix(id); // 이전 프레임의 ID별 월드행렬
 
-                                            // 최종 보간 적용
-                    Matrix4x4 interpolated = BDObjectAnimator.InterpolateMatrixTRS(currentMatrix, beforeMatrix, ratio);
-                    modelMatrixDict.Add(id, interpolated);
+                        // 최종 보간 적용
+                        Matrix4x4 interpolated = BDObjectAnimator.InterpolateMatrixTRS(beforeMatrix, currentMatrix, ratio);
+                        modelMatrixDict.Add(id, interpolated);
                     }
                     else
                     {
@@ -269,7 +264,7 @@ namespace Animation.AnimFrame
 
                 }
 
-                IsJump = isJump;
+                IsJump = true;
             }
 
         }

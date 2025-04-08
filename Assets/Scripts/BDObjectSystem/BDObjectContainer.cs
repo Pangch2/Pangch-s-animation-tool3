@@ -18,6 +18,8 @@ namespace BDObjectSystem
         public Matrix4x4 transformation;
         public Matrix4x4 parentMatrix;
 
+        public bool IsParentNull = false;
+
         public void Init(BdObject bdObject, BdObjectManager manager)
         {
             // 기본 정보 설정
