@@ -157,7 +157,9 @@ namespace Animation
                 if (!modelDict.TryGetValue(obj.ID, out var model)) continue;
 
                 var worldMatA = aFrame.GetWorldMatrix(obj.ID);
-                var worldMatB = bFrame.GetWorldMatrix(obj.ID);
+                // var worldMatB = bFrame.GetWorldMatrix(obj.ID);
+                if (!bFrame.worldMatrixDict.TryGetValue(obj.ID, out var worldMatB))
+                    worldMatB = Matrix4x4.identity;
 
                 Matrix4x4 lerpedMatrix = InterpolateMatrixTRS(worldMatA, worldMatB, ratio);
 

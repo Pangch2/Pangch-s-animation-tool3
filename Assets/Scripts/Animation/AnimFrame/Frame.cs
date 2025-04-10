@@ -37,6 +37,7 @@ namespace Animation.AnimFrame
         public Dictionary<string, Matrix4x4> worldMatrixDict = null;
         // 모델의 모든 노드 ID:Matrix4x4을 저장하는 딕셔너리
         public Dictionary<string, Matrix4x4> modelMatrixDict = new Dictionary<string, Matrix4x4>();
+        public Dictionary<string, Matrix4x4> interJumpDict = new Dictionary<string, Matrix4x4>();
         public bool IsJump = false;
 
         private Timeline _timeline;
@@ -63,18 +64,22 @@ namespace Animation.AnimFrame
             IsModelDiffrent = animObject.animator.RootObject.bdObjectID != info.ID;
             worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
             //Debug.Log(animObject.animator);
-            if (IsModelDiffrent)
-            {
-                Debug.Log($"Model is different, name : {fileName}\nModel : {animObject.animator.RootObject.bdObjectID}\nInfo : {info.ID}");
+            // if (IsModelDiffrent)
+            // {
+            //     Debug.Log($"Model is different, name : {fileName}\nModel : {animObject.animator.RootObject.bdObjectID}\nInfo : {info.ID}");
 
-            }
+            // }
 
 
         }
 
         public Matrix4x4 GetMatrix(string id)
         {
-            if (modelMatrixDict.TryGetValue(id, out var matrix))
+            if (IsJump && interJumpDict.TryGetValue(id, out var matrix))
+            {
+                return matrix;
+            }
+            if (modelMatrixDict.TryGetValue(id, out matrix))
             {
                 return matrix;
             }
@@ -84,7 +89,7 @@ namespace Animation.AnimFrame
 
         public Matrix4x4 GetWorldMatrix(string id)
         {
-            if (IsJump && modelMatrixDict.TryGetValue(id, out var matrix))
+            if (IsJump && interJumpDict.TryGetValue(id, out Matrix4x4 matrix))
             {
                 return matrix;
             }
@@ -157,8 +162,7 @@ namespace Animation.AnimFrame
                 interpolationRect.gameObject.SetActive(true);
 
                 var line = _timeline.GetTickLine(tick + interpolation, false);
-                if (line == null)
-                    line = _timeline.grid[_timeline.gridCount - 1];
+                line ??= _timeline.grid[_timeline.gridCount - 1];
 
                 // 1. line의 World Position 구함
                 Vector3 lineWorldPos = line.rect.position;
@@ -192,34 +196,14 @@ namespace Animation.AnimFrame
 
             // (1) 점프 발생 여부 체크
             // "tick + interpolation > nextFrame.tick" → 보간점프 발생
-            bool isJump = tick + interpolation > nextFrame.tick;
+            
+            bool isJump = (tick + interpolation) > nextFrame.tick;
 
-            modelMatrixDict.Clear();
-            if (!isJump)
-            {
-                // (2) 점프가 아닌 경우
-                foreach (var obj in leafObjects)
-                {
-                    var current = obj;
-                    while (current != null)
-                    {
-                        // 이미 넣었다면 중복 방지
-                        if (modelMatrixDict.ContainsKey(current.ID))
-                            break;
-
-                        // 현재 transform 행렬 그대로
-                        Matrix4x4 mat = current.Transforms.GetMatrix();
-                        modelMatrixDict.Add(current.ID, mat);
-
-                        current = current.Parent;
-                    }
-                }
-                IsJump = false;
-            }
-            else
+            interJumpDict.Clear();
+            if (isJump)
             {
 
-                float ratio = Mathf.Clamp01((nextFrame.tick - tick) / (float)interpolation);
+                float ratio = (float)(nextFrame.tick - tick) / interpolation;
                 Frame beforeFrame = animObject.frames.Values[idx - 1];
 
                 bool isStructureDifferent = IsModelDiffrent || nextFrame.IsModelDiffrent || beforeFrame.IsModelDiffrent;
@@ -227,23 +211,20 @@ namespace Animation.AnimFrame
                 foreach (var obj in leafObjects)
                 {
                     var id = obj.ID;
-                    if (id == specialTag)
-                    {
-                        Debug.Log($"Special Tag: {obj.Name}, {ratio}");
-                    }
 
-                    if (modelMatrixDict.ContainsKey(id))
+                    if (interJumpDict.ContainsKey(id))
                         continue;
 
                     if (isStructureDifferent)
                     {
                         // 월드 행렬 기반 보간
+                        //worldMatrixDict.TryGetValue(id, out var currentMatrix);
                         Matrix4x4 currentMatrix = GetWorldMatrix(id); // 현재 프레임의 ID별 월드행렬
                         Matrix4x4 beforeMatrix = beforeFrame.GetWorldMatrix(id); // 이전 프레임의 ID별 월드행렬
 
                         // 최종 보간 적용
                         Matrix4x4 interpolated = BDObjectAnimator.InterpolateMatrixTRS(beforeMatrix, currentMatrix, ratio);
-                        modelMatrixDict.Add(id, interpolated);
+                        interJumpDict.Add(id, interpolated);
                     }
                     else
                     {
@@ -252,14 +233,14 @@ namespace Animation.AnimFrame
 
                         while (current != null)
                         {
-                            if (modelMatrixDict.ContainsKey(current.ID))
+                            if (interJumpDict.ContainsKey(current.ID))
                                 break;
 
-                            Matrix4x4 aMatrix = current.Transforms.GetMatrix();
-                            Matrix4x4 bMatrix = beforeFrame.GetMatrix(current.ID);
+                            Matrix4x4 aMatrix = beforeFrame.GetMatrix(current.ID);
+                            Matrix4x4 bMatrix = current.Transforms.GetMatrix();
 
                             Matrix4x4 lerpedMatrix = BDObjectAnimator.InterpolateMatrixTRS(aMatrix, bMatrix, ratio);
-                            modelMatrixDict.Add(current.ID, lerpedMatrix);
+                            interJumpDict.Add(current.ID, lerpedMatrix);
 
 
                             current = current.Parent;
@@ -267,11 +248,12 @@ namespace Animation.AnimFrame
 
                         continue; // 트리 기반 처리했으면 아래로 내려가지 않게
                     }
-
-
                 }
-
                 IsJump = true;
+            }
+            else
+            {
+                IsJump = false;
             }
 
         }
