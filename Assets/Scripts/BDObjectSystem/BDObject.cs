@@ -10,7 +10,7 @@ using System.Linq;
 //[System.Serializable]
 namespace BDObjectSystem
 {
-    [System.Serializable]
+    //[System.Serializable]
     public class BdObject
     {
         // JSON Property

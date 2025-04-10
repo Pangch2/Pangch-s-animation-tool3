@@ -37,9 +37,12 @@ namespace Animation.AnimFrame
         public Dictionary<string, Matrix4x4> worldMatrixDict = null;
         // 모델의 모든 노드 ID:Matrix4x4을 저장하는 딕셔너리
         public Dictionary<string, Matrix4x4> modelMatrixDict = new Dictionary<string, Matrix4x4>();
+        public Dictionary<string, Matrix4x4> interJumpDict = new Dictionary<string, Matrix4x4>();
         public bool IsJump = false;
 
         private Timeline _timeline;
+
+        public string specialTag = "psolidsteve0,psolidsteve67";
 
 
         public void Init(string initFileName, int initTick, int inter, BdObject info, AnimObject obj, Timeline timeLine)
@@ -61,18 +64,22 @@ namespace Animation.AnimFrame
             IsModelDiffrent = animObject.animator.RootObject.bdObjectID != info.ID;
             worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
             //Debug.Log(animObject.animator);
-            if (IsModelDiffrent)
-            {
-                Debug.Log($"Model is different, name : {fileName}\nModel : {animObject.animator.RootObject.bdObjectID}\nInfo : {info.ID}");
+            // if (IsModelDiffrent)
+            // {
+            //     Debug.Log($"Model is different, name : {fileName}\nModel : {animObject.animator.RootObject.bdObjectID}\nInfo : {info.ID}");
 
-            }
+            // }
 
 
         }
 
         public Matrix4x4 GetMatrix(string id)
         {
-            if (modelMatrixDict.TryGetValue(id, out var matrix))
+            if (IsJump && interJumpDict.TryGetValue(id, out var matrix))
+            {
+                return matrix;
+            }
+            if (modelMatrixDict.TryGetValue(id, out matrix))
             {
                 return matrix;
             }
@@ -82,11 +89,11 @@ namespace Animation.AnimFrame
 
         public Matrix4x4 GetWorldMatrix(string id)
         {
-            if (IsJump && modelMatrixDict.TryGetValue(id, out var matrix))
+            if (IsJump && interJumpDict.TryGetValue(id, out Matrix4x4 matrix))
             {
                 return matrix;
             }
-            if (worldMatrixDict != null && worldMatrixDict.TryGetValue(id, out matrix))
+            if (worldMatrixDict.TryGetValue(id, out matrix))
             {
                 return matrix;
             }
@@ -182,44 +189,21 @@ namespace Animation.AnimFrame
         {
             int idx = animObject.frames.IndexOfKey(tick);
             if (idx <= 0 || idx >= animObject.frames.Count - 1) return;
-            // ↑ 범위 밖이면 업데이트 불가
+            // 범위 밖이면 업데이트 불가
 
             // 다음 프레임
             Frame nextFrame = animObject.frames.Values[idx + 1];
 
-
             // (1) 점프 발생 여부 체크
             // "tick + interpolation > nextFrame.tick" → 보간점프 발생
-            bool isJump = tick + interpolation > nextFrame.tick;
+            
+            bool isJump = (tick + interpolation) > nextFrame.tick;
 
-            if (!isJump)
+            interJumpDict.Clear();
+            if (isJump)
             {
-                modelMatrixDict.Clear();
-                // (2) 점프가 아닌 경우
-                // "현재 leafObjects의 Transforms 그대로" or "일반 보간"
-                // 여기서는 예시로, "그냥 현재 상태 그대로"를 저장
-                foreach (var obj in leafObjects)
-                {
-                    var current = obj;
-                    while (current != null)
-                    {
-                        // 이미 넣었다면 중복 방지
-                        if (modelMatrixDict.ContainsKey(current.ID))
-                            break;
 
-                        // '현재' transform 행렬 그대로
-                        Matrix4x4 mat = current.Transforms.GetMatrix();
-                        modelMatrixDict.Add(current.ID, mat);
-
-                        current = current.Parent;
-                    }
-                }
-                IsJump = isJump;
-            }
-            else if (isJump)
-            {
-                modelMatrixDict.Clear();
-                float ratio = Mathf.Clamp01((nextFrame.tick - tick) / (float)interpolation);
+                float ratio = (float)(nextFrame.tick - tick) / interpolation;
                 Frame beforeFrame = animObject.frames.Values[idx - 1];
 
                 bool isStructureDifferent = IsModelDiffrent || nextFrame.IsModelDiffrent || beforeFrame.IsModelDiffrent;
@@ -228,21 +212,19 @@ namespace Animation.AnimFrame
                 {
                     var id = obj.ID;
 
-                    if (modelMatrixDict.ContainsKey(id))
+                    if (interJumpDict.ContainsKey(id))
                         continue;
-
-                    Matrix4x4 currentMatrix;
-                    Matrix4x4 beforeMatrix;
 
                     if (isStructureDifferent)
                     {
                         // 월드 행렬 기반 보간
-                        currentMatrix = GetWorldMatrix(id); // 현재 프레임의 ID별 월드행렬
-                        beforeMatrix = beforeFrame.GetWorldMatrix(id); // 이전 프레임의 ID별 월드행렬
+                        //worldMatrixDict.TryGetValue(id, out var currentMatrix);
+                        Matrix4x4 currentMatrix = GetWorldMatrix(id); // 현재 프레임의 ID별 월드행렬
+                        Matrix4x4 beforeMatrix = beforeFrame.GetWorldMatrix(id); // 이전 프레임의 ID별 월드행렬
 
-                                            // 최종 보간 적용
-                    Matrix4x4 interpolated = BDObjectAnimator.InterpolateMatrixTRS(currentMatrix, beforeMatrix, ratio);
-                    modelMatrixDict.Add(id, interpolated);
+                        // 최종 보간 적용
+                        Matrix4x4 interpolated = BDObjectAnimator.InterpolateMatrixTRS(beforeMatrix, currentMatrix, ratio);
+                        interJumpDict.Add(id, interpolated);
                     }
                     else
                     {
@@ -251,25 +233,27 @@ namespace Animation.AnimFrame
 
                         while (current != null)
                         {
-                            if (modelMatrixDict.ContainsKey(current.ID))
+                            if (interJumpDict.ContainsKey(current.ID))
                                 break;
 
-                            Matrix4x4 aMatrix = current.Transforms.GetMatrix();
-                            Matrix4x4 bMatrix = beforeFrame.GetMatrix(current.ID);
+                            Matrix4x4 aMatrix = beforeFrame.GetMatrix(current.ID);
+                            Matrix4x4 bMatrix = current.Transforms.GetMatrix();
 
                             Matrix4x4 lerpedMatrix = BDObjectAnimator.InterpolateMatrixTRS(aMatrix, bMatrix, ratio);
-                            modelMatrixDict.Add(current.ID, lerpedMatrix);
+                            interJumpDict.Add(current.ID, lerpedMatrix);
+
 
                             current = current.Parent;
                         }
 
                         continue; // 트리 기반 처리했으면 아래로 내려가지 않게
                     }
-
-
                 }
-
-                IsJump = isJump;
+                IsJump = true;
+            }
+            else
+            {
+                IsJump = false;
             }
 
         }

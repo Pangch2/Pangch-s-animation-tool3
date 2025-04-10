@@ -174,6 +174,8 @@ namespace FileSystem
                 await Task.Delay(500);
             }
 
+            mainAnimObject.UpdateAllFrameInterJump();
+
             FrameInfo.Clear();
 
             CustomLog.Log($"Import 완료! BDObject 개수: {bdObjManager.bdObjectCount}");
