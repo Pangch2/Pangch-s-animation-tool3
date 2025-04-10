@@ -41,6 +41,8 @@ namespace Animation.AnimFrame
 
         private Timeline _timeline;
 
+        public string specialTag = "psolidsteve0,psolidsteve67";
+
 
         public void Init(string initFileName, int initTick, int inter, BdObject info, AnimObject obj, Timeline timeLine)
         {
@@ -216,7 +218,7 @@ namespace Animation.AnimFrame
             }
             else
             {
-                
+
                 float ratio = Mathf.Clamp01((nextFrame.tick - tick) / (float)interpolation);
                 Frame beforeFrame = animObject.frames.Values[idx - 1];
 
@@ -225,6 +227,10 @@ namespace Animation.AnimFrame
                 foreach (var obj in leafObjects)
                 {
                     var id = obj.ID;
+                    if (id == specialTag)
+                    {
+                        Debug.Log($"Special Tag: {obj.Name}, {ratio}");
+                    }
 
                     if (modelMatrixDict.ContainsKey(id))
                         continue;
@@ -254,6 +260,7 @@ namespace Animation.AnimFrame
 
                             Matrix4x4 lerpedMatrix = BDObjectAnimator.InterpolateMatrixTRS(aMatrix, bMatrix, ratio);
                             modelMatrixDict.Add(current.ID, lerpedMatrix);
+
 
                             current = current.Parent;
                         }
