@@ -22,6 +22,7 @@ namespace GameSystem
         /// </summary>
         public int defaultTickInterval;
 
+        [SerializeField]
         private bool _useNameInfoExtract = true;
         /// <summary>
         /// 이름 정보 추출 사용 여부
@@ -35,6 +36,7 @@ namespace GameSystem
                 PlayerPrefs.SetInt("useNameInfoExtract", value ? 1 : 0);
             }
         }
+        [SerializeField]
         private bool _useFrameTxtFile = true;
         /// <summary>
         /// 프레임 txt 파일 사용 여부
@@ -70,10 +72,6 @@ namespace GameSystem
         /// </summary>
         public string frameFileName = "frame";
         /// <summary>
-        /// 프레임 파일들이 저장될 경로 
-        /// </summary>
-        public string frameFilePath = "result";
-        /// <summary>
         /// 1초당 틱 수 
         /// </summary>
         public int tickUnit = 10;
@@ -86,6 +84,7 @@ namespace GameSystem
         public BdEngineStyleCameraMovement cameraMovement;
 
         public Slider[] sliders;
+        public Toggle[] toggleButtons;
 
         enum SliderType
         {
@@ -97,6 +96,7 @@ namespace GameSystem
 
         private void Start()
         {
+            // 토글 이벤트 리스너 등록
             findModeToggle.onValueChanged.AddListener(
                 value =>
                 {
@@ -104,56 +104,84 @@ namespace GameSystem
                     if (!useFindMode)
                         inputFields[2].text = "@s";
                 });
+
+            // PlayerPrefs에서 값 불러오기 (키가 없으면 현재 필드에 지정된 기본값 사용)
+            defaultTickInterval = PlayerPrefs.GetInt("defaultTickInterval", defaultTickInterval);
+            defaultInterpolation = PlayerPrefs.GetInt("defaultInterpolation", defaultInterpolation);
+            UseNameInfoExtract = PlayerPrefs.GetInt("useNameInfoExtract", UseNameInfoExtract ? 1 : 0) == 1;
+            UseFrameTxtFile = PlayerPrefs.GetInt("useFrameTxtFile", UseFrameTxtFile ? 1 : 0) == 1;
+            tickUnit = PlayerPrefs.GetInt("tickUnit", tickUnit);
+            GameManager.GetManager<AnimManager>().TickUnit = 1.0f / tickUnit;
+
+            cameraMovement.rotateSpeed = PlayerPrefs.GetFloat("cameraSpeed", cameraMovement.rotateSpeed);
+            cameraMovement.panSpeed = PlayerPrefs.GetFloat("cameraMoveSpeed", cameraMovement.panSpeed);
+            cameraMovement.zoomSpeed = PlayerPrefs.GetFloat("cameraZoomSpeed", cameraMovement.zoomSpeed);
+
+            // 슬라이더에 불러온 값 반영
+            sliders[(int)SliderType.CameraSpeed].value = cameraMovement.rotateSpeed;
+            sliders[(int)SliderType.CameraMoveSpeed].value = cameraMovement.panSpeed;
+            sliders[(int)SliderType.CameraZoomSpeed].value = cameraMovement.zoomSpeed;
+
+            // inputFields에도 불러온 값 반영 (인덱스 순서에 맞게 할당)
+            // 인덱스 0: defaultTickInterval
+            inputFields[0].text = defaultTickInterval.ToString();
+            // 인덱스 1: defaultInterpolation
+            inputFields[1].text = defaultInterpolation.ToString();
+            // 인덱스 2: fakePlayer (useFindMode가 false이면 "@s")
+            inputFields[2].text = useFindMode ? fakePlayer : "@s";
+            // 인덱스 3: scoreboardName
+            inputFields[3].text = scoreboardName;
+            // 인덱스 4: startTick
+            inputFields[4].text = startTick.ToString();
+            // 인덱스 5: packNamespace
+            inputFields[5].text = packNamespace;
+            // 인덱스 6: frameFileName
+            inputFields[6].text = frameFileName;
+            // 인덱스 7: exportManager.ExportPath
+            inputFields[7].text = exportManager.ExportFolder;
+            // 인덱스 8: tickUnit
+            inputFields[8].text = tickUnit.ToString();
+
+            toggleButtons[0].isOn = UseNameInfoExtract;
+            toggleButtons[1].isOn = UseFrameTxtFile;
+            // toggleButtons[2].isOn = useFindMode;
+            // toggleButtons[3].isOn = !useFindMode;
+
+            // 입력 필드 이벤트 리스너 등록
             for (var i = 0; i < inputFields.Length; i++)
             {
-                var idx = i;
+                int idx = i;
                 inputFields[i].onEndEdit.AddListener(value => OnEndEditValue(value, idx));
-                OnEndEditValue(inputFields[i].text, i);
             }
 
-            if (PlayerPrefs.HasKey("defaultInterpolation"))
-            {
-                defaultInterpolation = PlayerPrefs.GetInt("defaultInterpolation");
-            }
-            if (PlayerPrefs.HasKey("defaultTickInterval"))
-            {
-                defaultTickInterval = PlayerPrefs.GetInt("defaultTickInterval");
-            }
-            if (PlayerPrefs.HasKey("useNameInfoExtract"))
-            {
-                UseNameInfoExtract = PlayerPrefs.GetInt("useNameInfoExtract") == 1;
-            }
-            if (PlayerPrefs.HasKey("useFrameTxtFile"))
-            {
-                UseFrameTxtFile = PlayerPrefs.GetInt("useFrameTxtFile") == 1;
-            }
-            if (PlayerPrefs.HasKey("tickUnit"))
-            {
-                tickUnit = PlayerPrefs.GetInt("tickUnit");
-                GameManager.GetManager<AnimManager>().TickUnit = 1.0f / tickUnit;
-            }
-            if (PlayerPrefs.HasKey("cameraSpeed"))
-            {
-                cameraMovement.rotateSpeed = PlayerPrefs.GetFloat("cameraSpeed");
-                sliders[(int)SliderType.CameraSpeed].value = cameraMovement.rotateSpeed;
-            }
-            if (PlayerPrefs.HasKey("cameraMoveSpeed"))
-            {
-                cameraMovement.panSpeed = PlayerPrefs.GetFloat("cameraMoveSpeed");
-                sliders[(int)SliderType.CameraMoveSpeed].value = cameraMovement.panSpeed;
-            }
-            if (PlayerPrefs.HasKey("cameraZoomSpeed"))
-            {
-                cameraMovement.zoomSpeed = PlayerPrefs.GetFloat("cameraZoomSpeed");
-                sliders[(int)SliderType.CameraZoomSpeed].value = cameraMovement.zoomSpeed;
-            }
-            
+            // 슬라이더 이벤트 리스너 등록
             for (var i = 0; i < sliders.Length; i++)
             {
-                var idx = i;
+                int idx = i;
                 sliders[i].onValueChanged.AddListener(value => OnSliderValueEdited(value, (SliderType)idx));
             }
         }
+
+        public void LoadMCDEAnim(MCDEANIMFile file)
+        {
+            //Debug.Log(file.name);
+            scoreboardName = file.scoreboardName;
+            startTick = file.startTick;
+            packNamespace = file.packNamespace;
+            frameFileName = file.frameFileName;
+            fakePlayer = file.fakePlayer;
+            useFindMode = file.findMode;
+            exportManager.ExportFolder = file.resultFileName;
+
+            inputFields[3].text = scoreboardName;
+            inputFields[4].text = startTick.ToString();
+            inputFields[5].text = packNamespace;
+            inputFields[6].text = frameFileName;
+            inputFields[2].text = fakePlayer;
+
+            findModeToggle.isOn = useFindMode;
+        }
+
 
         public void SetSettingPanel(bool isOn)
         {
@@ -217,7 +245,7 @@ namespace GameSystem
                     frameFileName = value;
                     break;
                 case 7:
-                    exportManager.ExportPath = value;
+                    exportManager.ExportFolder = value;
                     break;
                 case 8:
                     if (int.TryParse(value, out var unit) && unit >= 1)

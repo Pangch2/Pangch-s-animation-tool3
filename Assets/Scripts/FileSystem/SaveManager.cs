@@ -60,7 +60,7 @@ namespace FileSystem
         // MDE 파일 업데이트하고 저장.
         public async void SaveMCDEFile()
         {
-            currentMDEFile.UpdateAnimObject(GameManager.GetManager<AnimObjList>().animObjects);
+            currentMDEFile.UpdateInfo(GameManager.GetManager<AnimObjList>().animObjects);
             // Serialize currentMDEFile to JSON and save to the specified path
             // string json = JsonConvert.SerializeObject(currentMDEFile, Formatting.Indented);
             // string fullPath = System.IO.Path.Combine(path, currentMDEFile.name + ".mde");
@@ -323,6 +323,8 @@ namespace FileSystem
 
             // FrameInfo는 MDE 파일을 로드할 때는 사용하지 않으므로 비울 필요 없음 (이미 비어있거나 사용되지 않음)
             // FrameInfo.Clear();
+
+            GameManager.Setting.LoadMCDEAnim(currentMDEFile);
 
             CustomLog.Log($"MDE File Processing 완료! BDObject 개수: {bdObjManager.bdObjectCount}");
         }

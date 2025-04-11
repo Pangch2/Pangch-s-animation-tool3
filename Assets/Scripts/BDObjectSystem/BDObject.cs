@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace BDObjectSystem
 {
-    [System.Serializable]
+    //[System.Serializable]
     public class BdObject
     {
         // JSON Property

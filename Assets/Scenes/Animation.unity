@@ -5997,13 +5997,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultInterpolation: 0
   defaultTickInterval: 5
+  _useNameInfoExtract: 1
+  _useFrameTxtFile: 1
   useFindMode: 1
   fakePlayer: '@s'
   scoreboardName: anim
   startTick: 0
   packNamespace: PotanAnim
   frameFileName: frame
-  frameFilePath: result
+  resultFileName: result
   tickUnit: 10
   findModeToggle: {fileID: 344122798}
   inputFields:
@@ -6023,6 +6025,11 @@ MonoBehaviour:
   - {fileID: 562810776}
   - {fileID: 211108864}
   - {fileID: 392516466}
+  toggleButtons:
+  - {fileID: 547224893}
+  - {fileID: 705214064}
+  - {fileID: 120069425}
+  - {fileID: 344122798}
 --- !u!1001 &434492881
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14537,9 +14544,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MDEFilePath: 
+  bdObjManager: {fileID: 0}
   currentMDEFile:
     name: 
     version: 
+    findMode: 0
+    fakePlayer: 
+    scoreboardName: 
+    startTick: 0
+    packNamespace: 
+    frameFileName: 
+    resultFileName: 
     animObjects: []
 --- !u!1 &998807596
 GameObject:

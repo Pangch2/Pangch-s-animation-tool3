@@ -11,17 +11,18 @@ namespace FileSystem
         public GameObject exportPanel;
 
         public TextMeshProUGUI exportPathText;
-        private string exportPath = "result";
-        public string ExportPath
+        private string exportFolder = "result";
+        public string ExportFolder
         {
-            get => exportPath;
+            get => exportFolder;
             set
             {
-                exportPath = value;
+                exportFolder = value;
                 SetPathText(currentPath);
             }
         }
         private string currentPath;
+        private string finalPath;
 
         private void Start()
         {
@@ -30,8 +31,10 @@ namespace FileSystem
 
         private void SetPathText(string path)
         {
-            currentPath = string.Concat(path, '/', exportPath);
-            exportPathText.text = currentPath;
+            Debug.Log($"Export path: {path}");
+            currentPath = path;
+            finalPath = path + '/' + exportFolder;
+            exportPathText.text = finalPath;
         }
 
         public void SetExportPanel(bool isShow)
@@ -39,7 +42,7 @@ namespace FileSystem
             exportPanel.SetActive(isShow);
             if (isShow)
             {
-                SetPathText(currentPath);
+                //SetPathText(currentPath);
                 UIManager.CurrentUIStatus |= UIManager.UIStatus.OnPopupPanel;
             }
             else

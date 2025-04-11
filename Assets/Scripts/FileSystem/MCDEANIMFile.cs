@@ -13,9 +13,18 @@ namespace FileSystem
     {
         public string name = string.Empty;
         public string version;
+
+        public bool findMode;
+        public string fakePlayer;
+        public string scoreboardName;
+        public int startTick;
+        public string packNamespace;
+        public string frameFileName;
+        public string resultFileName;
+
         public List<AnimObjectFile> animObjects = new List<AnimObjectFile>();
 
-        public void UpdateAnimObject(List<AnimObject> AnimObjects)
+        public void UpdateInfo(List<AnimObject> AnimObjects)
         {
             int cnt = AnimObjects.Count;
             for (int i = 0; i < cnt; i++)
@@ -29,6 +38,15 @@ namespace FileSystem
                     animObjects.Add(new AnimObjectFile(AnimObjects[i]));
                 }
             }
+
+            var setting = GameManager.Setting;
+            findMode = setting.useFindMode;
+            fakePlayer = setting.fakePlayer;
+            scoreboardName = setting.scoreboardName;
+            startTick = setting.startTick;
+            packNamespace = setting.packNamespace;
+            frameFileName = setting.frameFileName;
+            resultFileName = setting.exportManager.ExportFolder;
         }
         #endregion
 
