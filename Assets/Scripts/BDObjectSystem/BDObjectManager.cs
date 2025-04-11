@@ -48,6 +48,7 @@ namespace BDObjectSystem
             currentBdObject = await CreateObjectHierarchyAsync(bdObject, bdObjectParent);
 
             BDObjectAnim[fileName] = new BDObjectAnimator(currentBdObject);
+            Debug.Log($"AddObject: {fileName}");
         }
 
         // BDObject 따라가면서 BDObjectContainer 생성 

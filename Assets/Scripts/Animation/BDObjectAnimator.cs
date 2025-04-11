@@ -6,8 +6,10 @@ using UnityEngine;
 
 namespace Animation
 {
+    [System.Serializable]
     public class BDObjectAnimator
     {
+        
         public BdObjectContainer RootObject;
 
         public readonly Dictionary<string, BdObjectContainer> modelDict;
@@ -26,6 +28,7 @@ namespace Animation
             {
                 parentMatrixDict[obj.bdObjectID] = ComputeParentWorldMatrix(obj);
             }
+            //Debug.Log($"[BDObjectAnimator] {RootObject.name} : {modelDict.Count} objects found.");
         }
 
         #region Transformation
@@ -93,7 +96,10 @@ namespace Animation
                 if (leafB == null) continue;
 
                 // 모델 사전에서 해당 노드를 찾습니다.
-                if (!modelDict.TryGetValue(leafA.ID, out var model)) continue;
+                if (!modelDict.TryGetValue(leafA.ID, out var model))
+                {
+                    continue;
+                }
 
                 if (model.IsParentNull == true)
                 {
@@ -113,7 +119,7 @@ namespace Animation
                     if (modelRef.bdObjectID == aRef.ID)
                     {
                         // aFrame, bFrame 각각에서 해당 ID의 행렬을 가져와 보간
-                        Matrix4x4 aMatrix = aFrame.GetMatrix(aRef.ID);
+                        Matrix4x4 aMatrix = aFrame.GetMatrix(aRef.ID);  
                         Matrix4x4 bMatrix = bRef.Transforms.GetMatrix();
 
                         Matrix4x4 lerpedMatrix = InterpolateMatrixTRS(aMatrix, bMatrix, ratio);

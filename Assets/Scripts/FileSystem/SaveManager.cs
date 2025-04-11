@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Animation.AnimFrame;
 using BDObjectSystem;
 using BDObjectSystem.Display;
+using BDObjectSystem.Utility;
 using GameSystem;
 using Newtonsoft.Json;
 using SimpleFileBrowser;
@@ -188,8 +189,10 @@ namespace FileSystem
                         ui.SetLoadingPanel(false);
                         yield break;
                     }
-                    // currentMDEFile = loadedMDEFile; // 필요하다면 클래스 멤버에 저장
+                    currentMDEFile = loadedMDEFile; // 필요하다면 클래스 멤버에 저장
+                    SetMCDEFilePath(filePath); // MDEFilePath 업데이트
                 }
+
 
 
                 // 2. 로드된 데이터 처리 (비동기)
@@ -204,7 +207,7 @@ namespace FileSystem
                 }
                 catch (Exception e) // ProcessLoadedMDEFileAsync 호출 자체에서 예외 발생 시
                 {
-                    Debug.LogError($"ProcessLoadedMDEFileAsync 호출 중 예외: {e}");
+                    Debug.LogError($"ProcessLoadedMDEFileAsync 호출 중 예외: {e.Message}");
                     ui.SetLoadingPanel(false);
                     yield break;
                 }
@@ -267,6 +270,7 @@ namespace FileSystem
 
                 // 1) 첫 번째 프레임으로 메인 AnimObject 생성
                 var firstFrameFile = animObjectFile.frameFiles[0];
+                BdObjectHelper.SetParent(null, firstFrameFile.bdObject);
                 if (firstFrameFile.bdObject == null)
                 {
                     CustomLog.LogError($"AnimObject '{animObjectFile.name}'의 첫 프레임 '{firstFrameFile.name}'에 BdObject 데이터가 없습니다. 건너뜁니다.");
@@ -277,31 +281,17 @@ namespace FileSystem
                 // MakeDisplayAsync와 유사한 로직 수행
                 await bdObjManager.AddObject(firstFrameFile.bdObject, animObjectFile.name);
                 AnimObject currentRuntimeAnimObject = animObjList.AddAnimObject(animObjectFile.name);
-
-                // 첫 프레임 정보 설정 (AddFrame은 보통 두 번째 프레임부터 추가하므로, 첫 프레임은 직접 설정하거나 AddFrame 로직 수정 필요)
-                // AnimObject.AddFrame 구현에 따라 달라질 수 있음.
-                // 만약 AddFrame이 첫 프레임도 처리한다면 아래 로직 대신 AddFrame 호출.
-                // 여기서는 첫 프레임 데이터를 이미 사용했다고 가정하고 넘어감.
-                // 필요하다면 currentRuntimeAnimObject에 첫 프레임 정보(tick, interpolation 등)를 설정하는 로직 추가.
-                if (currentRuntimeAnimObject.frames.Count == 0) // 안전장치: 아직 프레임이 없다면 첫 프레임 추가
-                {
-                    currentRuntimeAnimObject.AddFrame(
-                      firstFrameFile.name,
-                      firstFrameFile.bdObject,
-                      firstFrameFile.tick,
-                      firstFrameFile.interpolation
-                    );
-                }
-
+                // 첫번째 프레임은 자동 추가 
 
                 // 2) 나머지 프레임들 추가
                 ui.SetLoadingText($"Adding Frames for {animObjectFile.name}...");
                 for (int i = 1; i < animObjectFile.frameFiles.Count; i++)
                 {
                     var currentFrameFile = animObjectFile.frameFiles[i];
+                    BdObjectHelper.SetParent(null, currentFrameFile.bdObject);
                     if (currentFrameFile.bdObject == null)
                     {
-                        CustomLog.LogWarning($"AnimObject '{animObjectFile.name}'의 프레임 '{currentFrameFile.name}'에 BdObject 데이터가 없습니다. 건너<0xEB><0x82>뜁니다.");
+                        CustomLog.LogWarning($"AnimObject '{animObjectFile.name}'의 프레임 '{currentFrameFile.name}'에 BdObject 데이터가 없습니다. 건너뜁니다.");
                         continue;
                     }
 

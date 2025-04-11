@@ -5,12 +5,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using BDObjectSystem.Utility;
 using UnityEngine;
-using System.Linq;
 
-//[System.Serializable]
+
 namespace BDObjectSystem
 {
-    //[System.Serializable]
+    [System.Serializable]
     public class BdObject
     {
         // JSON Property
