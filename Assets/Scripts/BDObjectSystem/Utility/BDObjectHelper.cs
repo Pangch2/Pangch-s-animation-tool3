@@ -94,9 +94,9 @@ namespace BDObjectSystem.Utility
         /// </summary>
         /// <param name="root"></param>
         /// <returns></returns>
-        public static List<BdObject> SetDisplayList(BdObject root, Dictionary<string, Matrix4x4> ModelMatrix)
+        public static Dictionary<string, BdObject> SetDisplayDict(BdObject root, Dictionary<string, Matrix4x4> ModelMatrix)
         {
-            var resultList = new List<BdObject>();
+            var resultList = new Dictionary<string, BdObject>();
             var queue = new Queue<BdObject>();
             queue.Enqueue(root);
             
@@ -107,7 +107,7 @@ namespace BDObjectSystem.Utility
             
                 if (obj.IsDisplay)
                 {
-                    resultList.Add(obj);
+                    resultList.Add(obj.ID, obj);
                 }
                 
                 // BFS

@@ -9,7 +9,6 @@ namespace Animation
     [System.Serializable]
     public class BDObjectAnimator
     {
-        
         public BdObjectContainer RootObject;
 
         public readonly Dictionary<string, BdObjectContainer> modelDict;
@@ -50,7 +49,7 @@ namespace Animation
             // 자식에서 부모로 올라가면서 변환을 적용합니다.
             foreach (var obj in targetFrame.leafObjects)
             {
-                if (!modelDict.TryGetValue(obj.ID, out var model)) continue;
+                if (!modelDict.TryGetValue(obj.Key, out var model)) continue;
 
                 if (model.IsParentNull == true)
                 {
@@ -59,7 +58,7 @@ namespace Animation
                 }
 
                 var modelRef = model;
-                var targetRef = obj;
+                var targetRef = obj.Value;
                 while (modelRef != null && targetRef != null)
                 {
                     if (visitedObjects.Contains(modelRef)) break;
@@ -89,14 +88,16 @@ namespace Animation
             }
 
             // aFrame의 leafObjects를 순회
-            foreach (var leafA in aFrame.leafObjects)
+            foreach (var leafAItem in aFrame.leafObjects)
             {
+                var leafA = leafAItem.Value;
+                var ID = leafAItem.Key;
                 // bFrame의 leafObjects에서 같은 ID를 가진 노드를 찾습니다.
-                var leafB = bFrame.leafObjects.Find(x => x.ID == leafA.ID);
+                var leafB = bFrame.leafObjects.GetValueOrDefault(ID);
                 if (leafB == null) continue;
 
                 // 모델 사전에서 해당 노드를 찾습니다.
-                if (!modelDict.TryGetValue(leafA.ID, out var model))
+                if (!modelDict.TryGetValue(ID, out var model))
                 {
                     continue;
                 }
@@ -143,9 +144,9 @@ namespace Animation
         {
             foreach (var obj in targetFrame.leafObjects)
             {
-                if (!modelDict.TryGetValue(obj.ID, out var model)) continue;
+                if (!modelDict.TryGetValue(obj.Key, out var model)) continue;
 
-                var worldMat = targetFrame.GetWorldMatrix(obj.ID);
+                var worldMat = targetFrame.GetWorldMatrix(obj.Key);
                 if (model.IsParentNull == false)
                 {
                     model.IsParentNull = true;
@@ -160,11 +161,11 @@ namespace Animation
         {
             foreach (var obj in aFrame.leafObjects)
             {
-                if (!modelDict.TryGetValue(obj.ID, out var model)) continue;
+                if (!modelDict.TryGetValue(obj.Key, out var model)) continue;
 
-                var worldMatA = aFrame.GetWorldMatrix(obj.ID);
+                var worldMatA = aFrame.GetWorldMatrix(obj.Key);
                 // var worldMatB = bFrame.GetWorldMatrix(obj.ID);
-                if (!bFrame.worldMatrixDict.TryGetValue(obj.ID, out var worldMatB))
+                if (!bFrame.worldMatrixDict.TryGetValue(obj.Key, out var worldMatB))
                     worldMatB = Matrix4x4.identity;
 
                 Matrix4x4 lerpedMatrix = InterpolateMatrixTRS(worldMatA, worldMatB, ratio);
