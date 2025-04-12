@@ -3,6 +3,8 @@ using GameSystem;
 using SimpleFileBrowser;
 using TMPro;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace FileSystem
 {
@@ -51,11 +53,12 @@ namespace FileSystem
             }
         }
 
-        public void ChangePath() => StartCoroutine(GetNewPathCoroutine());
+        // public void ChangePath() => StartCoroutine(GetNewPathCoroutine());
+        public void ChangePath() => GetNewPathCoroutine().Forget();
 
-        private IEnumerator GetNewPathCoroutine()
+        private async UniTask GetNewPathCoroutine()
         {
-            yield return FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Folders, false, Application.dataPath);
+            await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Folders, false, Application.dataPath).ToUniTask();
 
             if (FileBrowser.Success)
             {
@@ -66,12 +69,12 @@ namespace FileSystem
 
         public void OnExportButton()
         {
-            //Debug.Log("Exporting to: " + currentPath);
+            ExportAnimation().Forget();
         }
 
-        public void ExportAnimation()
+        public async UniTask ExportAnimation()
         {
-            
+            await UniTask.Delay(500);
         }
     }
 }

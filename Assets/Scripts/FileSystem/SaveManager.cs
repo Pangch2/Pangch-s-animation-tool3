@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using System.Threading.Tasks;
 using Animation.AnimFrame;
 using BDObjectSystem;
 using BDObjectSystem.Display;
 using BDObjectSystem.Utility;
+using Cysharp.Threading.Tasks;
 using GameSystem;
 using Newtonsoft.Json;
 using SimpleFileBrowser;
@@ -58,7 +58,7 @@ namespace FileSystem
 
         #region Save Logic
         // MDE 파일 업데이트하고 저장.
-        public async void SaveMCDEFile()
+        public void SaveMCDEFile()
         {
             currentMDEFile.UpdateInfo(GameManager.GetManager<AnimObjList>().animObjects);
             // Serialize currentMDEFile to JSON and save to the specified path
@@ -66,7 +66,7 @@ namespace FileSystem
             // string fullPath = System.IO.Path.Combine(path, currentMDEFile.name + ".mde");
             // System.IO.File.WriteAllText(MDEFilePath, json);
 
-            await SaveObjectCompressedAsync(currentMDEFile, MDEFilePath);
+            SaveObjectCompressedAsync(currentMDEFile, MDEFilePath).Forget();
 
             // var json = JsonConvert.SerializeObject(currentMDEFile);
             // Debug.Log(json);
@@ -84,18 +84,18 @@ namespace FileSystem
 
         /// <summary>
         /// 객체를 Brotli 압축된 JSON 파일로 비동기적으로 저장합니다 (Newtonsoft.Json 사용).
-        /// 실제 작업은 Task.Run을 통해 백그라운드 스레드에서 수행됩니다.
+        /// 실제 작업은 백그라운드 스레드에서 수행됩니다.
         /// </summary>
         /// <param name="dataToSave">저장할 객체</param>
         /// <param name="filePath">저장할 파일 경로 (확장자 포함, 예: "saveData.json.br")</param>
         /// <param name="settings">JSON 직렬화 설정 (선택 사항)</param>
-        /// <returns>성공 여부를 나타내는 Task<bool></returns>
-        public static async Task<bool> SaveObjectCompressedAsync(object dataToSave, string filePath, JsonSerializerSettings settings = null)
+        /// <returns></returns>
+        public static async UniTaskVoid SaveObjectCompressedAsync(object dataToSave, string filePath, JsonSerializerSettings settings = null)
         {
             try
             {
                 // 동기적인 파일 쓰기 및 직렬화 로직을 Task.Run으로 감싸서 비동기 실행
-                bool result = await Task.Run(() =>
+                await UniTask.RunOnThreadPool(() =>
                 {
                     // 이 블록 안의 코드는 백그라운드 스레드에서 실행됩니다.
                     JsonSerializer serializer = JsonSerializer.CreateDefault(settings);
@@ -111,31 +111,25 @@ namespace FileSystem
                         }
                         serializer.Serialize(jsonWriter, dataToSave);
                     } // using 블록 종료 시 자동으로 닫힘
-                    return true; // 성공 시 true 반환
                 });
-
-                if (result)
-                {
-                    CustomLog.Log($"파일 저장 성공: {filePath}");
-                }
                 // Task.Run 내부에서 예외가 발생하면 아래 catch 블록으로 전달됩니다.
-                return result;
+                CustomLog.Log($"파일 저장 성공: {filePath}");
             }
             catch (Exception ex)
             {
                 // Task.Run에서 발생한 예외 또는 그 외 예외 처리
                 CustomLog.LogError($"파일 저장 실패: {filePath}\nError: {ex.Message}\n{ex.StackTrace}");
-                return false;
             }
         }
 
 
         //public void SaveMDEFile() => SaveMDEFile(MDEFilePath);
-        public void SaveAsNewFile() => StartCoroutine(SaveAsNewFileCotoutine());
-        private IEnumerator SaveAsNewFileCotoutine()
+        // public void SaveAsNewFile() => StartCoroutine(SaveAsNewFileCotoutine());
+        public void SaveAsNewFile() => SaveAsNewFileCoroutine().Forget(); // UniTask로 변경
+        private async UniTaskVoid SaveAsNewFileCoroutine()
         {
             FileBrowser.SetFilters(false, saveFilter);
-            yield return FileBrowser.WaitForSaveDialog(FileBrowser.PickMode.Files, false, null, currentMDEFile.name);
+            await FileBrowser.WaitForSaveDialog(FileBrowser.PickMode.Files, false, null, currentMDEFile.name).ToUniTask();
 
             if (FileBrowser.Success)
             {
@@ -148,104 +142,61 @@ namespace FileSystem
 
         #region  Load Logic
 
-        public void LoadMCDEFile() => StartCoroutine(LoadMDEFileCoroutine());
-        private IEnumerator LoadMDEFileCoroutine()
+        // public void LoadMCDEFile() => StartCoroutine(LoadMDEFileCoroutine());
+        public void LoadMCDEFile() => LoadMDEFileCoroutine().Forget(); // UniTask로 변경
+        private async UniTaskVoid LoadMDEFileCoroutine()
         {
             FileBrowser.SetFilters(false, saveFilter); // MDE 파일 필터
-            yield return FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files, false, null, "Select MDE File"); // 파일 선택 모드
+            await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files, false, null, "Select MDE File").ToUniTask(); // 파일 선택 모드
 
-            if (FileBrowser.Success)
+            if (!FileBrowser.Success)
             {
-                string filePath = FileBrowser.Result[0];
-                CustomLog.Log($"선택된 MDE 파일: {filePath}");
+                CustomLog.Log("MDE 파일 선택 취소/실패");
+                return; // 파일 선택 취소 시
+            }
 
-                var ui = GameManager.GetManager<UIManager>();
-                ui.SetLoadingPanel(true);
-                ui.SetLoadingText("Loading MDE File...");
+            string filePath = FileBrowser.Result[0];
+            CustomLog.Log($"선택된 MDE 파일: {filePath}");
 
-                // 1. 파일 로드 (비동기)
-                Task<MCDEANIMFile> loadTask = LoadObjectCompressedAsync<MCDEANIMFile>(filePath);
-                yield return new WaitUntil(() => loadTask.IsCompleted);
+            var ui = GameManager.GetManager<UIManager>();
+            ui.SetLoadingPanel(true);
+            ui.SetLoadingText("Loading MDE File...");
 
-                MCDEANIMFile loadedMDEFile = null;
-                if (loadTask.IsFaulted)
-                {
-                    CustomLog.LogError($"MDE 파일 로드 실패: {loadTask.Exception}");
-                    ui.SetLoadingPanel(false);
-                    yield break; // 코루틴 종료
-                }
-                else if (loadTask.IsCanceled)
-                {
-                    CustomLog.LogWarning("MDE 파일 로드가 취소되었습니다.");
-                    ui.SetLoadingPanel(false);
-                    yield break;
-                }
-                else
-                {
-                    loadedMDEFile = loadTask.Result;
-                    if (loadedMDEFile == null)
-                    {
-                        CustomLog.LogError("MDE 파일 로드 결과가 null입니다.");
-                        ui.SetLoadingPanel(false);
-                        yield break;
-                    }
-                    currentMDEFile = loadedMDEFile; // 필요하다면 클래스 멤버에 저장
-                    SetMCDEFilePath(filePath); // MDEFilePath 업데이트
-                }
+            // 1. 파일 로드 (비동기)
+            // Task<MCDEANIMFile> loadTask = LoadObjectCompressedAsync<MCDEANIMFile>(filePath);
+            // yield return new WaitUntil(() => loadTask.IsCompleted);
+            var loadedMDEFile = await LoadObjectCompressedAsync<MCDEANIMFile>(filePath); // UniTask로 변경
+            if (loadedMDEFile == default)
+            {
+                CustomLog.LogError($"MDE 파일 로드 실패: {filePath}");
+                ui.SetLoadingPanel(false);
+                return;
+            }
 
-
-
-                // 2. 로드된 데이터 처리 (비동기)
-                CustomLog.Log("MDE 파일 로드 완료. 데이터 처리 시작...");
-                ui.SetLoadingText("Processing MDE Data..."); // 로딩 텍스트 변경
-
-                Task processTask = null;
-                try
-                {
-                    // 새로 만든 비동기 처리 함수 호출
-                    processTask = ProcessLoadedMDEFileAsync(loadedMDEFile);
-                }
-                catch (Exception e) // ProcessLoadedMDEFileAsync 호출 자체에서 예외 발생 시
-                {
-                    Debug.LogError($"ProcessLoadedMDEFileAsync 호출 중 예외: {e.Message}");
-                    ui.SetLoadingPanel(false);
-                    yield break;
-                }
-
-
-                // 처리 Task가 완료될 때까지 대기
-                yield return new WaitUntil(() => processTask.IsCompleted);
-
-                // 처리 중 발생한 예외 확인
-                if (processTask.IsFaulted)
-                {
-                    // ProcessLoadedMDEFileAsync 내부에서 예외가 발생하고 처리되지 않은 경우
-                    CustomLog.LogError($"MDE 데이터 처리 중 오류 발생: {processTask.Exception}");
-                }
-                else if (processTask.IsCanceled)
-                {
-                    CustomLog.LogWarning("MDE 데이터 처리가 취소되었습니다.");
-                }
-                else
-                {
-                    CustomLog.Log("MDE 데이터 처리가 성공적으로 완료되었습니다.");
-                    // 성공 시 필요한 추가 작업 수행 가능
-                }
-
+            // 2. 로드된 데이터 처리 (비동기)
+            CustomLog.Log("MDE 파일 로드 완료. 데이터 처리 시작...");
+            ui.SetLoadingText("Processing MDE Data..."); // 로딩 텍스트 변경
+            try
+            {
+                await ProcessLoadedMDEFileAsync(loadedMDEFile);
+            }
+            catch (Exception e) // ProcessLoadedMDEFileAsync 호출 자체에서 예외 발생 시
+            {
+                Debug.LogError($"파일 로드 중 예외: {e.Message}");
+            }
+            finally
+            {
                 // 3. 로딩 패널 닫기
                 ui.SetLoadingPanel(false);
             }
-            else
-            {
-                CustomLog.Log("MDE 파일 선택 취소/실패");
-            }
+
         }
 
         /// <summary>
                 /// 로드된 MCDEANIMFile 데이터를 기반으로 AnimObject와 Frame들을 생성합니다.
                 /// </summary>
                 /// <param name="mdeFile">파일로부터 로드된 MCDEANIMFile 객체</param>
-        private async Task ProcessLoadedMDEFileAsync(MCDEANIMFile mdeFile)
+        private async UniTask ProcessLoadedMDEFileAsync(MCDEANIMFile mdeFile)
         {
             if (mdeFile == null || mdeFile.animObjects == null || mdeFile.animObjects.Count == 0)
             {
@@ -314,11 +265,12 @@ namespace FileSystem
             if (WorkingGenerators.Count > 0)
             {
                 ui.SetLoadingText("Waiting Head Textures...");
-                while (WorkingGenerators.Count > 0)
-                {
-                    // Debug.Log($"Waiting for {WorkingGenerators.Count} head generators..."); // 디버그 로그
-                    await Task.Delay(500); // 0.5초 대기
-                }
+                await UniTask.WaitUntil(() => WorkingGenerators.Count == 0).Timeout(TimeSpan.FromSeconds(100)); // 모든 HeadGenerator가 완료될 때까지 대기
+                // while (WorkingGenerators.Count > 0)
+                // {
+                //     // Debug.Log($"Waiting for {WorkingGenerators.Count} head generators..."); // 디버그 로그
+                //     await UniTask.Delay(500); // 0.5초 대기
+                // }
             }
 
             // FrameInfo는 MDE 파일을 로드할 때는 사용하지 않으므로 비울 필요 없음 (이미 비어있거나 사용되지 않음)
@@ -329,36 +281,6 @@ namespace FileSystem
             CustomLog.Log($"MDE File Processing 완료! BDObject 개수: {bdObjManager.bdObjectCount}");
         }
 
-        // MDE 파일 로드.
-        // public MCDEANIMFile LoadMCDEFile(string filePath)
-        // {
-        //     if (!File.Exists(filePath))
-        //     {
-        //         CustomLog.LogError($"File not found: {filePath}");
-        //         return null;
-        //     }
-
-        //     try
-        //     {
-        //         using (var fs = new FileStream(filePath, FileMode.Open))
-        //         using (var gzip = new GZipStream(fs, CompressionMode.Decompress))
-        //         using (var ms = new MemoryStream())
-        //         {
-        //             gzip.CopyTo(ms);
-        //             var json = Encoding.UTF8.GetString(ms.ToArray());
-        //             var loadedMDE = JsonConvert.DeserializeObject<MCDEANIMFile>(json);
-
-        //             CustomLog.Log($"Loaded MDE file from: {filePath}");
-        //             return loadedMDE;
-        //         }
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         CustomLog.LogError($"Failed to load MDE file: {ex.Message}");
-        //         return null;
-        //     }
-        // }
-
         /// <summary>
         /// Brotli 압축된 JSON 파일을 읽어 객체로 비동기적으로 역직렬화합니다 (Newtonsoft.Json 사용).
         /// 실제 작업은 Task.Run을 통해 백그라운드 스레드에서 수행됩니다.
@@ -367,7 +289,7 @@ namespace FileSystem
         /// <param name="filePath">읽어올 파일 경로</param>
         /// <param name="settings">JSON 역직렬화 설정 (선택 사항)</param>
         /// <returns>역직렬화된 객체를 담은 Task<T>. 실패 시 default(T) 반환.</returns>
-        public static async Task<T> LoadObjectCompressedAsync<T>(string filePath, JsonSerializerSettings settings = null)
+        public static async UniTask<T> LoadObjectCompressedAsync<T>(string filePath, JsonSerializerSettings settings = null)
         {
             // 파일 존재 여부는 동기적으로 먼저 확인 (IO 작업 전에 빠른 실패)
             if (!File.Exists(filePath))
@@ -379,7 +301,7 @@ namespace FileSystem
             try
             {
                 // 동기적인 파일 읽기/압축해제/역직렬화 로직을 Task.Run으로 감싸서 비동기 실행
-                T loadedObject = await Task.Run<T>(() =>
+                T loadedObject = await UniTask.RunOnThreadPool(() =>
                 {
                     // 이 블록 안의 코드는 백그라운드 스레드에서 실행됩니다.
                     JsonSerializer serializer = JsonSerializer.CreateDefault(settings);

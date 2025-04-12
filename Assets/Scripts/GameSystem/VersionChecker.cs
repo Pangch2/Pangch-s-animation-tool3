@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -28,14 +30,15 @@ namespace GameSystem
 
         void Start()
         {
-            StartCoroutine(CheckLatestVersion());
+            // StartCoroutine(CheckLatestVersion());
+            CheckLatestVersion().Forget();
         }
 
-        IEnumerator CheckLatestVersion()
+        async UniTask CheckLatestVersion()
         {
             UnityWebRequest request = UnityWebRequest.Get(GitHubApiUrl);
             request.SetRequestHeader("User-Agent", "UnityApp");
-            yield return request.SendWebRequest();
+            await request.SendWebRequest();
 
             if (request.result == UnityWebRequest.Result.Success)
             {

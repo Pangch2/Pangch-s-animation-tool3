@@ -6005,7 +6005,6 @@ MonoBehaviour:
   startTick: 0
   packNamespace: PotanAnim
   frameFileName: frame
-  resultFileName: result
   tickUnit: 10
   findModeToggle: {fileID: 344122798}
   inputFields:
@@ -7177,6 +7176,7 @@ GameObject:
   - component: {fileID: 507988825}
   - component: {fileID: 507988827}
   - component: {fileID: 507988826}
+  - component: {fileID: 507988828}
   m_Layer: 5
   m_Name: ExportHeader
   m_TagString: Untagged
@@ -7302,6 +7302,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 507988824}
   m_CullTransparentMesh: 1
+--- !u!114 &507988828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 507988824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99634edca86565b4a96a0b7b261787f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  simpleTooltipStyle: {fileID: 11400000, guid: f1d1c287ded68be43934c42c517f05d2, type: 2}
+  infoLeft: "mcfunction\uC73C\uB85C \uB0B4\uBCF4\uB0BC \uB54C \uC124\uC815\uC785\uB2C8\uB2E4.
+    \uC138\uC774\uBE0C \uD30C\uC77C\uC5D0 \uC800\uC7A5\uB429\uB2C8\uB2E4."
+  infoRight: 
 --- !u!1 &531619560
 GameObject:
   m_ObjectHideFlags: 0
@@ -24038,6 +24054,7 @@ GameObject:
   - component: {fileID: 1637580355}
   - component: {fileID: 1637580357}
   - component: {fileID: 1637580356}
+  - component: {fileID: 1637580358}
   m_Layer: 5
   m_Name: ImportHeader
   m_TagString: Untagged
@@ -24165,6 +24182,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1637580354}
   m_CullTransparentMesh: 1
+--- !u!114 &1637580358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1637580354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99634edca86565b4a96a0b7b261787f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  simpleTooltipStyle: {fileID: 11400000, guid: f1d1c287ded68be43934c42c517f05d2, type: 2}
+  infoLeft: "\uD30C\uC77C\uC744 \uAC00\uC838\uC624 \uB54C \uAE30\uBCF8 \uC124\uC815\uC785\uB2C8\uB2E4."
+  infoRight: 
 --- !u!1 &1638290675
 GameObject:
   m_ObjectHideFlags: 0

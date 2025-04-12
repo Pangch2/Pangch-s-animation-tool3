@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BDObjectSystem;
 using BDObjectSystem.Utility;
+using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -21,9 +22,9 @@ namespace FileSystem.Helpers
         /// <summary>
         /// [Async] 파일 하나를 읽어 BDObject 배열 로드 후, 첫 번째를 반환
         /// </summary>
-        public static async Task<BdObject> ProcessFileAsync(string filePath)
+        public static async UniTask<BdObject> ProcessFileAsync(string filePath)
         {
-            return await Task.Run(() =>
+            return await UniTask.RunOnThreadPool(() =>
             {
                 // 1) base64 → gzip 바이트
                 string base64Text = SimpleFileBrowser.FileBrowserHelpers.ReadTextFromFile(filePath);

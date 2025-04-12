@@ -7,6 +7,7 @@ using BDObjectSystem.Display;
 using BDObjectSystem.Utility;
 using Animation;
 using Animation.AnimFrame;
+using Cysharp.Threading.Tasks;
 
 namespace BDObjectSystem
 {
@@ -41,7 +42,7 @@ namespace BDObjectSystem
         #region Make BDObject
 
 
-        public async Task AddObject(BdObject bdObject, string fileName)
+        public async UniTask AddObject(BdObject bdObject, string fileName)
         {
             bdObjectCount = 0;
             // BDObjectContainer 생성하기 
@@ -52,7 +53,7 @@ namespace BDObjectSystem
         }
 
         // BDObject 따라가면서 BDObjectContainer 생성 
-        private async Task<BdObjectContainer> CreateObjectHierarchyAsync(BdObject bdObject, Transform parent, BdObjectContainer parentBdobj = null, int batchSize = 10)
+        private async UniTask<BdObjectContainer> CreateObjectHierarchyAsync(BdObject bdObject, Transform parent, BdObjectContainer parentBdobj = null, int batchSize = 10)
         {
             // BDObjectPrefab 으로 생성하기 
             var newObj = Instantiate(bdObjectPrefab, parent);
@@ -75,7 +76,7 @@ namespace BDObjectSystem
                     // delay
                     if (i % batchSize == 0)
                     {
-                        await Task.Yield();
+                        await UniTask.Yield();
                     }
                 }
             }
