@@ -66,7 +66,7 @@ namespace GameSystem
         /// <summary>
         /// 내보냈을 때 데이터팩 네임스페이스 
         /// </summary>
-        public string packNamespace = "PotanAnim";
+        public string packNamespace = "PotanAnim:anim/";
         /// <summary>
         /// 프레임 파일들의 이름
         /// </summary>

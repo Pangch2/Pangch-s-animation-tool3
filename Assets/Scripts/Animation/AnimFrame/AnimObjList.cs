@@ -5,6 +5,7 @@ using UnityEngine;
 using Animation.UI;
 using BDObjectSystem;
 using FileSystem;
+using System.Linq;
 
 namespace Animation.AnimFrame
 {
@@ -72,9 +73,26 @@ namespace Animation.AnimFrame
             CustomLog.Log("Line Removed: " + obj.bdFileName);
         }
 
-        public void SetByMCDEFile()
+        public SortedList<int, ExportFrame> GetAllFrames()
         {
+            var frames = new SortedList<int, ExportFrame>();
             
+            foreach (var animObject in animObjects)
+            {
+                foreach (var frame in animObject.frames.Values)
+                {
+                    if (!frames.ContainsKey(frame.tick))
+                    {
+                        frames.Add(frame.tick, new ExportFrame(frame));
+                    }
+                    else
+                    {
+                        frames[frame.tick].Merge(frame);
+                    }
+                }
+            }
+
+            return frames;
         }
     }
 }

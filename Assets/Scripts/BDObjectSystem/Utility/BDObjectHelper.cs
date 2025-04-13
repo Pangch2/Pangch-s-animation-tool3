@@ -6,8 +6,6 @@ namespace BDObjectSystem.Utility
 {
     public static class BdObjectHelper
     {
-        private static readonly Regex tagsRegex = new Regex(@"Tags:\[([^\]]+)\]");
-        private static readonly Regex uuidRegex = new Regex(@"UUID:\[I;(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]");
         private const string FrameFormatString = @"\b{0}(\d+)\b";
 
         // reading Tags:[] and return string
@@ -15,7 +13,7 @@ namespace BDObjectSystem.Utility
         {
             if (string.IsNullOrEmpty(input)) return null;
 
-            var match = tagsRegex.Match(input);
+            var match = RegexPatterns.NBT_TagRegex.Match(input);
             return match.Success ? match.Groups[1].Value : null;
         }
 
@@ -24,7 +22,7 @@ namespace BDObjectSystem.Utility
         {
             if (string.IsNullOrEmpty(input)) return null;
 
-            var match = uuidRegex.Match(input);
+            var match = RegexPatterns.NBT_UUIDRegex.Match(input);
             return match.Success
                 ? $"{match.Groups[1].Value},{match.Groups[2].Value},{match.Groups[3].Value},{match.Groups[4].Value}"
                 : null;

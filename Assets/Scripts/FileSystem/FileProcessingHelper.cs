@@ -54,7 +54,7 @@ namespace FileSystem.Helpers
         /// </summary>
         public static List<string> SortFiles(IEnumerable<string> fileNames)
         {
-            var regex = new Regex(@"f(\d+)", RegexOptions.IgnoreCase);
+            var regex = RegexPatterns.FNumberRegex;
             var matched = new List<(string path, int number)>();
             var unmatched = new List<string>();
 
