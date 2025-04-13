@@ -1,0 +1,119 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using Animation.AnimFrame;
+using BDObjectSystem;
+using BDObjectSystem.Utility;
+
+namespace FileSystem
+{
+    #region MCDEANIMFile
+    [Serializable]
+    public class MCDEANIMFile
+    {
+        public string name = string.Empty;
+        public string version;
+
+        public bool findMode;
+        public string fakePlayer;
+        public string scoreboardName;
+        public int startTick;
+        public string packNamespace;
+        public string frameFileName;
+        public string resultFileName;
+        public string exportPath;
+
+        public List<AnimObjectFile> animObjects = new List<AnimObjectFile>();
+
+        public void UpdateInfo(List<AnimObject> AnimObjects)
+        {
+            int cnt = AnimObjects.Count;
+            for (int i = 0; i < cnt; i++)
+            {
+                if (i < animObjects.Count)
+                {
+                    animObjects[i].SetInformation(AnimObjects[i]);
+                }
+                else
+                {
+                    animObjects.Add(new AnimObjectFile(AnimObjects[i]));
+                }
+            }
+
+            var setting = GameManager.Setting;
+            findMode = setting.useFindMode;
+            fakePlayer = setting.fakePlayer;
+            scoreboardName = setting.scoreboardName;
+            startTick = setting.startTick;
+            packNamespace = setting.packNamespace;
+            frameFileName = setting.frameFileName;
+            resultFileName = setting.exportManager.ExportFolder;
+            exportPath = setting.exportManager.currentPath;
+        }
+        #endregion
+
+        #region AnimObject
+        [Serializable]
+        public class AnimObjectFile
+        {
+            public string name;
+            public List<FrameFile> frameFiles = new List<FrameFile>();
+
+            public AnimObjectFile(){}
+
+            public AnimObjectFile(AnimObject animObject)
+            {
+                SetInformation(animObject);
+            }
+
+            public void SetInformation(AnimObject animObject)
+            {
+                name = animObject.bdFileName;
+
+                var frameValues = animObject.frames.Values;
+                int i = 0;
+                foreach (var frame in frameValues)
+                {
+                    if (i < frameFiles.Count)
+                    {
+                        frameFiles[i].SetInformation(frame);
+                    }
+                    else
+                    {
+                        frameFiles.Add(new FrameFile(frame));
+                    }
+                    i++;
+                }
+            }
+
+        }
+        #endregion
+
+        #region FrameFile
+        [Serializable]
+        public class FrameFile
+        {
+            public string name;
+            public int tick;
+            public int interpolation;
+
+            public BdObject bdObject;
+
+            public FrameFile(){}
+
+            public FrameFile(Frame frame)
+            {
+                SetInformation(frame);
+            }
+
+            public void SetInformation(Frame frame)
+            {
+                name = frame.fileName;
+                tick = frame.tick;
+                interpolation = frame.interpolation;
+                bdObject = frame.Info;
+            }
+        }
+        #endregion
+    }
+}

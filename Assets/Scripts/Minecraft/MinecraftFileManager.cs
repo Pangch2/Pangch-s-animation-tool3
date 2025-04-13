@@ -41,7 +41,7 @@ namespace Minecraft
         private readonly string _appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
         private const string MinecraftPath = ".minecraft/versions";
-        private const string MinecraftVersion = "1.21.4";
+        // private const string MinecraftVersionj = "1.21.4";
 
         [SerializeField] private string filePath;
 
@@ -54,9 +54,9 @@ namespace Minecraft
         // 시작하면 마크 파일 읽음 
         private async void Start()
         {
-            filePath = $"{_appdata}/{MinecraftPath}/{MinecraftVersion}/{MinecraftVersion}.jar";
+            filePath = $"{_appdata}/{MinecraftPath}/{GameManager.MinecraftVersion}/{GameManager.MinecraftVersion}.jar";
 
-            CustomLog.Log($"Reading minecraft file: {MinecraftVersion}");
+            CustomLog.Log($"Reading minecraft file: {GameManager.MinecraftVersion}");
             var sw = new Stopwatch();
             sw.Start();
 

@@ -1,4 +1,5 @@
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using GameSystem;
 using TMPro;
 using UnityEngine;
@@ -52,7 +53,7 @@ namespace Animation.UI
             {
                 UIManager.CurrentUIStatus |= UIManager.UIStatus.OnAnimUIPanel;
             }
-            
+
         }
 
         public void OnTickFieldEndEdit(string value)
@@ -104,31 +105,39 @@ namespace Animation.UI
             {
                 // 위로 올리기
                 StopAllCoroutines();
-                StartCoroutine(MovePanelCoroutine(_initPos.y));
+                // StartCoroutine(MovePanelCoroutine(_initPos.y));
+                MovePanelAsync(_initPos.y).Forget();
             }
             else
             {
                 // 아래로 내리기 
                 StopAllCoroutines();
-                StartCoroutine(MovePanelCoroutine(0));
+                // StartCoroutine(MovePanelCoroutine(0));
+                MovePanelAsync(0).Forget();
             }
             dragPanel.SetDragPanel(_isHiding);
 
             _isHiding = !_isHiding;
         }
 
-        private IEnumerator MovePanelCoroutine(float targetY)
+        private async UniTask MovePanelAsync(float targetY)
         {
-            var pos = dragPanel.rect.position.y;
+            float pos = dragPanel.rect.position.y;
+            float time = 0f;
 
-            float time = 0;
             while (time < 1f)
             {
+                // 매 프레임 0.03 비율로 Lerp
                 pos = Mathf.Lerp(pos, targetY, 0.03f);
                 dragPanel.SetPanelSize(pos);
+
                 time += Time.deltaTime;
-                yield return null;
+
+                // 다음 프레임까지 대기
+                await UniTask.Yield(PlayerLoopTiming.Update);
             }
+
+            // 마지막으로 정확히 targetY 설정
             dragPanel.SetPanelSize(targetY);
         }
 
@@ -160,7 +169,7 @@ namespace Animation.UI
         {
             if (callback.started)
                 _manager.TickAdd(-1);
-            
+
         }
 
         public void MoveTickRight(InputAction.CallbackContext callback)

@@ -1,4 +1,7 @@
+using System;
 using System.Collections;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -11,19 +14,17 @@ namespace GameSystem
 
         private int _index;
 
-        private WaitForSeconds _wait;
-
         private void Awake()
         {
             instance = this;
-            _wait = new WaitForSeconds(5f);
         }
 
         public void Log(object message, Color co)
         {
             text[_index].text = message.ToString();
             text[_index].color = co;
-            StartCoroutine(TextCoroutine(text[_index]));
+            // StartCoroutine(TextCoroutine(text[_index]));
+            TextCoroutine(text[_index]).Forget();
 
             _index = (_index + 1) % text.Length;
         }
@@ -33,10 +34,10 @@ namespace GameSystem
             Log(message, Color.white);
         }
 
-        private IEnumerator TextCoroutine(TextMeshProUGUI txt)
+        private async UniTask TextCoroutine(TextMeshProUGUI txt)
         {
             txt.gameObject.SetActive(true);
-            yield return _wait;
+            await UniTask.Delay(TimeSpan.FromSeconds(5f));
             txt.color = Color.clear;
             txt.gameObject.SetActive(false);
         }

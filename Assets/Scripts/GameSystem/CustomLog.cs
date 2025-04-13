@@ -22,4 +22,12 @@ public static class CustomLog
 #endif
         LogConsole.instance.Log(message, Color.red);
     }
+
+        public static void LogWarning(object message)
+    {
+#if UNITY_EDITOR
+        Debug.LogWarning(message);
+#endif
+        LogConsole.instance.Log(message, Color.yellow);
+    }
 }

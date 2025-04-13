@@ -95,7 +95,9 @@ namespace BDObjectSystem.Utility
             // shear 값이 존재하면 출력
             if (Mathf.Abs(shearXY) > 0.01f || Mathf.Abs(shearXZ) > 0.01f || Mathf.Abs(shearYZ) > 0.01f)
             {
-                Debug.Log($"Shear values: XY={shearXY}, XZ={shearXZ}, YZ={shearYZ}");
+                #if UNITY_EDITOR
+                //Debug.Log($"Shear values: XY={shearXY}, XZ={shearXZ}, YZ={shearYZ}");
+                #endif
             }
         }
 

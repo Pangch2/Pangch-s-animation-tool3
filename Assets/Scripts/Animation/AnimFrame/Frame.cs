@@ -30,7 +30,7 @@ namespace Animation.AnimFrame
 
         [Header("BDObject Info")]
         public BdObject Info;
-        public List<BdObject> leafObjects;
+        public Dictionary<string, BdObject> leafObjects;
 
         // 모델의 부모 자식 구조가 다를 경우
         public bool IsModelDiffrent;
@@ -59,7 +59,7 @@ namespace Animation.AnimFrame
             UpdatePos();
             _timeline.OnGridChanged += UpdatePos;
 
-            leafObjects = BdObjectHelper.SetDisplayList(info, modelMatrixDict);
+            leafObjects = BdObjectHelper.SetDisplayDict(info, modelMatrixDict);
 
             IsModelDiffrent = animObject.animator.RootObject.bdObjectID != info.ID;
             worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
@@ -210,7 +210,7 @@ namespace Animation.AnimFrame
 
                 foreach (var obj in leafObjects)
                 {
-                    var id = obj.ID;
+                    var id = obj.Value.ID;
 
                     if (interJumpDict.ContainsKey(id))
                         continue;
@@ -229,7 +229,7 @@ namespace Animation.AnimFrame
                     else
                     {
                         // 트리 기반 보간
-                        var current = obj;
+                        var current = obj.Value;
 
                         while (current != null)
                         {

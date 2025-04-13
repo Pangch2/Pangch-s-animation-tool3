@@ -63,6 +63,7 @@ namespace Animation.AnimFrame
             if (left < 0) return;
             var leftFrame = frames.Values[left];
 
+
             // 보간 없이 적용해야 하는 경우: interpolation이 0이거나, 보간 종료됐거나, 첫 프레임인 경우
             if (leftFrame.interpolation == 0 || leftFrame.tick + leftFrame.interpolation < tick || left == 0)
             {
