@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using BDObjectSystem.Utility;
 using UnityEngine;
+using System;
 
 
 namespace BDObjectSystem
@@ -83,6 +84,13 @@ namespace BDObjectSystem
             }
 
             return _id;
+        }
+
+        public string GetEntityType()
+        {
+            return IsBlockDisplay ? "block_display" :
+                   IsItemDisplay ? "item_display" :
+                   IsTextDisplay ? "text_display" : null;
         }
 
 

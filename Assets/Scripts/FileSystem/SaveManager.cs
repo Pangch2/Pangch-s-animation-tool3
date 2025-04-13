@@ -94,6 +94,10 @@ namespace FileSystem
         {
             try
             {
+                #if UNITY_EDITOR
+                string json = JsonConvert.SerializeObject(dataToSave, Formatting.Indented);
+                Debug.Log($"Serialized JSON: {json}"); // 직렬화된 JSON 로그
+                #endif
                 // 동기적인 파일 쓰기 및 직렬화 로직을 Task.Run으로 감싸서 비동기 실행
                 await UniTask.RunOnThreadPool(() =>
                 {
@@ -165,24 +169,26 @@ namespace FileSystem
             // 1. 파일 로드 (비동기)
             // Task<MCDEANIMFile> loadTask = LoadObjectCompressedAsync<MCDEANIMFile>(filePath);
             // yield return new WaitUntil(() => loadTask.IsCompleted);
-            var loadedMDEFile = await LoadObjectCompressedAsync<MCDEANIMFile>(filePath); // UniTask로 변경
-            if (loadedMDEFile == default)
+            currentMDEFile = await LoadObjectCompressedAsync<MCDEANIMFile>(filePath); // UniTask로 변경
+            if (currentMDEFile == default)
             {
                 CustomLog.LogError($"MDE 파일 로드 실패: {filePath}");
                 ui.SetLoadingPanel(false);
                 return;
             }
 
+            SetMCDEFilePath(filePath); // MDE 파일 경로 설정
+
             // 2. 로드된 데이터 처리 (비동기)
             CustomLog.Log("MDE 파일 로드 완료. 데이터 처리 시작...");
             ui.SetLoadingText("Processing MDE Data..."); // 로딩 텍스트 변경
             try
             {
-                await ProcessLoadedMDEFileAsync(loadedMDEFile);
+                await ProcessLoadedMDEFileAsync(currentMDEFile);
             }
             catch (Exception e) // ProcessLoadedMDEFileAsync 호출 자체에서 예외 발생 시
             {
-                Debug.LogError($"파일 로드 중 예외: {e.Message}");
+                Debug.LogError($"파일 로드 중 예외: {e.Message}, {e.StackTrace}");
             }
             finally
             {

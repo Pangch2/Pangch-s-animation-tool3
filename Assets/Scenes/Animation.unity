@@ -6139,7 +6139,7 @@ MonoBehaviour:
   fakePlayer: anim
   scoreboardName: anim
   startTick: 0
-  packNamespace: PotanAnim:anim/
+  packNamespace: potan:anim/
   frameFileName: frame
   tickUnit: 10
   findModeToggle: {fileID: 344122798}
@@ -11705,6 +11705,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   exportPanel: {fileID: 2130217947}
   exportPathText: {fileID: 1855794598}
+  currentPath: 
 --- !u!1001 &816097953
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14708,6 +14709,7 @@ MonoBehaviour:
     packNamespace: 
     frameFileName: 
     resultFileName: 
+    exportPath: 
     animObjects: []
 --- !u!1 &998807596
 GameObject:
@@ -29549,7 +29551,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.9437866, y: -58.91992}
+  m_AnchoredPosition: {x: -0.9437866, y: -119.2}
   m_SizeDelta: {x: -1.8875, y: 117.8397}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2027496733
@@ -31394,7 +31396,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2130217948
 RectTransform:
   m_ObjectHideFlags: 0

@@ -180,6 +180,8 @@ namespace GameSystem
             inputFields[2].text = fakePlayer;
 
             findModeToggle.isOn = useFindMode;
+
+            exportManager.SetPathText(file.exportPath);
         }
 
 

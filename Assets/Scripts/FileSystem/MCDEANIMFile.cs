@@ -21,6 +21,7 @@ namespace FileSystem
         public string packNamespace;
         public string frameFileName;
         public string resultFileName;
+        public string exportPath;
 
         public List<AnimObjectFile> animObjects = new List<AnimObjectFile>();
 
@@ -47,6 +48,7 @@ namespace FileSystem
             packNamespace = setting.packNamespace;
             frameFileName = setting.frameFileName;
             resultFileName = setting.exportManager.ExportFolder;
+            exportPath = setting.exportManager.currentPath;
         }
         #endregion
 
