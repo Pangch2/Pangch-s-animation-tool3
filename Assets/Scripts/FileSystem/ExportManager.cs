@@ -41,7 +41,7 @@ namespace FileSystem
 
         private void Start()
         {
-            SetPathText(Application.dataPath);
+            SetPathText(Directory.GetParent(Application.dataPath).FullName);
             settingManager = GameManager.Setting;
         }
 
@@ -186,7 +186,7 @@ namespace FileSystem
                     if (transformChanged || isFirstFrame)
                     {
                         // Matrix4x4와 interpolation 값을 전달
-                        string transformationNbt = FormatTransformation(worldTransform, frame.Interpolation);
+                        string transformationNbt = FormatTransformation(worldTransform, kvp.Value.Item3);
                         // transformationNbt는 이제 "{interpolation_duration:...,transformation:...}" 형태
                         // 중괄호 제거하고 내용만 추출
                         transformationNbt = transformationNbt.Trim('{', '}');
@@ -450,10 +450,10 @@ namespace FileSystem
             {
                 // entityId가 태그 기반이거나 다른 식별자일 경우, BdObject에서 태그 정보 추출
                 var tags = entityId.Split(',');
-                for (int i = 0; i < tags.Length; i++)
-                {
-                    Debug.Log($"Tag[{i}]: {tags[i]}");
-                }
+                // for (int i = 0; i < tags.Length; i++)
+                // {
+                //     Debug.Log($"Tag[{i}]: {tags[i]}");
+                // }
                 // 끝이 0으로 끝나지 않는 태그 선택
                 string tag = null;
                 for (int i = 0; i < tags.Length; i++)
