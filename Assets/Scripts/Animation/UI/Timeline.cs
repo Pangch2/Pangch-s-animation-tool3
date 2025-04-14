@@ -22,8 +22,11 @@ namespace Animation.UI
         private AnimManager _animManager;
         private RectTransform _rectTransform;
 
+        public int startTick = 0;
+
         private void Start()
         {
+            _animManager = GameManager.GetManager<AnimManager>();
             _rectTransform = GetComponent<RectTransform>();
             SetTickTexts(0);
             for (var i = 0; i < gridCount; i++)
@@ -32,7 +35,6 @@ namespace Animation.UI
             }
             AnimManager.TickChanged += OnAnimManagerTickChanged;
 
-            _animManager = GameManager.GetManager<AnimManager>();
             OnAnimManagerTickChanged(_animManager.Tick);
 
         }
@@ -146,6 +148,7 @@ namespace Animation.UI
         // TickLine Grid 변경하기
         public void SetTickTexts(int start)
         {
+            startTick = start;
             for (var i = 0; i < gridCount; i++)
             {
                 if (grid.Count <= i)
@@ -172,6 +175,15 @@ namespace Animation.UI
             for (var i = gridCount; i < grid.Count; i++)
             {
                 grid[i].gameObject.SetActive(false);
+            }
+
+            if (_animManager.Tick < startTick)
+            {
+                _animManager.Tick = startTick;
+            }
+            else if (_animManager.Tick > startTick + gridCount - 1)
+            {
+                _animManager.Tick = startTick + gridCount - 2;
             }
 
             LayoutRebuilder.ForceRebuildLayoutImmediate(_rectTransform);

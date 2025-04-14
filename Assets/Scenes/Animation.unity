@@ -3230,6 +3230,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abe4f394d4d803e499fab75fd2482d6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerInput: {fileID: 0}
 --- !u!114 &257885226
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14727,6 +14728,7 @@ MonoBehaviour:
     resultFileName: 
     exportPath: 
     animObjects: []
+  SavingProgressStatus: 0
 --- !u!1 &998807596
 GameObject:
   m_ObjectHideFlags: 0
@@ -21985,6 +21987,7 @@ MonoBehaviour:
   playPauseButton: {fileID: 566864926}
   playSprite: {fileID: -1732010616, guid: af3e1c9f6ed27284198cb8b4b9fef041, type: 3}
   pauseSprite: {fileID: -896268401, guid: af3e1c9f6ed27284198cb8b4b9fef041, type: 3}
+  IsMiddleClicked: 0
 --- !u!1 &1498508765
 GameObject:
   m_ObjectHideFlags: 0
@@ -24988,6 +24991,7 @@ MonoBehaviour:
   timeBar: {fileID: 1643657971}
   gridCount: 200
   isClicking: 0
+  startTick: 0
 --- !u!1 &1661913240
 GameObject:
   m_ObjectHideFlags: 0

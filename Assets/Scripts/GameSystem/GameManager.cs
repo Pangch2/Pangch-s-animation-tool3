@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
 
     public static SettingManager Setting => GetManager<SettingManager>();
 
-    private PlayerInput playerInput;
+    public PlayerInput playerInput;
 
     public static string MinecraftVersion = "1.21.4";
 
