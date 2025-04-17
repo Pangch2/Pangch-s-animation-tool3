@@ -24,7 +24,7 @@ namespace Animation.UI
         public List<GameObject> contextMenuBtns;
 
         public TMP_InputField[] frameInfo;
-        public TextMeshProUGUI frameName;
+        // public TextMeshProUGUI frameName;
 
         [Header("Current Context")]
         public Frame currentFrame;
@@ -39,6 +39,18 @@ namespace Animation.UI
             }
             contextMenu.SetActive(false);
 
+            frameInfo[2].onEndEdit.AddListener((value) =>
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    frameInfo[2].text = currentFrame.fileName.ToString();
+                }
+                else
+                {
+                    currentFrame.fileName = value;
+                }
+            });
+
         }
 
         // Set Context Menu
@@ -49,7 +61,8 @@ namespace Animation.UI
 
             frameInfo[0].text = currentFrame.tick.ToString();
             frameInfo[1].text = currentFrame.interpolation.ToString();
-            frameName.text = currentFrame.fileName;
+            frameInfo[2].text = currentFrame.fileName.ToString();
+            // frameName.text = currentFrame.fileName;
 
             SetContextMenu();
         }

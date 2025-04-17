@@ -1,4 +1,6 @@
 using System.Collections;
+using Animation.AnimFrame;
+using BDObjectSystem;
 using Cysharp.Threading.Tasks;
 using GameSystem;
 using TMPro;
@@ -226,6 +228,19 @@ namespace Animation.UI
         {
             if (callback.started)
                 _manager.TickAdd(1);
+        }
+
+        public void OnResetButton()
+        {
+            // 애니메이션 초기화
+            Stop();
+
+            // 모든 모델 초기화
+            GameManager.GetManager<BdObjectManager>().ClearAllObject();
+
+            // 모든 트랙 제거
+            GameManager.GetManager<AnimObjList>().ResetAnimObject();
+
         }
     }
 }

@@ -6,6 +6,7 @@ using Animation.UI;
 using BDObjectSystem;
 using FileSystem;
 using System.Linq;
+using Unity.VisualScripting;
 
 namespace Animation.AnimFrame
 {
@@ -53,6 +54,16 @@ namespace Animation.AnimFrame
             animObjects.Add(animObject);
             
             return animObject;
+        }
+
+        public void ResetAnimObject()
+        {
+            var objs = animObjects.ToArray();
+            foreach (var obj in objs)
+            {
+                RemoveAnimObject(obj);
+            }
+            
         }
 
         public void RemoveAnimObject(AnimObject obj)
