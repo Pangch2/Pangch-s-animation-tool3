@@ -71,4 +71,4 @@ crashlytics-build.properties
 
 # Custom
 /[Aa]ssets/TestModel/*
-# /Packages/com.singularitygroup.hotreload/*
+/Packages/com.singularitygroup.hotreload/*
