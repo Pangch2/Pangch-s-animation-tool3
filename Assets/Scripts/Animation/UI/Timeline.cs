@@ -181,8 +181,9 @@ namespace Animation.UI
             {
                 _animManager.Tick = startTick;
             }
-            else if (_animManager.Tick > startTick + gridCount - 1)
+            else if (_animManager.Tick >= startTick + gridCount - 1)
             {
+                // Debug.Log($"Tick: {_animManager.Tick} / StartTick: {startTick} / GridCount: {gridCount}");
                 _animManager.Tick = startTick + gridCount - 2;
             }
 

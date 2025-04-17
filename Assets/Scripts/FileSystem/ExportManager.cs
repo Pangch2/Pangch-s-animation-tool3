@@ -117,11 +117,14 @@ namespace FileSystem
 
             // 4. 각 ExportFrame별로 mcfunction 명령어 생성 및 저장
             List<int> sortedTicks = allFrames.Keys.ToList(); // Scoreboard 생성용 Key 리스트
-            var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
-            for (int i = 0; i < allFrames.Count; i++)
+            var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+            for (int i = -1; i < allFrames.Count; i++)
             {
-                int tick = sortedTicks[i];
+                int tick;
+                if (i == -1) tick = sortedTicks[^1];
+                else tick = sortedTicks[i]; // 현재 프레임의 Tick 값
+
                 ExportFrame frame = allFrames[tick];
 
                 // 현재 프레임 상태 저장용
@@ -228,7 +231,9 @@ namespace FileSystem
 
 
                 // 파일 이름 생성 시 frame index 사용 (Python의 f{number} 형식 유지)
-                string frameFilePath = Path.Combine(finalPath, $"f{i + 1}.mcfunction");
+                int fileIndex = i + 1;
+                if (i == -1) fileIndex = allFrames.Count;
+                string frameFilePath = Path.Combine(finalPath, $"f{fileIndex}.mcfunction");
                 await File.WriteAllLinesAsync(frameFilePath, commandsForThisFrame, utf8NoBom);
 
                 // 다음 프레임 비교를 위해 현재 상태를 이전 상태로 업데이트

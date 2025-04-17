@@ -81,7 +81,7 @@ namespace Animation.UI
                 if (Mathf.Abs(accumulatedDelta) >= threshold)
                 {
                     // 넘은 픽셀 수만큼 몇 칸 이동할지 정하기
-                    // 예를 들어, 10픽셀당 1 tick 이동
+                    // 예를 들어, 10픽셀당 2 tick 이동
                     int ticksToMove = (int)(accumulatedDelta / threshold);
 
                     // 현재 시작 tick 가져오기
@@ -91,6 +91,8 @@ namespace Animation.UI
                     int newTick = startTick + ticksToMove;
                     // 예: newTick이 0보다 작으면 0으로 제한
                     newTick = Mathf.Max(newTick, 0);
+
+                    // Debug.Log($"Tick: {_manager.Tick} / StartTick: {startTick} / TicksToMove: {ticksToMove} / NewTick: {newTick}");
 
                     // 그리드 업데이트 (tick 텍스트 수정)
                     _manager.timeline.SetTickTexts(newTick);
