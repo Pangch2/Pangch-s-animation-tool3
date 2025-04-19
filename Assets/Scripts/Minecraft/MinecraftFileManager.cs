@@ -6,7 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using GameSystem;
+using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -14,9 +14,20 @@ using UnityEngine;
 namespace Minecraft
 {
 
-    public class MinecraftFileManager : BaseManager
+    public class MinecraftFileManager
     {
         private static MinecraftFileManager _instance;
+        public static MinecraftFileManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new MinecraftFileManager();
+                }
+                return _instance;
+            }
+        }
 
         //Dictionary<string, byte[]> textureFiles = new Dictionary<string, byte[]>();
         private readonly ConcurrentDictionary<string, byte[]> _textureFiles = new();
@@ -38,42 +49,31 @@ namespace Minecraft
 
         private readonly string[] _hardcodeNames = { "head", "bed", "shulker_box", "chest", "conduit", "shield", "decorated_pot", "banner" };
 
-        private readonly string _appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        // private readonly string _appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-        private const string MinecraftPath = ".minecraft/versions";
-        // private const string MinecraftVersionj = "1.21.4";
+        // public static string MinecraftPath = ".minecraft/versions";
+        // private const string MinecraftVersion = "1.21.4";
+        public static string MinecraftVersion = "1.21.4";
 
-        [SerializeField] private string filePath;
-
-        protected override void Awake()
-        {
-            base.Awake();
-            _instance = this;
-        }
+        // [SerializeField] private string filePath = string.Empty;
 
         // 시작하면 마크 파일 읽음 
-        private async void Start()
+        public async UniTask<bool> ReadMinecraftFile(string path, string version)
         {
-            filePath = $"{_appdata}/{MinecraftPath}/{GameManager.MinecraftVersion}/{GameManager.MinecraftVersion}.jar";
+            // filePath = path;
+            try
+            {
+                await ReadJarFile(path, "assets/minecraft");
 
-            CustomLog.Log($"Reading minecraft file: {GameManager.MinecraftVersion}");
-            var sw = new Stopwatch();
-            sw.Start();
+            }
+            catch (Exception e)
+            {
+                CustomLog.UnityLogErr("Error reading Minecraft file: " + e.Message);
+                return false;
+            }
+            MinecraftVersion = version;
+            return true;
 
-            await ReadJarFile(filePath, "assets/minecraft");
-
-            CustomLog.Log("Finished reading JAR file");
-            //CustomLog.Log("Textures: " + textureFiles.Count + ", JSON: " + jsonFiles.Count);
-
-            sw.Stop();
-            CustomLog.Log($"Reading JAR file took {sw.ElapsedMilliseconds}ms");
-
-            // string log = string.Empty;
-            // foreach (var file in _isTextureAnimated)
-            // {
-            //     log += file + "\n";
-            // }
-            // CustomLog.Log(log);
         }
 
         #region Static functions
@@ -89,7 +89,7 @@ namespace Minecraft
             }
             //Debug.Log(_instance._jsonFiles.ContainsKey(path));
             
-            return _instance._jsonFiles.TryGetValue(path, out var file) ? JObject.Parse(file) : null;
+            return Instance._jsonFiles.TryGetValue(path, out var file) ? JObject.Parse(file) : null;
         }
 
         /// <summary>
@@ -102,12 +102,12 @@ namespace Minecraft
         {
             //CustomLog.Log("Get Model Data: " + path);
 
-            if (_instance._importantModels.TryGetValue(path, out var data))
+            if (Instance._importantModels.TryGetValue(path, out var data))
             {
                 return data;
             }
 
-            foreach (var t in _instance._hardcodeNames)
+            foreach (var t in Instance._hardcodeNames)
             {
                 if (path.Contains(t))
                 {
@@ -115,7 +115,7 @@ namespace Minecraft
                 }
             }
 
-            if (_instance._jsonFiles.TryGetValue(path, out var file))
+            if (Instance._jsonFiles.TryGetValue(path, out var file))
             {
                 return JsonConvert.DeserializeObject<MinecraftModelData>(file);
             }
@@ -126,7 +126,7 @@ namespace Minecraft
 
         public static Texture2D GetTextureFile(string path)
         {
-            if (_instance._textureFiles.TryGetValue(path, out var file))
+            if (Instance._textureFiles.TryGetValue(path, out var file))
             {
                 var texture = new Texture2D(2, 2)
                 {
@@ -147,14 +147,14 @@ namespace Minecraft
         public static bool IsTextureAnimated(string path)
         {
             //CustomLog.Log(path);
-            return _instance._isTextureAnimated.Contains(path + ".mcmeta");
+            return Instance._isTextureAnimated.Contains(path + ".mcmeta");
         }
 
         public static string RemoveNamespace(string path) => path.Replace("minecraft:", "");
         #endregion
 
         #region Read Minecraft JAR file
-                private async Task ReadJarFile(string path, string targetFolder)
+        private async UniTask ReadJarFile(string path, string targetFolder)
         {
             // 1회용으로 읽을 폴더들
             string[] readTexturesFolders =
@@ -171,13 +171,14 @@ namespace Minecraft
 
             if (!File.Exists(path))
             {
-                CustomLog.LogError("File not found: " + path);
+                
+                CustomLog.UnityLogErr("File not found: " + path);
                 return;
             }
 
             using (var jarArchive = ZipFile.OpenRead(path))
             {
-                var tasks = new List<Task>(); // Store tasks for async processing
+                var tasks = new List<UniTask>(); // Store tasks for async processing
 
                 foreach (var entry in jarArchive.Entries)
                 {
@@ -218,7 +219,7 @@ namespace Minecraft
                     }
 
                     // Process each file asynchronously
-                    tasks.Add(Task.Run(() =>
+                    tasks.Add(UniTask.RunOnThreadPool(() =>
                     {
                         if (isTextureFolder)
                         {
@@ -242,7 +243,7 @@ namespace Minecraft
                     }));
                 }
 
-                await Task.WhenAll(tasks); // Wait for all async tasks to finish
+                await UniTask.WhenAll(tasks); // Wait for all async tasks to finish
                 
             }
 

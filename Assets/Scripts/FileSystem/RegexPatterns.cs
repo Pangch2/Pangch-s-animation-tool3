@@ -10,5 +10,5 @@ public static class RegexPatterns
 
     public static readonly Regex TagZeroEndRegex = new Regex(@".*\D0$", RegexOptions.Compiled);
 
-
+    public static readonly Regex VersionRegex = new Regex(@"(\d+)\.(\d+)\.(\d+)", RegexOptions.Compiled);
 }

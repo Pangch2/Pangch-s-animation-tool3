@@ -25,8 +25,6 @@ public class GameManager : MonoBehaviour
 
     public PlayerInput playerInput;
 
-    public static string MinecraftVersion = "1.21.4";
-
     // Get Manager
     public static T GetManager<T>() where T : BaseManager
     {

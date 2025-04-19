@@ -41,23 +41,7 @@ namespace FileSystem
         private void Start()
         {
             bdObjManager = GameManager.GetManager<BdObjectManager>();
-            SetupFileBrowser();
-        }
 
-        #endregion
-
-        #region FileBrowser 초기 설정
-
-        private void SetupFileBrowser()
-        {
-            FileBrowser.AddQuickLink("Launcher Folder", Application.dataPath + "/../");
-
-            // OS 별로 “Downloads” 폴더 찾기
-            var download = System.IO.Path.GetDirectoryName(
-                Environment.GetFolderPath(Environment.SpecialFolder.Personal)
-            );
-            download = Path.Combine(download, "Downloads");
-            FileBrowser.AddQuickLink("Downloads", download);
         }
 
         #endregion

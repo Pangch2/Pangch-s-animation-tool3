@@ -11,6 +11,7 @@ using Animation.AnimFrame;
 using System.Collections.Generic;
 using System.Text;
 using BDObjectSystem;
+using Minecraft;
 
 namespace FileSystem
 {
@@ -348,8 +349,7 @@ namespace FileSystem
             // interpolation 값에 따라 문자열 구성
             if (interpolation > 0)
             {
-                // 파이썬 코드와 동일한 필드명 "interpolation_duration"
-                if (GameManager.MinecraftVersion == "1.21.4")
+                if (MinecraftFileManager.MinecraftVersion == "1.21.4")
                 {
                     return $"{{start_interpolation:0,interpolation_duration:{interpolation},transformation:[{joined}]}}";
                 }
