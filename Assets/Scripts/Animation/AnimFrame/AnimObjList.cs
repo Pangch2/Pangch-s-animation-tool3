@@ -84,23 +84,18 @@ namespace Animation.AnimFrame
             CustomLog.Log("Line Removed: " + obj.bdFileName);
         }
 
-        public SortedList<int, ExportFrame> GetAllFrames()
+        public List<SortedList<int, ExportFrame>> GetAllFrames()
         {
-            var frames = new SortedList<int, ExportFrame>();
+            var frames = new List<SortedList<int, ExportFrame>>();
             
             foreach (var animObject in animObjects)
             {
+                var animFrames = new SortedList<int, ExportFrame>();
                 foreach (var frame in animObject.frames.Values)
                 {
-                    if (!frames.ContainsKey(frame.tick))
-                    {
-                        frames.Add(frame.tick, new ExportFrame(frame));
-                    }
-                    else
-                    {
-                        frames[frame.tick].Merge(frame);
-                    }
+                    animFrames.Add(frame.tick, new ExportFrame(frame));
                 }
+                frames.Add(animFrames);
             }
 
             return frames;
