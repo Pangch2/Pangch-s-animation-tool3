@@ -92,29 +92,6 @@ namespace BDObjectSystem
                    IsItemDisplay ? "item_display" :
                    IsTextDisplay ? "text_display" : null;
         }
-
-
-
-        // private string GetID()
-        // {
-        //     if (!string.IsNullOrEmpty(_id)) return _id;
-
-        //     if (Children == null) _id = Name;
-        //     else
-        //     {
-        //         var childSum = new StringBuilder();
-        //         foreach (var child in Children)
-        //         {
-        //             childSum.Append(child.ID);
-        //             // childSum += child.GetID();
-        //         }
-
-        //         if (Children.Length <= 1) childSum.Append("g");
-        //         _id = childSum.ToString();
-        //     }
-
-        //     return _id;
-        // }
     }
 }
 

@@ -195,8 +195,8 @@ namespace FileSystem
                         }
                     }
 
-                    if (cmds.Count == 0)
-                        cmds.Add("# No changes in this frame");
+                    // if (cmds.Count == 0)
+                    //     cmds.Add("# No changes in this frame");
 
                     // 결과 집계
                     if (!result.ContainsKey(tick))
@@ -239,8 +239,6 @@ namespace FileSystem
 
             CustomLog.Log($"Export is Done! Export path: {finalPath}");
         }
-
-
         /*
                 public async UniTask ExportFile()
                 {
@@ -457,7 +455,9 @@ namespace FileSystem
                     // Debug.Log($"Export is Done! Export path: {finalPath}"); // Unity 기본 로그 사용 예시
                 }
                 */
-
+        #endregion
+        
+        #region Helper Functions
         // --- 기존 및 추가된 Helper 함수들 ---
 
         public void DeleteFrameAndFnumberFiles(string folderPath)
@@ -669,6 +669,5 @@ namespace FileSystem
             }
         }
     }
-
     #endregion
 }

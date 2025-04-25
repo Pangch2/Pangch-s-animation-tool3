@@ -42,9 +42,6 @@ namespace Animation.AnimFrame
 
         private Timeline _timeline;
 
-        public string specialTag = "psolidsteve0,psolidsteve67";
-
-
         public void Init(string initFileName, int initTick, int inter, BdObject info, AnimObject obj, Timeline timeLine)
         {
             //Debug.Log("tick : " + tick);
