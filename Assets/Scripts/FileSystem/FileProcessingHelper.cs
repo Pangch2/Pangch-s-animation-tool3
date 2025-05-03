@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BDObjectSystem;
@@ -11,7 +12,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace FileSystem.Helpers
+namespace FileSystem
 {
     /// <summary>
     /// 파일을 읽어 base64 → gzip 해제 → JSON → BDObject 로 변환하는 등의
@@ -54,7 +55,7 @@ namespace FileSystem.Helpers
         /// </summary>
         public static List<string> SortFiles(IEnumerable<string> fileNames)
         {
-            var regex = RegexPatterns.FNumberRegex;
+            var regex = new Regex(@"f(\d+)", RegexOptions.IgnoreCase);
             var matched = new List<(string path, int number)>();
             var unmatched = new List<string>();
 
@@ -86,6 +87,17 @@ namespace FileSystem.Helpers
             using var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress);
             using var reader = new StreamReader(gzipStream);
             return reader.ReadToEnd();
+        }
+        public static byte[] CompressGzip(string jsonString)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(jsonString);
+
+            using MemoryStream memoryStream = new MemoryStream();
+            using (GZipStream gzipStream = new GZipStream(memoryStream, CompressionMode.Compress))
+            {
+                gzipStream.Write(bytes, 0, bytes.Length);
+            }
+            return memoryStream.ToArray();
         }
 
         /// <summary>

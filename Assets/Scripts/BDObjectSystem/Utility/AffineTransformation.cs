@@ -177,7 +177,7 @@ namespace BDObjectSystem.Utility
             Dictionary<string, Matrix4x4> result)
         {
             // 1) 현재 노드의 로컬 행렬
-            Matrix4x4 localMatrix = node.Transforms.GetMatrix();
+            Matrix4x4 localMatrix = node.transforms.GetMatrix();
 
             // 2) 부모 월드행렬 x 로컬행렬 => 현재 노드의 월드행렬
             Matrix4x4 worldMatrix = parentWorld * localMatrix;
@@ -190,7 +190,7 @@ namespace BDObjectSystem.Utility
             else
             {
                 // 자식이 있으면 모든 자식에 대해 재귀
-                foreach (var child in node.Children)
+                foreach (var child in node.children)
                 {
                     TraverseAndCollectLeaf(child, worldMatrix, result);
                 }

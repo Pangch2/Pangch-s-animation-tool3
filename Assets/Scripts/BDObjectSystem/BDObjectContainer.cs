@@ -24,24 +24,24 @@ namespace BDObjectSystem
         {
             // 기본 정보 설정
             BdObject = bdObject;
-            gameObject.name = bdObject.Name;
+            gameObject.name = bdObject.name;
             bdObjectID = bdObject.ID;
 
             // 그룹과 디스플레이 구분 
-            if (!bdObject.IsBlockDisplay && !bdObject.IsItemDisplay && !bdObject.IsTextDisplay) return;
+            if (!bdObject.isBlockDisplay && !bdObject.isItemDisplay && !bdObject.isTextDisplay) return;
 
             // 디스플레이 공통부분
-            var typeStart = bdObject.Name.IndexOf('[');
+            var typeStart = bdObject.name.IndexOf('[');
             if (typeStart == -1)
             {
-                typeStart = bdObject.Name.Length;
+                typeStart = bdObject.name.Length;
             }
-            var modelName = bdObject.Name[..typeStart];
-            var state = bdObject.Name[typeStart..];
+            var modelName = bdObject.name[..typeStart];
+            var state = bdObject.name[typeStart..];
             state = state.Replace("[", "").Replace("]", "");
 
             // 블록 디스플레이
-            if (bdObject.IsBlockDisplay)
+            if (bdObject.isBlockDisplay)
             {
                 var obj = Instantiate(manager.blockDisplay, transform);
                 obj.LoadDisplayModel(modelName, state);
@@ -51,7 +51,7 @@ namespace BDObjectSystem
                 obj.transform.localPosition = -obj.AABBBound.min / 2;
             }
             // 아이템 디스플레이
-            else if (bdObject.IsItemDisplay)
+            else if (bdObject.isItemDisplay)
             {
                 var obj = Instantiate(manager.itemDisplay, transform);
                 obj.LoadDisplayModel(modelName, state);
@@ -71,7 +71,7 @@ namespace BDObjectSystem
         public void PostProcess(BdObjectContainer[] childArray)
         {
             // ��ȯ ����� ����
-            SetTransformation(BdObject.Transforms);
+            SetTransformation(BdObject.transforms);
             children = childArray;
 
             //if (displayObj == null)

@@ -66,12 +66,12 @@ namespace BDObjectSystem
             BdObjectContainer[] children = null;
 
             // when children exist
-            if (bdObject.Children is { Length: > 0 })
+            if (bdObject.children is { Length: > 0 })
             {
-                children = new BdObjectContainer[bdObject.Children.Length];
-                for (var i = 0; i < bdObject.Children.Length; i++)
+                children = new BdObjectContainer[bdObject.children.Length];
+                for (var i = 0; i < bdObject.children.Length; i++)
                 {
-                    children[i] = await CreateObjectHierarchyAsync(bdObject.Children[i], newObj.transform, newObj, batchSize);
+                    children[i] = await CreateObjectHierarchyAsync(bdObject.children[i], newObj.transform, newObj, batchSize);
 
                     // delay
                     if (i % batchSize == 0)

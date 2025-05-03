@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Minecraft;
@@ -21,6 +22,8 @@ namespace Mainmenu
 
         public RawImage fadeImg;
 
+        // public static readonly Regex VersionRegex = new Regex(@"(\d+)\.(\d+)\.(\d+)", RegexOptions.Compiled);
+
         void Start()
         {
             minecraftFileManager = MinecraftFileManager.Instance;
@@ -41,7 +44,9 @@ namespace Mainmenu
 
         public async UniTask<bool> SetNewPath(string path)
         {
-            string version = RegexPatterns.VersionRegex.Match(path).Value;
+            const string versionPattern = @"(\d+)\.(\d+)\.(\d+)";
+            
+            string version = Regex.Match(path, versionPattern).Value;
             if (string.IsNullOrEmpty(version))
             {
                 versionText.text = "Version not found";

@@ -7,13 +7,15 @@ namespace BDObjectSystem.Utility
     public static class BdObjectHelper
     {
         private const string FrameFormatString = @"\b{0}(\d+)\b";
+        public static readonly Regex NBT_TagRegex = new Regex(@"Tags:\[([^\]]+)\]");
+        public static readonly Regex NBT_UUIDRegex = new Regex(@"UUID:\[I;(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]");
 
         // reading Tags:[] and return string
         public static string GetTags(string input)
         {
             if (string.IsNullOrEmpty(input)) return null;
 
-            var match = RegexPatterns.NBT_TagRegex.Match(input);
+            var match = NBT_TagRegex.Match(input);
             return match.Success ? match.Groups[1].Value : null;
         }
 
@@ -22,7 +24,7 @@ namespace BDObjectSystem.Utility
         {
             if (string.IsNullOrEmpty(input)) return null;
 
-            var match = RegexPatterns.NBT_UUIDRegex.Match(input);
+            var match = NBT_UUIDRegex.Match(input);
             return match.Success
                 ? $"{match.Groups[1].Value},{match.Groups[2].Value},{match.Groups[3].Value},{match.Groups[4].Value}"
                 : null;
@@ -33,8 +35,8 @@ namespace BDObjectSystem.Utility
         {
             target.Parent = parent;
 
-            if (target.Children == null) return;
-            foreach (var child in target.Children)
+            if (target.children == null) return;
+            foreach (var child in target.children)
             {
                 SetParent(target, child);
             }
@@ -101,7 +103,7 @@ namespace BDObjectSystem.Utility
             while (queue.Count > 0)
             {
                 var obj = queue.Dequeue();
-                ModelMatrix[obj.ID] = obj.Transforms.GetMatrix();
+                ModelMatrix[obj.ID] = obj.transforms.GetMatrix();
             
                 if (obj.IsDisplay)
                 {
@@ -109,8 +111,8 @@ namespace BDObjectSystem.Utility
                 }
                 
                 // BFS
-                if (obj.Children == null) continue;
-                foreach (var child in obj.Children)
+                if (obj.children == null) continue;
+                foreach (var child in obj.children)
                 {
                     queue.Enqueue(child);
                 }

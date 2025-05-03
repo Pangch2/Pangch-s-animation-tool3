@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Text;
 using BDObjectSystem;
 using Minecraft;
+using System.Text.RegularExpressions;
 
 namespace FileSystem
 {
@@ -34,6 +35,10 @@ namespace FileSystem
         private string finalPath;
 
         SettingManager settingManager;
+
+        public readonly Regex FNumberRegex = new Regex(@"f(\d+)", RegexOptions.IgnoreCase);
+        public static readonly Regex UuidExtractedFormatRegex = new Regex(@"^(-?\d+),(-?\d+),(-?\d+),(-?\d+)$", RegexOptions.Compiled);
+        public static readonly Regex TagZeroEndRegex = new Regex(@".*\D0$", RegexOptions.Compiled);
 
         private void Start()
         {
@@ -472,7 +477,7 @@ namespace FileSystem
                 string fileName = Path.GetFileName(file);
 
                 // frame 파일 이름 또는 f{number}.mcfunction 패턴 확인
-                if (fileName.Equals(frameFileNameToDelete, StringComparison.OrdinalIgnoreCase) || RegexPatterns.FNumberRegex.IsMatch(fileName))
+                if (fileName.Equals(frameFileNameToDelete, StringComparison.OrdinalIgnoreCase) || FNumberRegex.IsMatch(fileName))
                 {
                     try
                     {
@@ -599,7 +604,7 @@ namespace FileSystem
                 return null;
             }
 
-            var uuidmatch = RegexPatterns.UuidExtractedFormatRegex.Match(entityId);
+            var uuidmatch = UuidExtractedFormatRegex.Match(entityId);
             if (uuidmatch.Success)
             {
                 // 각 그룹을 파싱 (Group[0]는 전체 문자열이므로, Group[1]부터 사용)
@@ -637,7 +642,7 @@ namespace FileSystem
                 string tag = null;
                 for (int i = 0; i < tags.Length; i++)
                 {
-                    var rgx = RegexPatterns.TagZeroEndRegex.Match(tags[i]);
+                    var rgx = TagZeroEndRegex.Match(tags[i]);
                     if (!rgx.Success)
                     {
                         tag = tags[i]; // 태그를 찾으면 저장

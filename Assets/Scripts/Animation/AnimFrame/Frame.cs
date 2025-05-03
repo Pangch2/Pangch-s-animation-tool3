@@ -66,8 +66,6 @@ namespace Animation.AnimFrame
             //     Debug.Log($"Model is different, name : {fileName}\nModel : {animObject.animator.RootObject.bdObjectID}\nInfo : {info.ID}");
 
             // }
-
-
         }
 
         public Matrix4x4 GetMatrix(string id)
@@ -234,7 +232,7 @@ namespace Animation.AnimFrame
                                 break;
 
                             Matrix4x4 aMatrix = beforeFrame.GetMatrix(current.ID);
-                            Matrix4x4 bMatrix = current.Transforms.GetMatrix();
+                            Matrix4x4 bMatrix = current.transforms.GetMatrix();
 
                             Matrix4x4 lerpedMatrix = BDObjectAnimator.InterpolateMatrixTRS(aMatrix, bMatrix, ratio);
                             interJumpDict.Add(current.ID, lerpedMatrix);
