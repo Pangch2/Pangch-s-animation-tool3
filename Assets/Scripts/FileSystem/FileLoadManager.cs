@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Animation.AnimFrame;
 using BDObjectSystem;
 using BDObjectSystem.Display;
+using BDObjectSystem.Utility;
 using Cysharp.Threading.Tasks;
 using GameSystem;
 using SimpleFileBrowser;
@@ -33,6 +34,8 @@ namespace FileSystem
 
         private FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", ".bdengine", ".bdstudio");
 
+        public TagUUIDAdder tagUUIDAdder;
+
         #endregion
 
         #region Unity 라이프사이클
@@ -40,7 +43,6 @@ namespace FileSystem
         private void Start()
         {
             bdObjManager = GameManager.GetManager<BdObjectManager>();
-
         }
 
         #endregion
@@ -104,7 +106,7 @@ namespace FileSystem
 
         #endregion
 
-        #region 메인 임포트 로직 (비동기)
+        #region 메인 임포트 로직
 
         private async UniTask ImportFilesAsync(List<string> filePaths)
         {
@@ -134,13 +136,32 @@ namespace FileSystem
             // 3) 첫 파일로 메인 디스플레이 생성
             ui.SetLoadingText("Making Main Display...");
             string mainName = Path.GetFileNameWithoutExtension(filePaths[0]);
-            var mainAnimObject = await MakeDisplayAsync(filePaths[0], mainName);
+            // var mainAnimObject = await MakeDisplayAsync(filePaths[0], mainName);
+
+            // BDObject 읽은 뒤 BDObjectManager에 추가, AnimObject 추가 
+            var mainBdObject = await FileProcessingHelper.ProcessFileAsync(filePaths[0]);
+
+            bool isCorrectTag = BdObjectHelper.HasVaildID(mainBdObject);
+            if (!isCorrectTag)
+            {
+                mainBdObject = await AskAndApplyTagUUIDAdder(filePaths[0]);
+            }
+
+            await bdObjManager.AddObject(mainBdObject, mainName);
+            var mainAnimObject = animObjList.AddAnimObject(mainName);
 
             // 4) 나머지 파일 프레임 추가
             ui.SetLoadingText("Adding Frames...");
             for (int i = 1; i < filePaths.Count; i++)
             {
                 var bdObj = await FileProcessingHelper.ProcessFileAsync(filePaths[i]);
+
+                if (!isCorrectTag)
+                {
+                    // 첫번째 파일에 태그가 없다면 여기에도 똑같은 방식으로 태그 추가
+                    await tagUUIDAdder.ApplyTagOrUUID(bdObj);
+                }
+
                 mainAnimObject.AddFrame(bdObj, Path.GetFileNameWithoutExtension(filePaths[i]));
             }
 
@@ -160,20 +181,6 @@ namespace FileSystem
             FrameInfo.Clear();
 
             CustomLog.Log($"Import 완료! BDObject 개수: {bdObjManager.bdObjectCount}");
-        }
-
-        /// <summary>
-        /// 파일 하나로 AnimObject 생성 (BdObjectManager에 등록 후 AnimObjList에 생성)
-        /// </summary>
-        private async UniTask<AnimObject> MakeDisplayAsync(string filePath, string fileName)
-        {
-            // 파일 → BDObject
-            var bdObject = await FileProcessingHelper.ProcessFileAsync(filePath);
-
-            // BdObjectManager 등록
-            await bdObjManager.AddObject(bdObject, fileName);
-
-            return animObjList.AddAnimObject(fileName);
         }
 
         public static async UniTask TryParseFrameTxtAsync(
@@ -300,6 +307,39 @@ namespace FileSystem
             {
                 CustomLog.Log("프레임 추가용 파일 선택 취소/실패");
             }
+        }
+
+        #endregion
+
+        #region 태그/UUID 추가
+
+        async UniTask<BdObject> AskAndApplyTagUUIDAdder(string path)
+        {
+            // 1) CompletionSource 생성
+            var tcs = new UniTaskCompletionSource<BdObject>();
+
+            // 2) 이벤트 핸들러 정의 (로컬 함수로 캡쳐)
+            void Handler(BdObject obj)
+            {
+                // 결과 세팅
+                tcs.TrySetResult(obj);
+                // 메모리 누수 방지를 위해 구독 해제
+                tagUUIDAdder.OnBDObjectEdited -= Handler;
+            }
+
+            // 3) 편집 완료 이벤트 구독
+            tagUUIDAdder.OnBDObjectEdited += Handler;
+
+            // 4) 패널 띄우기
+            tagUUIDAdder.SetFilePath(path);
+            tagUUIDAdder.SetPanelActive(true);
+
+            // 5) 편집 완료 이벤트가 발생할 때까지 대기
+            BdObject editedObject = await tcs.Task;
+
+            tagUUIDAdder.SetPanelActive(false);
+
+            return editedObject;
         }
 
         #endregion

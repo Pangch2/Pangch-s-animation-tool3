@@ -69,13 +69,13 @@ namespace BDObjectSystem.Utility
                 
                 if (obj.BdObject.IsDisplay)
                 {
-                    if (idDataDict.ContainsKey(obj.bdObjectID))
+                    if (idDataDict.ContainsKey(obj.BdObjectID))
                     {
-                        CustomLog.LogError($"{obj.bdObjectID}가 중복됨: 애니메이션 불가능!");
+                        CustomLog.LogError($"{obj.BdObjectID}가 중복됨: 애니메이션 불가능!");
                         idDataDict.Clear();
                         return idDataDict;
                     }
-                    idDataDict[obj.bdObjectID] = obj;
+                    idDataDict[obj.BdObjectID] = obj;
                 }
                 
                 // BFS
@@ -118,6 +118,36 @@ namespace BDObjectSystem.Utility
                 }
             }
             return resultList;
+        }
+
+
+        /// <summary>
+        /// 해당 root의 자식들 중 Tag, UUID가 존재하지 않는 오브젝트가 존재한다면 false를 반환합니다.
+        /// </summary>
+        /// <param name="root"> 최상위 BDObject</param>
+        /// <returns></returns>
+        public static bool HasVaildID(BdObject root)
+        {
+            var queue = new Queue<BdObject>();
+            queue.Enqueue(root);
+        
+            while (queue.Count > 0)
+            {
+                var obj = queue.Dequeue();
+                
+                if (obj.IsDisplay && string.IsNullOrEmpty(obj.ID))
+                {
+                    return false;
+                }
+                
+                // BFS
+                if (obj.children == null) continue;
+                foreach (var child in obj.children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+            return true;
         }
     }
 }

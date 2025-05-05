@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using SimpleFileBrowser;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 
@@ -115,6 +116,10 @@ namespace BDObjectSystem
 
         public GameObject loadingPanel;
 
+        public event Action<BdObject> OnBDObjectEdited;
+
+        Queue<BdObject> queue = new Queue<BdObject>();
+
 
         void Start()
         {
@@ -134,7 +139,12 @@ namespace BDObjectSystem
 
             if (!FileBrowser.Success) return;
 
-            filePath = FileBrowser.Result[0];
+            SetFilePath(FileBrowser.Result[0]);
+        }
+
+        public void SetFilePath(string path)
+        {
+            filePath = path;
             var fileName = Path.GetFileName(filePath);
             infoTexts[3].text = fileName;
             CheckSaveButton();
@@ -175,7 +185,9 @@ namespace BDObjectSystem
         {
             try
             {
-                await ApplyTagOrUUID();
+                // 1. File Load
+                var bdobject = await FileProcessingHelper.ProcessFileAsync(filePath);
+                await ApplyTagOrUUID(bdobject);
             }
             catch (Exception e)
             {
@@ -188,18 +200,15 @@ namespace BDObjectSystem
 
         }
 
-        async UniTask ApplyTagOrUUID()
+        public async UniTask ApplyTagOrUUID(BdObject bdobject, bool SaveFile = true)
         {
             loadingPanel.SetActive(true);
 
             await UniTask.SwitchToTaskPool();
 
-            // 1. File Load
-            var bdobject = await FileProcessingHelper.ProcessFileAsync(filePath);
+            // Tag or UUID Apply
 
-            // 2. Tag or UUID Apply
-
-            Queue<BdObject> queue = new Queue<BdObject>();
+            queue.Clear();
             queue.Enqueue(bdobject);
 
             int idx = 1;
@@ -232,7 +241,7 @@ namespace BDObjectSystem
                     }
                     else if (AddType == ADDTYPE.Tag)
                     {
-                        tag += $"{tagName}{idx++}";
+                        tag += $",{tagName}{idx++}";
                     }
 
                     const string tagPattern = @"Tags:\[([^\]]*)\]";
@@ -263,69 +272,7 @@ namespace BDObjectSystem
                         }
                     }
 
-
-
-                    // if (AddType == ADDTYPE.Tag)
-                    // {
-                    //     var tagToAdd = $"{tagName}0,{tagName}{idx++}";
-                    //     const string tagPattern = @"Tags:\[([^\]]*)\]";
-                    //     var match = Regex.Match(obj.nbt, tagPattern);
-
-                    //     if (IsReplacingTag)
-                    //     {
-                    //         // 기존 Tags 블록을 새 태그로 대체 (대괄호 유지)
-                    //         obj.nbt = Regex.Replace(obj.nbt, tagPattern, $"Tags:[{tagToAdd}]");
-                    //         if (!match.Success && !obj.nbt.Contains($"Tags:[{tagToAdd}]")) // 기존에 없었고 대체도 못했으면 추가
-                    //         {
-                    //             obj.nbt = string.IsNullOrEmpty(obj.nbt) ? $"Tags:[{tagToAdd}]" : $"{obj.nbt},Tags:[{tagToAdd}]";
-                    //         }
-                    //     }
-                    //     else
-                    //     {
-                    //         if (match.Success)
-                    //         {
-                    //             // 기존 Tags 블록이 있으면 내부 태그 목록에 추가
-                    //             string existingTags = match.Groups[1].Value;
-                    //             string newTags = string.IsNullOrEmpty(existingTags) ? tagToAdd : $"{existingTags},{tagToAdd}";
-                    //             obj.nbt = Regex.Replace(obj.nbt, tagPattern, $"Tags:[{newTags}]");
-                    //         }
-                    //         else
-                    //         {
-                    //             // 기존 Tags 블록이 없으면 새로 생성
-                    //             obj.nbt = string.IsNullOrEmpty(obj.nbt) ? $"Tags:[{tagToAdd}]" : $"{obj.nbt},Tags:[{tagToAdd}]";
-                    //         }
-                    //     }
-                    // }
-                    // else if (AddType == ADDTYPE.UUID)
-                    // {
-                    //     var uuidToAdd = $"UUID:[I;{tagName},{idx++},0,0]";
-                    //     const string uuidPattern = @"UUID:\[I;(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]";
-                    //     var match = Regex.Match(obj.nbt, uuidPattern);
-
-                    //     if (IsReplacingTag)
-                    //     {
-                    //         // 기존 UUID 블록을 새 UUID로 대체 (대괄호 유지)
-                    //         obj.nbt = Regex.Replace(obj.nbt, uuidPattern, uuidToAdd);
-                    //         if (!match.Success && !obj.nbt.Contains(uuidToAdd)) // 기존에 없었고 대체도 못했으면 추가
-                    //         {
-                    //             obj.nbt = string.IsNullOrEmpty(obj.nbt) ? uuidToAdd : $"{obj.nbt},{uuidToAdd}";
-                    //         }
-                    //     }
-                    //     else
-                    //     {
-                    //         if (match.Success)
-                    //         {
-                    //             // 기존 UUID 블록이 있으면 내부 UUID 목록에 추가 (쉼표로 구분)
-                    //             string existingUuids = match.Value;
-                    //             obj.nbt = obj.nbt.Replace(existingUuids, $"{existingUuids},{uuidToAdd}");
-                    //         }
-                    //         else
-                    //         {
-                    //             // 기존 UUID 블록이 없으면 새로 생성
-                    //             obj.nbt = string.IsNullOrEmpty(obj.nbt) ? uuidToAdd : $"{obj.nbt},{uuidToAdd}";
-                    //         }
-                    //     }
-                    // }
+                    obj.OnDeserialized(default);
                 }
 
 
@@ -336,27 +283,35 @@ namespace BDObjectSystem
                 }
             }
 
-            // 3. File Save
-            string jsonFile = JsonConvert.SerializeObject(new BdObject[] { bdobject }, new JsonSerializerSettings()
+            if (SaveFile)
             {
-                NullValueHandling = NullValueHandling.Ignore,
-                DefaultValueHandling = DefaultValueHandling.Ignore,
-            });
+
+                // 3. File Save
+                string jsonFile = JsonConvert.SerializeObject(new BdObject[] { bdobject }, new JsonSerializerSettings()
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    DefaultValueHandling = DefaultValueHandling.Ignore,
+                });
+
+
 
 #if UNITY_EDITOR
-            Debug.Log(jsonFile);
+                Debug.Log(jsonFile);
 #endif
 
-            byte[] gzip = FileProcessingHelper.CompressGzip(jsonFile);
-            string base64Text = Convert.ToBase64String(gzip);
+                byte[] gzip = FileProcessingHelper.CompressGzip(jsonFile);
+                string base64Text = Convert.ToBase64String(gzip);
 
-            // 이름에 _edited 붙이기
-            string newFileName = Path.GetFileNameWithoutExtension(filePath) + "_edited" + Path.GetExtension(filePath);
-            string newFilePath = Path.Combine(Path.GetDirectoryName(filePath), newFileName);
+                // 이름에 _edited 붙이기
+                string newFileName = Path.GetFileNameWithoutExtension(filePath) + "_edited" + Path.GetExtension(filePath);
+                string newFilePath = Path.Combine(Path.GetDirectoryName(filePath), newFileName);
 
-            await File.WriteAllTextAsync(newFilePath, base64Text);
+                await File.WriteAllTextAsync(newFilePath, base64Text);
+            }
 
             await UniTask.SwitchToMainThread();
+
+            OnBDObjectEdited?.Invoke(bdobject);
 
             loadingPanel.SetActive(false);
 

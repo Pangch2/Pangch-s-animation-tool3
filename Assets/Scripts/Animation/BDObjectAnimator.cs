@@ -25,7 +25,7 @@ namespace Animation
 
             foreach (var obj in modelDict.Values)
             {
-                parentMatrixDict[obj.bdObjectID] = ComputeParentWorldMatrix(obj);
+                parentMatrixDict[obj.BdObjectID] = ComputeParentWorldMatrix(obj);
             }
             //Debug.Log($"[BDObjectAnimator] {RootObject.name} : {modelDict.Count} objects found.");
         }
@@ -63,7 +63,7 @@ namespace Animation
                 {
                     if (visitedObjects.Contains(modelRef)) break;
 
-                    if (modelRef.bdObjectID == targetRef.ID)
+                    if (modelRef.BdObjectID == targetRef.ID)
                     {
                         modelRef.SetTransformation(targetFrame.GetMatrix(targetRef.ID));
                         visitedObjects.Add(modelRef);
@@ -117,7 +117,7 @@ namespace Animation
                     if (visitedObjects.Contains(modelRef))
                         break;
 
-                    if (modelRef.bdObjectID == aRef.ID)
+                    if (modelRef.BdObjectID == aRef.ID)
                     {
                         // aFrame, bFrame 각각에서 해당 ID의 행렬을 가져와 보간
                         Matrix4x4 aMatrix = aFrame.GetMatrix(aRef.ID);  

@@ -64,7 +64,7 @@ namespace BDObjectSystem
 
             if (children == null || children.Length == 0)
             {
-                _id = name;
+                _id = string.Empty;
             }
             else
             {

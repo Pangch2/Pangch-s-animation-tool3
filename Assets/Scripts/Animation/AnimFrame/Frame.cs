@@ -57,7 +57,7 @@ namespace Animation.AnimFrame
             _timeline.OnGridChanged += UpdatePos;
 
 
-            IsModelDiffrent = animObject.animator.RootObject.bdObjectID != info.ID;
+            IsModelDiffrent = animObject.animator.RootObject.BdObjectID != info.ID;
             worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
             SetInter(inter);
             //Debug.Log(animObject.animator);

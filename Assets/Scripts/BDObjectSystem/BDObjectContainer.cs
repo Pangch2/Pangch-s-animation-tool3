@@ -7,7 +7,14 @@ namespace BDObjectSystem
 {
     public class BdObjectContainer : MonoBehaviour
     {
+        public string BdObjectID => BdObject.ID;
+#if UNITY_EDITOR
         public string bdObjectID;
+        void Update()
+        {
+            bdObjectID = BdObject.ID;
+        }
+#endif
 
         public BdObject BdObject;
         public DisplayObject displayObj;
@@ -25,7 +32,7 @@ namespace BDObjectSystem
             // 기본 정보 설정
             BdObject = bdObject;
             gameObject.name = bdObject.name;
-            bdObjectID = bdObject.ID;
+            // bdObjectID = bdObject.ID;
 
             // 그룹과 디스플레이 구분 
             if (!bdObject.isBlockDisplay && !bdObject.isItemDisplay && !bdObject.isTextDisplay) return;

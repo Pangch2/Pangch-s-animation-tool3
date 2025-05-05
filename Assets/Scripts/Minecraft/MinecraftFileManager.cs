@@ -88,8 +88,16 @@ namespace Minecraft
                 return JObject.Parse(bed.text);
             }
             //Debug.Log(_instance._jsonFiles.ContainsKey(path));
-            
+            #if UNITY_EDITOR
+            var data = Instance._jsonFiles.TryGetValue(path, out var file) ? JObject.Parse(file) : null;
+            if (data == null)
+            {
+                CustomLog.LogError("JSON not found: " + path);
+            }
+            return data;
+            #else
             return Instance._jsonFiles.TryGetValue(path, out var file) ? JObject.Parse(file) : null;
+            #endif
         }
 
         /// <summary>
