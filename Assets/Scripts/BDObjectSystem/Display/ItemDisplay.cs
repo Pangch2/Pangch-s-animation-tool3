@@ -14,7 +14,6 @@ namespace BDObjectSystem.Display
 
         public override void LoadDisplayModel(string mName, string state)
         {
-            // items ������ ������ �����ͼ�
             modelName = mName;
             var itemState = MinecraftFileManager.GetJsonData("items/" + mName + ".json");
 
@@ -23,8 +22,6 @@ namespace BDObjectSystem.Display
                 CustomLog.LogError("Model not found: " + mName);
                 return;
             }
-
-            // �� ������ ������
             _currentItemState = itemState.GetValue("model") as JObject;
 
             CheckModelType(_currentItemState);
@@ -164,13 +161,6 @@ namespace BDObjectSystem.Display
                     break;
 
             }
-
-            /*
-         * ���, ����ü, ���ڱ�, ���� : �� ����, ���� ���÷��� �ʵ� �� ����
-         * ħ��, ����, ��Ŀ ���� : �������� �ѱ�� (Done)
-         * �Ӹ� : �� ����, ���� ���÷��� �ʵ� �� ���� (�÷��̾� �Ӹ��� profile ó�� �ؾ���)
-         * ǥ����, �Ŵ޸� ǥ���� : �� ����, ���� ���÷��� �ʵ� �� ���� �ٵ� BDEngine�� ������ ����(???)
-         */
         }
 
 

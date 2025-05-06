@@ -5,6 +5,8 @@ using UnityEngine.Serialization;
 using TMPro;
 using FileSystem;
 using System;
+using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
 
 namespace GameSystem
 {
@@ -12,23 +14,25 @@ namespace GameSystem
     {
 
         [Flags]
-        public enum UIStatus {
+        public enum UIStatus
+        {
             None = 0,
             OnAnimUIPanel = 1 << 0,
             OnSettingPanel = 1 << 1,
-            OnPopupPanel = 1 << 2,
+            OnExportPanel = 1 << 2,
             OnDraggingPanel = 1 << 3,
             OnMenuBarPanel = 1 << 4,
+            OnPopupPanel = 1 << 5,
         }
-        
+
         private static UIStatus _currentUIStatus = UIStatus.None;
-        public static UIStatus CurrentUIStatus 
+        public static UIStatus CurrentUIStatus
         {
-            get => _currentUIStatus; 
+            get => _currentUIStatus;
             set
             {
                 _currentUIStatus = value;
-                GameManager.SetPlayerInput((_currentUIStatus | UIStatus.OnMenuBarPanel | UIStatus.OnPopupPanel) != UIStatus.None);
+                GameManager.SetPlayerInput((_currentUIStatus | UIStatus.OnMenuBarPanel | UIStatus.OnExportPanel) != UIStatus.None);
                 //Debug.Log($"CurrentUIStatus: {_currentUIStatus}");
             }
         }
@@ -42,11 +46,21 @@ namespace GameSystem
 
         private int _cursorID;
 
+        public GameObject popupPanel;
+        public TextMeshProUGUI popupText1;
+        public TextMeshProUGUI popupText2;
+        public Button popupApplyButton;
+        public Button popupCancelButton;
+        public Action<bool> onApplyOrCancel;
+
         private void Start()
         {
             _fileManager = GameManager.GetManager<FileLoadManager>();
-            
+
             _currentUIStatus = UIStatus.None;
+
+            popupApplyButton.onClick.AddListener(() => OnPopupButton(true));
+            popupCancelButton.onClick.AddListener(() => OnPopupButton(false));
         }
 
         public void SetLoadingPanel(bool isOn)
@@ -68,10 +82,39 @@ namespace GameSystem
             loadingText.text = text;
         }
 
-        [UsedImplicitly]
         public void OnPressImportButton()
         {
             _fileManager.ImportFile();
+        }
+
+        public void SetPopupPanel(string text1, string text2, Action<bool> OnApplyOrCancel = null)
+        {
+            CurrentUIStatus |= UIStatus.OnPopupPanel;
+            popupPanel.SetActive(true);
+            popupText1.text = text1;
+            popupText2.text = text2;
+
+            onApplyOrCancel = OnApplyOrCancel;
+        }
+
+        void OnPopupButton(bool isApply)
+        {
+            CurrentUIStatus &= ~UIStatus.OnPopupPanel;
+            popupPanel.SetActive(false);
+
+            onApplyOrCancel?.Invoke(isApply);
+        }
+
+        public async UniTask<bool> SetPopupPanelAsync(string text1, string text2)
+        {
+            var tcs = new UniTaskCompletionSource<bool>();
+
+            SetPopupPanel(text1, text2, isApply =>
+            {
+                tcs.TrySetResult(isApply);
+            });
+
+            return await tcs.Task;
         }
     }
 }

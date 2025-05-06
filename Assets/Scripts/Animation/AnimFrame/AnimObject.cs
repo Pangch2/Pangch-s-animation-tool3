@@ -28,6 +28,9 @@ namespace Animation.AnimFrame
 
         public BDObjectAnimator animator;
 
+        public string tagName = string.Empty;
+        public int uuidNumber = -1;
+
         private readonly HashSet<string> _noID = new HashSet<string>();
         #endregion
 
@@ -47,6 +50,45 @@ namespace Animation.AnimFrame
             frames[0] = firstFrame;
 
             AnimManager.TickChanged += OnTickChanged;
+
+            SetTagName(animator.RootObject.BdObject);
+        }
+
+        void SetTagName(BdObject obj)
+        {
+            // 디스플레이로 이동
+            BdObject p = obj;
+            while (p.IsDisplay == false)
+            {
+                p = p.children[0];
+            }
+
+            var tags = BdObjectHelper.GetTags(p.nbt);
+            string uuid = BdObjectHelper.GetUuid(p.nbt);
+
+            if (string.IsNullOrEmpty(tags))
+            {
+                tagName = string.Empty;
+                return;
+            }
+
+            foreach (var tag in tags.Split(','))
+            {
+                var rgx = ExportManager.TagZeroEndRegex.Match(tag);
+                if (rgx.Success)
+                {
+                    tagName = tag[..^1];
+                    break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(uuid) == false)
+            {
+                var numbers = uuid.Split(',');
+                uuidNumber = int.Parse(numbers[0]);
+
+            }
+            
         }
         
         #region Transform

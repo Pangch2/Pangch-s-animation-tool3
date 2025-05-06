@@ -30,6 +30,7 @@ namespace FileSystem
 
         public MCDEANIMFile currentMDEFile;
         public bool IsNoneSaved { get; private set; } = true;
+        public bool SavingProgressStatus = false;
 
         private void Start()
         {
@@ -66,6 +67,8 @@ namespace FileSystem
             // string fullPath = System.IO.Path.Combine(path, currentMDEFile.name + ".mde");
             // System.IO.File.WriteAllText(MDEFilePath, json);
 
+            if (SavingProgressStatus) return; // 저장 중이면 추가 저장 불가
+
             SaveObjectCompressedAsync(currentMDEFile, MDEFilePath).Forget();
 
             // var json = JsonConvert.SerializeObject(currentMDEFile);
@@ -90,14 +93,15 @@ namespace FileSystem
         /// <param name="filePath">저장할 파일 경로 (확장자 포함, 예: "saveData.json.br")</param>
         /// <param name="settings">JSON 직렬화 설정 (선택 사항)</param>
         /// <returns></returns>
-        public static async UniTaskVoid SaveObjectCompressedAsync(object dataToSave, string filePath, JsonSerializerSettings settings = null)
+        public async UniTaskVoid SaveObjectCompressedAsync(object dataToSave, string filePath, JsonSerializerSettings settings = null)
         {
             try
             {
-                #if UNITY_EDITOR
+                SavingProgressStatus = true;
+#if UNITY_EDITOR
                 string json = JsonConvert.SerializeObject(dataToSave, Formatting.Indented);
                 Debug.Log($"Serialized JSON: {json}"); // 직렬화된 JSON 로그
-                #endif
+#endif
                 // 동기적인 파일 쓰기 및 직렬화 로직을 Task.Run으로 감싸서 비동기 실행
                 await UniTask.RunOnThreadPool(() =>
                 {
@@ -124,6 +128,10 @@ namespace FileSystem
                 // Task.Run에서 발생한 예외 또는 그 외 예외 처리
                 CustomLog.LogError($"파일 저장 실패: {filePath}\nError: {ex.Message}\n{ex.StackTrace}");
             }
+            finally
+            {
+                SavingProgressStatus = false;
+            }
         }
 
 
@@ -147,9 +155,14 @@ namespace FileSystem
         #region  Load Logic
 
         // public void LoadMCDEFile() => StartCoroutine(LoadMDEFileCoroutine());
-        public void LoadMCDEFile() => LoadMDEFileCoroutine().Forget(); // UniTask로 변경
+        public void LoadMCDEFile()
+        {
+            if (SavingProgressStatus) return; // 저장/로드 중이면 추가 로드 불가
+            LoadMDEFileCoroutine().Forget(); // UniTask로 변경
+        }
         private async UniTaskVoid LoadMDEFileCoroutine()
         {
+            SavingProgressStatus = true;
             FileBrowser.SetFilters(false, saveFilter); // MDE 파일 필터
             await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files, false, null, "Select MDE File").ToUniTask(); // 파일 선택 모드
 
@@ -194,6 +207,7 @@ namespace FileSystem
             {
                 // 3. 로딩 패널 닫기
                 ui.SetLoadingPanel(false);
+                SavingProgressStatus = false;
             }
 
         }

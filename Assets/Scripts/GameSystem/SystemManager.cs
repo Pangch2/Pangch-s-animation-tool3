@@ -45,8 +45,6 @@ namespace GameSystem
 
         private void OnGUI()
         {
-
-
             var rect = new Rect(Screen.width - 200, 70, Screen.width, Screen.height);
 
             var ms = _deltaTime * 1000f;

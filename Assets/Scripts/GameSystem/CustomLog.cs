@@ -23,11 +23,18 @@ public static class CustomLog
         LogConsole.instance.Log(message, Color.red);
     }
 
-        public static void LogWarning(object message)
+    public static void LogWarning(object message)
     {
 #if UNITY_EDITOR
         Debug.LogWarning(message);
 #endif
         LogConsole.instance.Log(message, Color.yellow);
+    }
+
+    public static void UnityLogErr(object message)
+    {
+#if UNITY_EDITOR
+        Debug.LogError(message);
+#endif
     }
 }

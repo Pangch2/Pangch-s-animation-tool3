@@ -42,9 +42,6 @@ namespace Animation.AnimFrame
 
         private Timeline _timeline;
 
-        public string specialTag = "psolidsteve0,psolidsteve67";
-
-
         public void Init(string initFileName, int initTick, int inter, BdObject info, AnimObject obj, Timeline timeLine)
         {
             //Debug.Log("tick : " + tick);
@@ -54,23 +51,21 @@ namespace Animation.AnimFrame
             _timeline = timeLine;
             Info = info;
             tick = initTick;
-            SetInter(inter);
+            leafObjects = BdObjectHelper.SetDisplayDict(info, modelMatrixDict);
 
             UpdatePos();
             _timeline.OnGridChanged += UpdatePos;
 
-            leafObjects = BdObjectHelper.SetDisplayDict(info, modelMatrixDict);
 
-            IsModelDiffrent = animObject.animator.RootObject.bdObjectID != info.ID;
+            IsModelDiffrent = animObject.animator.RootObject.BdObjectID != info.ID;
             worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
+            SetInter(inter);
             //Debug.Log(animObject.animator);
             // if (IsModelDiffrent)
             // {
             //     Debug.Log($"Model is different, name : {fileName}\nModel : {animObject.animator.RootObject.bdObjectID}\nInfo : {info.ID}");
 
             // }
-
-
         }
 
         public Matrix4x4 GetMatrix(string id)
@@ -83,7 +78,7 @@ namespace Animation.AnimFrame
             {
                 return matrix;
             }
-            Debug.LogError($"Matrix not found for ID: {id}");
+            CustomLog.UnityLogErr($"Matrix not found for ID: {id}");
             return Matrix4x4.identity;
         }
 
@@ -97,7 +92,7 @@ namespace Animation.AnimFrame
             {
                 return matrix;
             }
-            Debug.LogError($"World Matrix not found for ID: {id}");
+            CustomLog.UnityLogErr($"World Matrix not found for ID: {id}");
             return Matrix4x4.identity;
         }
 
@@ -237,7 +232,7 @@ namespace Animation.AnimFrame
                                 break;
 
                             Matrix4x4 aMatrix = beforeFrame.GetMatrix(current.ID);
-                            Matrix4x4 bMatrix = current.Transforms.GetMatrix();
+                            Matrix4x4 bMatrix = current.transforms.GetMatrix();
 
                             Matrix4x4 lerpedMatrix = BDObjectAnimator.InterpolateMatrixTRS(aMatrix, bMatrix, ratio);
                             interJumpDict.Add(current.ID, lerpedMatrix);

@@ -7,13 +7,15 @@ namespace BDObjectSystem.Utility
     public static class BdObjectHelper
     {
         private const string FrameFormatString = @"\b{0}(\d+)\b";
+        public static readonly Regex NBT_TagRegex = new Regex(@"Tags:\[([^\]]+)\]");
+        public static readonly Regex NBT_UUIDRegex = new Regex(@"UUID:\[I;(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]");
 
         // reading Tags:[] and return string
         public static string GetTags(string input)
         {
             if (string.IsNullOrEmpty(input)) return null;
 
-            var match = RegexPatterns.NBT_TagRegex.Match(input);
+            var match = NBT_TagRegex.Match(input);
             return match.Success ? match.Groups[1].Value : null;
         }
 
@@ -22,7 +24,7 @@ namespace BDObjectSystem.Utility
         {
             if (string.IsNullOrEmpty(input)) return null;
 
-            var match = RegexPatterns.NBT_UUIDRegex.Match(input);
+            var match = NBT_UUIDRegex.Match(input);
             return match.Success
                 ? $"{match.Groups[1].Value},{match.Groups[2].Value},{match.Groups[3].Value},{match.Groups[4].Value}"
                 : null;
@@ -33,8 +35,8 @@ namespace BDObjectSystem.Utility
         {
             target.Parent = parent;
 
-            if (target.Children == null) return;
-            foreach (var child in target.Children)
+            if (target.children == null) return;
+            foreach (var child in target.children)
             {
                 SetParent(target, child);
             }
@@ -67,13 +69,13 @@ namespace BDObjectSystem.Utility
                 
                 if (obj.BdObject.IsDisplay)
                 {
-                    if (idDataDict.ContainsKey(obj.bdObjectID))
+                    if (idDataDict.ContainsKey(obj.BdObjectID))
                     {
-                        CustomLog.LogError($"{obj.bdObjectID}가 중복됨: 애니메이션 불가능!");
+                        CustomLog.LogError($"{obj.BdObjectID}가 중복됨: 애니메이션 불가능!");
                         idDataDict.Clear();
                         return idDataDict;
                     }
-                    idDataDict[obj.bdObjectID] = obj;
+                    idDataDict[obj.BdObjectID] = obj;
                 }
                 
                 // BFS
@@ -101,7 +103,7 @@ namespace BDObjectSystem.Utility
             while (queue.Count > 0)
             {
                 var obj = queue.Dequeue();
-                ModelMatrix[obj.ID] = obj.Transforms.GetMatrix();
+                ModelMatrix[obj.ID] = obj.transforms.GetMatrix();
             
                 if (obj.IsDisplay)
                 {
@@ -109,13 +111,103 @@ namespace BDObjectSystem.Utility
                 }
                 
                 // BFS
-                if (obj.Children == null) continue;
-                foreach (var child in obj.Children)
+                if (obj.children == null) continue;
+                foreach (var child in obj.children)
                 {
                     queue.Enqueue(child);
                 }
             }
             return resultList;
+        }
+
+
+        /// <summary>
+        /// 해당 root의 자식들 중 Tag, UUID가 존재하지 않는 오브젝트가 존재한다면 false를 반환합니다.
+        /// </summary>
+        /// <param name="root"> 최상위 BDObject</param>
+        /// <returns></returns>
+        public static bool HasVaildID(BdObject root)
+        {
+            var queue = new Queue<BdObject>();
+            queue.Enqueue(root);
+        
+            while (queue.Count > 0)
+            {
+                var obj = queue.Dequeue();
+                
+                if (obj.IsDisplay && string.IsNullOrEmpty(obj.ID))
+                {
+                    return false;
+                }
+                
+                // BFS
+                if (obj.children == null) continue;
+                foreach (var child in obj.children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+            return true;
+        }
+
+
+        public enum IDValidationResult 
+        {
+            Vaild, NoID, Mismatch
+        }
+        /// <summary>
+        /// 해당 root의 자식들 중 기존 알고리즘과 주어진 tag, uuid가 일치하지 않는 오브젝트가 존재한다면 false를 반환합니다.
+        /// </summary>
+        /// <param name="root"></param>
+        /// <param name="tag"></param>
+        /// <param name="uuid"></param>
+        /// <returns></returns>
+        public static IDValidationResult HasVaildID(BdObject root, string tag, int uuid = -1)
+        {
+            var queue = new Queue<BdObject>();
+            queue.Enqueue(root);
+
+            int idx = 1;
+        
+            while (queue.Count > 0)
+            {
+                var obj = queue.Dequeue();
+                
+                if (obj.IsDisplay)
+                {
+                    if (string.IsNullOrEmpty(obj.ID))
+                    {
+                        return IDValidationResult.NoID;
+                    }
+
+                    if (uuid == -1)
+                    {
+                        string expectTag = $"{tag}0,{tag}{idx}";
+                        if (obj.ID != expectTag)
+                        {
+                            return IDValidationResult.Mismatch;
+                        }
+                    }
+                    else
+                    {
+                        string expectTag = $"{uuid},{idx},0,0";
+                        if (obj.ID != expectTag)
+                        {
+                            return IDValidationResult.Mismatch;
+                        }
+                    }
+
+                    idx++;
+                }
+                
+                // BFS
+                if (obj.children == null) continue;
+                foreach (var child in obj.children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+            return IDValidationResult.Vaild;
         }
     }
 }
