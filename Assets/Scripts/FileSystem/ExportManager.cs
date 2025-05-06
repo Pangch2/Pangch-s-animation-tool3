@@ -67,11 +67,11 @@ namespace FileSystem
             if (isShow)
             {
                 //SetPathText(currentPath);
-                UIManager.CurrentUIStatus |= UIManager.UIStatus.OnPopupPanel;
+                UIManager.CurrentUIStatus |= UIManager.UIStatus.OnExportPanel;
             }
             else
             {
-                UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnPopupPanel;
+                UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnExportPanel;
             }
         }
 

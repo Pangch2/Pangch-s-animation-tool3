@@ -149,5 +149,65 @@ namespace BDObjectSystem.Utility
             }
             return true;
         }
+
+
+        public enum IDValidationResult 
+        {
+            Vaild, NoID, Mismatch
+        }
+        /// <summary>
+        /// 해당 root의 자식들 중 기존 알고리즘과 주어진 tag, uuid가 일치하지 않는 오브젝트가 존재한다면 false를 반환합니다.
+        /// </summary>
+        /// <param name="root"></param>
+        /// <param name="tag"></param>
+        /// <param name="uuid"></param>
+        /// <returns></returns>
+        public static IDValidationResult HasVaildID(BdObject root, string tag, int uuid = -1)
+        {
+            var queue = new Queue<BdObject>();
+            queue.Enqueue(root);
+
+            int idx = 1;
+        
+            while (queue.Count > 0)
+            {
+                var obj = queue.Dequeue();
+                
+                if (obj.IsDisplay)
+                {
+                    if (string.IsNullOrEmpty(obj.ID))
+                    {
+                        return IDValidationResult.NoID;
+                    }
+
+                    if (uuid == -1)
+                    {
+                        string expectTag = $"{tag}0,{tag}{idx}";
+                        if (obj.ID != expectTag)
+                        {
+                            return IDValidationResult.Mismatch;
+                        }
+                    }
+                    else
+                    {
+                        string expectTag = $"{uuid},{idx},0,0";
+                        if (obj.ID != expectTag)
+                        {
+                            return IDValidationResult.Mismatch;
+                        }
+                    }
+
+                    idx++;
+                }
+                
+                // BFS
+                if (obj.children == null) continue;
+                foreach (var child in obj.children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+            return IDValidationResult.Vaild;
+        }
     }
 }

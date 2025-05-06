@@ -145,6 +145,13 @@ namespace FileSystem
             if (!isCorrectTag)
             {
                 mainBdObject = await AskAndApplyTagUUIDAdder(filePaths[0]);
+
+                if (mainBdObject == null)
+                {
+                    CustomLog.Log("태그 추가 취소됨, 임포트 중단");
+                    return;
+                }
+
             }
 
             await bdObjManager.AddObject(mainBdObject, mainName);
@@ -154,13 +161,15 @@ namespace FileSystem
             ui.SetLoadingText("Adding Frames...");
             for (int i = 1; i < filePaths.Count; i++)
             {
-                var bdObj = await FileProcessingHelper.ProcessFileAsync(filePaths[i]);
 
-                if (!isCorrectTag)
-                {
-                    // 첫번째 파일에 태그가 없다면 여기에도 똑같은 방식으로 태그 추가
-                    await tagUUIDAdder.ApplyTagOrUUID(bdObj);
-                }
+                // var bdObj = await FileProcessingHelper.ProcessFileAsync(filePaths[i]);
+
+                // if (!isCorrectTag)
+                // {
+                //     // 첫번째 파일에 태그가 없다면 여기에도 똑같은 방식으로 태그 추가
+                //     await tagUUIDAdder.ApplyTagOrUUID(bdObj);
+                // }
+                var bdObj = await GetBDObject(mainAnimObject, filePaths[i]);
 
                 mainAnimObject.AddFrame(bdObj, Path.GetFileNameWithoutExtension(filePaths[i]));
             }
@@ -286,7 +295,14 @@ namespace FileSystem
 
                 try
                 {
-                    var bdObject = await FileProcessingHelper.ProcessFileAsync(filePath);
+                    var bdObject = await GetBDObject(target, filePath);
+
+                    if (bdObject == null)
+                    {
+                        CustomLog.Log("프레임 불러오기 취소됨");
+                        return;
+                    }
+
                     target.AddFrame(
                         Path.GetFileNameWithoutExtension(filePath),
                         bdObject,
@@ -296,7 +312,7 @@ namespace FileSystem
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"프레임 임포트 오류: {e}");
+                    CustomLog.UnityLogErr($"프레임 임포트 오류: {e}");
                 }
                 finally
                 {
@@ -307,6 +323,76 @@ namespace FileSystem
             {
                 CustomLog.Log("프레임 추가용 파일 선택 취소/실패");
             }
+        }
+
+        private async UniTask<BdObject> GetBDObject(AnimObject target, string filePath)
+        {
+            var bdObject = await FileProcessingHelper.ProcessFileAsync(filePath);
+
+            // 태그 있는지 없는지 감지
+            var isCorrectTag = BdObjectHelper.HasVaildID(bdObject, target.tagName, target.uuidNumber);
+            if (isCorrectTag == BdObjectHelper.IDValidationResult.Mismatch)
+            {
+                const string ADDTAGDESC_MISMATCH = "해당 오브젝트에 시작 오브젝트의 태그가 일치하지 않습니다.\n태그를 자동으로 추가하거나 무시하고 넣을 수 있습니다.\n(UUID의 경우 대체됩니다)";
+                bool checkApply = await GameManager.GetManager<UIManager>().SetPopupPanelAsync(
+                    ADDTAGDESC_MISMATCH,
+                    target.tagName + (target.uuidNumber > 0 ? ", uuid:" + target.uuidNumber.ToString() : "")
+                );
+
+                if (checkApply)
+                {
+                    tagUUIDAdder.TagName = target.tagName;
+                    tagUUIDAdder.uuidStartNumber = target.uuidNumber;
+
+                    if (target.uuidNumber > 0)
+                    {
+                        tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.UUID;
+                    }
+                    else
+                    {
+                        tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.TAG;
+                    }
+
+                    tagUUIDAdder.IsReplacingTag = false;
+                    await tagUUIDAdder.ApplyTagOrUUID(bdObject, false);
+                }
+                else
+                {
+                    CustomLog.Log("태그 추가 취소됨");
+                }
+            }
+            else if (isCorrectTag == BdObjectHelper.IDValidationResult.NoID)
+            {
+                const string ADDTAGDESC_NOID = "해당 오브젝트에 태그가 없습니다.\n태그를 자동으로 추가하거나 불러오기를 취소합니다.\n";
+                bool checkApply = await GameManager.GetManager<UIManager>().SetPopupPanelAsync(
+                    ADDTAGDESC_NOID,
+                    target.tagName + (target.uuidNumber > 0 ? ", uuid:" + target.uuidNumber.ToString() : "")
+                );
+
+                if (checkApply)
+                {
+                    tagUUIDAdder.TagName = target.tagName;
+                    tagUUIDAdder.uuidStartNumber = target.uuidNumber;
+
+                    if (target.uuidNumber > 0)
+                    {
+                        tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.UUID;
+                    }
+                    else
+                    {
+                        tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.TAG;
+                    }
+
+                    tagUUIDAdder.IsReplacingTag = false;
+                    await tagUUIDAdder.ApplyTagOrUUID(bdObject, false);
+                }
+                else
+                {
+                    CustomLog.Log("프레임 불러오기 취소됨");
+                    return null;
+                }
+            }
+            return bdObject;
         }
 
         #endregion
@@ -334,12 +420,28 @@ namespace FileSystem
             tagUUIDAdder.SetFilePath(path);
             tagUUIDAdder.SetPanelActive(true);
 
+            async UniTaskVoid UserCancelDetection()
+            {
+                await UniTask.WaitUntil(() => tagUUIDAdder.gameObject.activeSelf == false);
+
+                tcs.TrySetCanceled();
+                tagUUIDAdder.OnBDObjectEdited -= Handler;
+            }
+
+            UserCancelDetection().Forget();
+
             // 5) 편집 완료 이벤트가 발생할 때까지 대기
-            BdObject editedObject = await tcs.Task;
-
-            tagUUIDAdder.SetPanelActive(false);
-
-            return editedObject;
+            try
+            {
+                BdObject editedObject = await tcs.Task;
+                tagUUIDAdder.SetPanelActive(false);
+                return editedObject;
+            }
+            catch (OperationCanceledException)
+            {
+                tagUUIDAdder.SetPanelActive(false);
+                return null;
+            }
         }
 
         #endregion

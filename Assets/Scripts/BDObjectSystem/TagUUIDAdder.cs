@@ -40,7 +40,7 @@ namespace BDObjectSystem
 
         public enum ADDTYPE
         {
-            Tag,
+            TAG,
             UUID,
         }
 
@@ -51,12 +51,12 @@ namespace BDObjectSystem
             set
             {
                 addType = value;
-                infoTexts[0].text = TEXTLIST[addType == ADDTYPE.Tag ? 0 : 1];
-                infoTexts[1].text = TEXTLIST[addType == ADDTYPE.Tag ? 2 : 3];
+                infoTexts[0].text = TEXTLIST[addType == ADDTYPE.TAG ? 0 : 1];
+                infoTexts[1].text = TEXTLIST[addType == ADDTYPE.TAG ? 2 : 3];
 
                 switch (addType)
                 {
-                    case ADDTYPE.Tag:
+                    case ADDTYPE.TAG:
                         uuidStartNumberInputField.gameObject.SetActive(false);
                         break;
                     case ADDTYPE.UUID:
@@ -81,8 +81,7 @@ namespace BDObjectSystem
             }
         }
 
-        [SerializeField]
-        private int uuidStartNumber;
+        public int uuidStartNumber;
         public string UUIDStartNumber
         {
             get { return uuidStartNumber.ToString(); }
@@ -120,11 +119,18 @@ namespace BDObjectSystem
 
         Queue<BdObject> queue = new Queue<BdObject>();
 
+        public Toggle IsReplacingTagToggle;
+
 
         void Start()
         {
-            addTypeToggles[0].onValueChanged.AddListener((_) => { AddType = ADDTYPE.Tag; });
+            addTypeToggles[0].onValueChanged.AddListener((_) => { AddType = ADDTYPE.TAG; });
             addTypeToggles[1].onValueChanged.AddListener((_) => { AddType = ADDTYPE.UUID; });
+
+            IsReplacingTagToggle.onValueChanged.AddListener((isOn) =>
+            {
+                IsReplacingTag = isOn;
+            });
         }
 
         public async void OnAddFileButton()
@@ -153,6 +159,10 @@ namespace BDObjectSystem
         public void SetPanelActive(bool active)
         {
             gameObject.SetActive(active);
+
+            IsReplacingTagToggle.isOn = IsReplacingTag;
+            addTypeToggles[0].isOn = AddType == ADDTYPE.TAG;
+
         }
 
         void CheckSaveButton()
@@ -171,7 +181,7 @@ namespace BDObjectSystem
             {
                 infoText.text = string.Empty;
             }
-            else if (AddType == ADDTYPE.Tag)
+            else if (AddType == ADDTYPE.TAG)
             {
                 infoText.text = string.Format(TEXTLIST[4], tagName);
             }
@@ -239,7 +249,7 @@ namespace BDObjectSystem
                             obj.nbt = string.IsNullOrEmpty(obj.nbt) ? uuidToAdd : $"{obj.nbt},{uuidToAdd}";
                         }
                     }
-                    else if (AddType == ADDTYPE.Tag)
+                    else if (AddType == ADDTYPE.TAG)
                     {
                         tag += $",{tagName}{idx++}";
                     }
@@ -293,12 +303,6 @@ namespace BDObjectSystem
                     DefaultValueHandling = DefaultValueHandling.Ignore,
                 });
 
-
-
-#if UNITY_EDITOR
-                Debug.Log(jsonFile);
-#endif
-
                 byte[] gzip = FileProcessingHelper.CompressGzip(jsonFile);
                 string base64Text = Convert.ToBase64String(gzip);
 
@@ -308,6 +312,16 @@ namespace BDObjectSystem
 
                 await File.WriteAllTextAsync(newFilePath, base64Text);
             }
+
+#if UNITY_EDITOR
+            string deugJson = JsonConvert.SerializeObject(new BdObject[] { bdobject }, new JsonSerializerSettings()
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                DefaultValueHandling = DefaultValueHandling.Ignore,
+            });
+
+            Debug.Log(deugJson);
+#endif
 
             await UniTask.SwitchToMainThread();
 

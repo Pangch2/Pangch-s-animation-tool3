@@ -930,6 +930,7 @@ MonoBehaviour:
   tagNameInputField: {fileID: 4293602203991028141}
   uuidStartNumberInputField: {fileID: 1180009601476206586}
   loadingPanel: {fileID: 202501132287867713}
+  IsReplacingTagToggle: {fileID: 4811465088910183369}
 --- !u!1 &2555706951740188728
 GameObject:
   m_ObjectHideFlags: 0
