@@ -84,12 +84,6 @@ namespace Mainmenu
         {
 
         }
-
-        public void OnAddTagButton()
-        {
-
-        }
-
         async UniTask FadeOut()
         {
             fadeImg.gameObject.SetActive(true);

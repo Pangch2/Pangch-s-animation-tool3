@@ -163,7 +163,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 93299098}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
@@ -668,6 +668,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 198261950}
   m_CullTransparentMesh: 1
+--- !u!114 &267448437 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1862045707142336164, guid: 5339e625f9c3a384289d3b9ad6bda51a, type: 3}
+  m_PrefabInstance: {fileID: 7833738793488936680}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64ec90a39ebeae44ebb6db97232d554f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &294823023
 GameObject:
   m_ObjectHideFlags: 0
@@ -2066,17 +2077,17 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 132695310}
-        m_TargetAssemblyTypeName: Mainmenu.MainmenuManager, Assembly-CSharp
-        m_MethodName: OnAddTagButton
-        m_Mode: 1
+      - m_Target: {fileID: 267448437}
+        m_TargetAssemblyTypeName: BDObjectSystem.TagUUIDAdder, Assembly-CSharp
+        m_MethodName: SetPanelActive
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
-          m_BoolArgument: 0
+          m_BoolArgument: 1
         m_CallState: 2
 --- !u!114 &980340113
 MonoBehaviour:
@@ -2703,7 +2714,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1237388824}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
@@ -2759,7 +2770,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1237388824}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
