@@ -7,6 +7,8 @@ using FileSystem;
 using System;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
+using Mainmenu;
+using DG.Tweening;
 
 namespace GameSystem
 {
@@ -61,6 +63,19 @@ namespace GameSystem
 
             popupApplyButton.onClick.AddListener(() => OnPopupButton(true));
             popupCancelButton.onClick.AddListener(() => OnPopupButton(false));
+
+            if (MainmenuManager.isFirstVisiting)
+            {
+                var canvas = GetComponent<CanvasGroup>();
+
+                canvas.alpha = 0f;
+                canvas.interactable = false;
+
+                canvas.DOFade(1f, 0.5f).SetEase(Ease.InQuart).OnComplete(() =>
+                {
+                    canvas.interactable = true;
+                });
+            }
         }
 
         public void SetLoadingPanel(bool isOn)

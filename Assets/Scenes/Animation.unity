@@ -6747,6 +6747,7 @@ GameObject:
   - component: {fileID: 433026523}
   - component: {fileID: 433026524}
   - component: {fileID: 433026525}
+  - component: {fileID: 433026526}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: GameController
@@ -6862,6 +6863,18 @@ MonoBehaviour:
   - {fileID: 705214064}
   - {fileID: 120069425}
   - {fileID: 344122798}
+--- !u!225 &433026526
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 433026521}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1001 &434492881
 PrefabInstance:
   m_ObjectHideFlags: 0

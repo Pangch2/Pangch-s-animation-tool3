@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Minecraft;
 using TMPro;
 using UnityEngine;
@@ -20,7 +21,13 @@ namespace Mainmenu
 
         public Button[] buttons;
 
-        public RawImage fadeImg;
+        // public RawImage fadeImg;
+        public CanvasGroup menu;
+
+        string backgroundColor = "303030";
+        // public RectTransform previewPanel;
+
+        public static bool isFirstVisiting = false;
 
         // public static readonly Regex VersionRegex = new Regex(@"(\d+)\.(\d+)\.(\d+)", RegexOptions.Compiled);
 
@@ -40,12 +47,14 @@ namespace Mainmenu
             }
             // Debug.Log(path);
             SetNewPath(path).Forget();
+
+            isFirstVisiting = true;
         }
 
         public async UniTask<bool> SetNewPath(string path)
         {
             const string versionPattern = @"(\d+)\.(\d+)\.(\d+)";
-            
+
             string version = Regex.Match(path, versionPattern).Value;
             if (string.IsNullOrEmpty(version))
             {
@@ -71,30 +80,28 @@ namespace Mainmenu
             return true;
         }
 
-        public async void OnAnimatorButton()
+        public void OnAnimatorButton()
         {
             var loadScene = SceneManager.LoadSceneAsync("Animation");
+
             loadScene.allowSceneActivation = false;
-            await FadeOut();
-            await UniTask.Delay(1000);
-            loadScene.allowSceneActivation = true;
+            menu.interactable = false;
+            menu.transform.DOScale(0f, 1f).SetEase(Ease.InOutBack);
+            menu.DOFade(0f, 1f).SetEase(Ease.InOutBack);
+
+            if (ColorUtility.TryParseHtmlString("#" + backgroundColor, out Color color))
+            {
+                var cam = Camera.main;
+                cam.DOColor(color, 1f).SetEase(Ease.InQuad).OnComplete(() =>
+                {
+                    loadScene.allowSceneActivation = true;
+                });
+            }
         }
 
         public void OnDisplayMakerButton()
         {
 
-        }
-        async UniTask FadeOut()
-        {
-            fadeImg.gameObject.SetActive(true);
-            fadeImg.color = new Color(0, 0, 0, 0);
-            float time = 0f;
-            while (time < 1f)
-            {
-                time += Time.deltaTime;
-                fadeImg.color = new Color(0, 0, 0, time);
-                await UniTask.Yield();
-            }
         }
     }
 }

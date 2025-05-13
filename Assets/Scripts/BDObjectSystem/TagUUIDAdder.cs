@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using FileSystem;
 using Newtonsoft.Json;
 using SimpleFileBrowser;
@@ -121,6 +122,11 @@ namespace BDObjectSystem
 
         public Toggle IsReplacingTagToggle;
 
+        public RectTransform panel;
+
+        Tween PanelActiveTween;
+        Tweener PanelHideTween;
+
 
         void Start()
         {
@@ -131,6 +137,10 @@ namespace BDObjectSystem
             {
                 IsReplacingTag = isOn;
             });
+
+            PanelActiveTween = panel.DOLocalMoveY(0, 0.5f).SetEase(Ease.OutBack).SetAutoKill(false).Pause();
+            PanelHideTween = panel.DOLocalMoveY(-panel.rect.height, 0.5f).SetEase(Ease.InQuad).SetAutoKill(false).OnComplete(() => gameObject.SetActive(false)).Pause();
+            // gameObject.SetActive(false);
         }
 
         public async void OnAddFileButton()
@@ -158,7 +168,17 @@ namespace BDObjectSystem
 
         public void SetPanelActive(bool active)
         {
-            gameObject.SetActive(active);
+            if (active)
+            {
+                gameObject.SetActive(true);
+                // panel.localPosition = new Vector3(panel.localPosition.x, -panel.rect.height, panel.localPosition.z);
+                PanelActiveTween.Restart();
+            }
+            else
+            {
+                // panel.position = initPos;
+                PanelHideTween.Restart();
+            }
 
             IsReplacingTagToggle.isOn = IsReplacingTag;
             addTypeToggles[0].isOn = AddType == ADDTYPE.TAG;
