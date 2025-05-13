@@ -329,69 +329,69 @@ namespace FileSystem
         {
             var bdObject = await FileProcessingHelper.ProcessFileAsync(filePath);
 
-            // 태그 있는지 없는지 감지
-            var isCorrectTag = BdObjectHelper.HasVaildID(bdObject, target.tagName, target.uuidNumber);
-            if (isCorrectTag == BdObjectHelper.IDValidationResult.Mismatch)
-            {
-                const string ADDTAGDESC_MISMATCH = "해당 오브젝트에 시작 오브젝트의 태그가 일치하지 않습니다.\n태그를 자동으로 추가하거나 무시하고 넣을 수 있습니다.\n(UUID의 경우 대체됩니다)";
-                bool checkApply = await GameManager.GetManager<UIManager>().SetPopupPanelAsync(
-                    ADDTAGDESC_MISMATCH,
-                    target.tagName + (target.uuidNumber > 0 ? ", uuid:" + target.uuidNumber.ToString() : "")
-                );
+            // // 태그 있는지 없는지 감지
+            // var isCorrectTag = BdObjectHelper.HasVaildID(bdObject, target.tagName, target.uuidNumber);
+            // if (isCorrectTag == BdObjectHelper.IDValidationResult.Mismatch)
+            // {
+            //     const string ADDTAGDESC_MISMATCH = "해당 오브젝트에 시작 오브젝트의 태그가 일치하지 않습니다.\n태그를 자동으로 추가하거나 무시하고 넣을 수 있습니다.\n(UUID의 경우 대체됩니다)";
+            //     bool checkApply = await GameManager.GetManager<UIManager>().SetPopupPanelAsync(
+            //         ADDTAGDESC_MISMATCH,
+            //         target.tagName + (target.uuidNumber > 0 ? ", uuid:" + target.uuidNumber.ToString() : "")
+            //     );
 
-                if (checkApply)
-                {
-                    tagUUIDAdder.TagName = target.tagName;
-                    tagUUIDAdder.uuidStartNumber = target.uuidNumber;
+            //     if (checkApply)
+            //     {
+            //         tagUUIDAdder.TagName = target.tagName;
+            //         tagUUIDAdder.uuidStartNumber = target.uuidNumber;
 
-                    if (target.uuidNumber > 0)
-                    {
-                        tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.UUID;
-                    }
-                    else
-                    {
-                        tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.TAG;
-                    }
+            //         if (target.uuidNumber > 0)
+            //         {
+            //             tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.UUID;
+            //         }
+            //         else
+            //         {
+            //             tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.TAG;
+            //         }
 
-                    tagUUIDAdder.IsReplacingTag = false;
-                    await tagUUIDAdder.ApplyTagOrUUID(bdObject, false);
-                }
-                else
-                {
-                    CustomLog.Log("태그 추가 취소됨");
-                }
-            }
-            else if (isCorrectTag == BdObjectHelper.IDValidationResult.NoID)
-            {
-                const string ADDTAGDESC_NOID = "해당 오브젝트에 태그가 없습니다.\n태그를 자동으로 추가하거나 불러오기를 취소합니다.\n";
-                bool checkApply = await GameManager.GetManager<UIManager>().SetPopupPanelAsync(
-                    ADDTAGDESC_NOID,
-                    target.tagName + (target.uuidNumber > 0 ? ", uuid:" + target.uuidNumber.ToString() : "")
-                );
+            //         tagUUIDAdder.IsReplacingTag = false;
+            //         await tagUUIDAdder.ApplyTagOrUUID(bdObject, false);
+            //     }
+            //     else
+            //     {
+            //         CustomLog.Log("태그 추가 취소됨");
+            //     }
+            // }
+            // else if (isCorrectTag == BdObjectHelper.IDValidationResult.NoID)
+            // {
+            //     const string ADDTAGDESC_NOID = "해당 오브젝트에 태그가 없습니다.\n태그를 자동으로 추가하거나 불러오기를 취소합니다.\n";
+            //     bool checkApply = await GameManager.GetManager<UIManager>().SetPopupPanelAsync(
+            //         ADDTAGDESC_NOID,
+            //         target.tagName + (target.uuidNumber > 0 ? ", uuid:" + target.uuidNumber.ToString() : "")
+            //     );
 
-                if (checkApply)
-                {
-                    tagUUIDAdder.TagName = target.tagName;
-                    tagUUIDAdder.uuidStartNumber = target.uuidNumber;
+            //     if (checkApply)
+            //     {
+            //         tagUUIDAdder.TagName = target.tagName;
+            //         tagUUIDAdder.uuidStartNumber = target.uuidNumber;
 
-                    if (target.uuidNumber > 0)
-                    {
-                        tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.UUID;
-                    }
-                    else
-                    {
-                        tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.TAG;
-                    }
+            //         if (target.uuidNumber > 0)
+            //         {
+            //             tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.UUID;
+            //         }
+            //         else
+            //         {
+            //             tagUUIDAdder.AddType = TagUUIDAdder.ADDTYPE.TAG;
+            //         }
 
-                    tagUUIDAdder.IsReplacingTag = false;
-                    await tagUUIDAdder.ApplyTagOrUUID(bdObject, false);
-                }
-                else
-                {
-                    CustomLog.Log("프레임 불러오기 취소됨");
-                    return null;
-                }
-            }
+            //         tagUUIDAdder.IsReplacingTag = false;
+            //         await tagUUIDAdder.ApplyTagOrUUID(bdObject, false);
+            //     }
+            //     else
+            //     {
+            //         CustomLog.Log("프레임 불러오기 취소됨");
+            //         return null;
+            //     }
+            // }
             return bdObject;
         }
 

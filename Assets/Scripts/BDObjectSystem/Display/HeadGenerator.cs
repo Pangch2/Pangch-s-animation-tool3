@@ -164,5 +164,20 @@ namespace BDObjectSystem.Display
 
         }
 
+        [ContextMenu("Save Texture")]
+        public void SaveTexture()
+        {
+            if (headTexture == null)
+            {
+                CustomLog.LogError("Head Texture is null.");
+                return;
+            }
+
+            var path = Application.dataPath + "/../" + "HeadTexture.png";
+            var bytes = headTexture.EncodeToPNG();
+            System.IO.File.WriteAllBytes(path, bytes);
+            CustomLog.Log("Head Texture saved to: " + path);
+        }
+
     }
 }

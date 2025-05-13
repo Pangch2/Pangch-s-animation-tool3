@@ -116,5 +116,10 @@ namespace GameSystem
 
             return await tcs.Task;
         }
+
+        void OnDestroy()
+        {
+            _currentUIStatus = UIStatus.None;
+        }
     }
 }

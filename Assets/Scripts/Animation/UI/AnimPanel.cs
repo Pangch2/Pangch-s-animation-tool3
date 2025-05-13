@@ -7,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Animation.UI
@@ -240,6 +241,8 @@ namespace Animation.UI
 
             // 모든 트랙 제거
             GameManager.GetManager<AnimObjList>().ResetAnimObject();
+
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
         }
     }

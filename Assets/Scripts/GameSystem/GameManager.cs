@@ -63,7 +63,6 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        // �ڱ� �ڽ��� ��� ��� (�˻� ����)
         if (Instance == null)
         {
             _instance = this;
@@ -76,8 +75,9 @@ public class GameManager : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
     }
 
-    private void OnDestroy()
+    void OnDestroy()
     {
+        _instance = null;
         _managers.Clear();
     }
 }

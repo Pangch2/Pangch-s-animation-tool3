@@ -21,10 +21,7 @@ namespace Minecraft
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new MinecraftFileManager();
-                }
+                _instance ??= new MinecraftFileManager();
                 return _instance;
             }
         }
