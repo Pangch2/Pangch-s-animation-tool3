@@ -245,5 +245,23 @@ namespace Animation.UI
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
         }
+
+        public void OnPressDeleteKey()
+        {
+            var contextMenu = GameManager.GetManager<ContextMenuManager>();
+            if (contextMenu.currentType == ContextMenuManager.ContextMenuType.Frame && contextMenu.isMenuActive == true)
+            {
+                contextMenu.OnFrameRemoveButton();
+            }
+        }
+
+        public void OnPressAddKey()
+        {
+            var contextMenu = GameManager.GetManager<ContextMenuManager>();
+            if (contextMenu.currentType == ContextMenuManager.ContextMenuType.NewFrame && contextMenu.isMenuActive == true)
+            {
+                contextMenu.OnAddFrameButtonClicked();
+            }
+        }
     }
 }

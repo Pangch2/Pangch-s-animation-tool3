@@ -642,6 +642,24 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Delete"",
+                    ""type"": ""Button"",
+                    ""id"": ""95a69659-03cb-4f41-a4ad-e82ed3497307"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Add"",
+                    ""type"": ""Button"",
+                    ""id"": ""c1271616-9755-4aec-9291-fe9f344b9c6d"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -710,6 +728,39 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""action"": ""Save"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f41e5681-bed6-4c90-be12-b48b338ad358"",
+                    ""path"": ""<Keyboard>/delete"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Delete"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""25ca0c09-8c83-4072-8adb-c2a4e2a93045"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Add"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7d14bcfc-9864-4b07-a41f-d7062508e478"",
+                    ""path"": ""<Keyboard>/insert"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Add"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -903,6 +954,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Animation_MoveTickRight = m_Animation.FindAction("MoveTickRight", throwIfNotFound: true);
         m_Animation_PlayPause = m_Animation.FindAction("PlayPause", throwIfNotFound: true);
         m_Animation_Save = m_Animation.FindAction("Save", throwIfNotFound: true);
+        m_Animation_Delete = m_Animation.FindAction("Delete", throwIfNotFound: true);
+        m_Animation_Add = m_Animation.FindAction("Add", throwIfNotFound: true);
         // Camera
         m_Camera = asset.FindActionMap("Camera", throwIfNotFound: true);
         m_Camera_CameraReset = m_Camera.FindAction("CameraReset", throwIfNotFound: true);
@@ -1191,6 +1244,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Animation_MoveTickRight;
     private readonly InputAction m_Animation_PlayPause;
     private readonly InputAction m_Animation_Save;
+    private readonly InputAction m_Animation_Delete;
+    private readonly InputAction m_Animation_Add;
     /// <summary>
     /// Provides access to input actions defined in input action map "Animation".
     /// </summary>
@@ -1218,6 +1273,14 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Animation/Save".
         /// </summary>
         public InputAction @Save => m_Wrapper.m_Animation_Save;
+        /// <summary>
+        /// Provides access to the underlying input action "Animation/Delete".
+        /// </summary>
+        public InputAction @Delete => m_Wrapper.m_Animation_Delete;
+        /// <summary>
+        /// Provides access to the underlying input action "Animation/Add".
+        /// </summary>
+        public InputAction @Add => m_Wrapper.m_Animation_Add;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1256,6 +1319,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Save.started += instance.OnSave;
             @Save.performed += instance.OnSave;
             @Save.canceled += instance.OnSave;
+            @Delete.started += instance.OnDelete;
+            @Delete.performed += instance.OnDelete;
+            @Delete.canceled += instance.OnDelete;
+            @Add.started += instance.OnAdd;
+            @Add.performed += instance.OnAdd;
+            @Add.canceled += instance.OnAdd;
         }
 
         /// <summary>
@@ -1279,6 +1348,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Save.started -= instance.OnSave;
             @Save.performed -= instance.OnSave;
             @Save.canceled -= instance.OnSave;
+            @Delete.started -= instance.OnDelete;
+            @Delete.performed -= instance.OnDelete;
+            @Delete.canceled -= instance.OnDelete;
+            @Add.started -= instance.OnAdd;
+            @Add.performed -= instance.OnAdd;
+            @Add.canceled -= instance.OnAdd;
         }
 
         /// <summary>
@@ -1630,6 +1705,20 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSave(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Delete" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDelete(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Add" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnAdd(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Camera" which allows adding and removing callbacks.

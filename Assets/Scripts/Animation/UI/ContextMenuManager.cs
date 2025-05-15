@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using Animation.AnimFrame;
 using FileSystem;
+using UnityEngine.InputSystem;
 
 namespace Animation.UI
 {
@@ -30,6 +31,8 @@ namespace Animation.UI
         public Frame currentFrame;
         public AnimObject currentObj;
         public int animObjectsTick;
+
+        public bool isMenuActive;
 
         private void Start()
         {
@@ -83,12 +86,14 @@ namespace Animation.UI
             Vector2 mousePos = Input.mousePosition;
             contextMenu.SetActive(true);
 
-            if (mousePos.x + contextMenuContent.sizeDelta.x * 2.5f > Screen.width)
-            {
-                mousePos.x -= contextMenuContent.sizeDelta.x * 2.5f;
-            }
+            // if (mousePos.x + contextMenuContent.sizeDelta.x > Screen.width)
+            // {
+            //     mousePos.x -= contextMenuContent.sizeDelta.x;
+            // }
             contextMenuContent.anchoredPosition = mousePos;
             contextMenuBtns[(int)currentType].SetActive(true);
+
+            isMenuActive = true;
         }
 
         // �޴� �ݱ�
@@ -96,6 +101,8 @@ namespace Animation.UI
         {
             contextMenuBtns[(int)currentType].SetActive(false);
             contextMenu.SetActive(false);
+
+            isMenuActive = false;
         }
 
         public void OnAddFrameButtonClicked()
