@@ -27,8 +27,11 @@ namespace Mainmenu
         private void SetupFileBrowser()
         {
             FileBrowser.AddQuickLink("Launcher Folder", Application.dataPath + "/../");
+            FileBrowser.AddQuickLink("Minecraft Folder", Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                ".minecraft"
+            ));
 
-            // OS 별로 “Downloads” 폴더 찾기
             var download = Path.GetDirectoryName(
                 Environment.GetFolderPath(Environment.SpecialFolder.Personal)
             );

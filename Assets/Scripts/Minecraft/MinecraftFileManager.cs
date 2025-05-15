@@ -21,10 +21,7 @@ namespace Minecraft
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new MinecraftFileManager();
-                }
+                _instance ??= new MinecraftFileManager();
                 return _instance;
             }
         }
@@ -179,9 +176,7 @@ namespace Minecraft
 
             if (!File.Exists(path))
             {
-                
-                CustomLog.UnityLogErr("File not found: " + path);
-                return;
+                throw new FileNotFoundException("Minecraft JAR file not found", path);
             }
 
             using (var jarArchive = ZipFile.OpenRead(path))
@@ -274,7 +269,7 @@ namespace Minecraft
         }
 
         // �ֻ��� ���� �̸� ����
-        private static string GetTopLevelFolder(string fullPath, string targetFolder)
+        private string GetTopLevelFolder(string fullPath, string targetFolder)
         {
             var relativePath = fullPath[(targetFolder.Length + 1)..]; // targetFolder ���� ���
             var firstSlashIndex = relativePath.IndexOf('/');
@@ -282,7 +277,7 @@ namespace Minecraft
         }
 
         // �־��� ���� ��ΰ� ���� ���ϴ� textures ��� �� �ϳ����� Ȯ��
-        private static bool IsReadFolder(string fullPath, string[] readTexturesFolders)
+        private bool IsReadFolder(string fullPath, string[] readTexturesFolders)
         {
             foreach (var texture in readTexturesFolders)
             {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using TMPro;
@@ -16,6 +17,11 @@ namespace GameSystem
 
         private void Awake()
         {
+            if (instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
             instance = this;
         }
 
@@ -24,7 +30,7 @@ namespace GameSystem
             text[_index].text = message.ToString();
             text[_index].color = co;
             // StartCoroutine(TextCoroutine(text[_index]));
-            TextCoroutine(text[_index]).Forget();
+            TextCoroutine(text[_index], this.GetCancellationTokenOnDestroy()).Forget();
 
             _index = (_index + 1) % text.Length;
         }
@@ -34,12 +40,24 @@ namespace GameSystem
             Log(message, Color.white);
         }
 
-        private async UniTask TextCoroutine(TextMeshProUGUI txt)
+        private async UniTask TextCoroutine(TextMeshProUGUI txt, CancellationToken token)
         {
-            txt.gameObject.SetActive(true);
-            await UniTask.Delay(TimeSpan.FromSeconds(5f));
-            txt.color = Color.clear;
-            txt.gameObject.SetActive(false);
+            try
+            {
+                txt.gameObject.SetActive(true);
+                await UniTask.Delay(TimeSpan.FromSeconds(5f), cancellationToken: token);
+                txt.color = Color.clear;
+                txt.gameObject.SetActive(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Handle cancellation if needed
+            }
+        }
+
+        void OnDestroy()
+        {
+            instance = null;
         }
     }
 }

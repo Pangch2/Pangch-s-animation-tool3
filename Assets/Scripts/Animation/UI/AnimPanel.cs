@@ -7,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Animation.UI
@@ -241,6 +242,26 @@ namespace Animation.UI
             // 모든 트랙 제거
             GameManager.GetManager<AnimObjList>().ResetAnimObject();
 
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+        }
+
+        public void OnPressDeleteKey()
+        {
+            var contextMenu = GameManager.GetManager<ContextMenuManager>();
+            if (contextMenu.currentType == ContextMenuManager.ContextMenuType.Frame && contextMenu.isMenuActive == true)
+            {
+                contextMenu.OnFrameRemoveButton();
+            }
+        }
+
+        public void OnPressAddKey()
+        {
+            var contextMenu = GameManager.GetManager<ContextMenuManager>();
+            if (contextMenu.currentType == ContextMenuManager.ContextMenuType.NewFrame && contextMenu.isMenuActive == true)
+            {
+                contextMenu.OnAddFrameButtonClicked();
+            }
         }
     }
 }

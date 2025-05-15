@@ -48,7 +48,7 @@ namespace FileSystem
 
         public void SetPathText(string path)
         {
-            Debug.Log($"Export path: {path}");
+            // Debug.Log($"Export path: {path}");
             currentPath = path.Replace("\\", "/");
             if (currentPath.EndsWith(exportFolder))
             {
