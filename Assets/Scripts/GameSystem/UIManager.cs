@@ -55,6 +55,8 @@ namespace GameSystem
         public Button popupCancelButton;
         public Action<bool> onApplyOrCancel;
 
+        public CanvasGroup canvasGroup;
+
         private void Start()
         {
             _fileManager = GameManager.GetManager<FileLoadManager>();
@@ -64,16 +66,16 @@ namespace GameSystem
             popupApplyButton.onClick.AddListener(() => OnPopupButton(true));
             popupCancelButton.onClick.AddListener(() => OnPopupButton(false));
 
+            canvasGroup = GetComponent<CanvasGroup>();
+
             if (MainmenuManager.isFirstVisiting)
             {
-                var canvas = GetComponent<CanvasGroup>();
+                canvasGroup.alpha = 0f;
+                canvasGroup.interactable = false;
 
-                canvas.alpha = 0f;
-                canvas.interactable = false;
-
-                canvas.DOFade(1f, 0.5f).SetEase(Ease.InQuart).OnComplete(() =>
+                canvasGroup.DOFade(1f, 0.5f).SetEase(Ease.InQuart).OnComplete(() =>
                 {
-                    canvas.interactable = true;
+                    canvasGroup.interactable = true;
                 });
             }
         }

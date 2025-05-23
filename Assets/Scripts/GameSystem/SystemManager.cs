@@ -5,6 +5,8 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using BDObjectSystem;
+using Minecraft;
+using UnityEngine.SceneManagement;
 
 namespace GameSystem
 {
@@ -41,17 +43,22 @@ namespace GameSystem
                     textColor = color
                 }
             };
+
+            if (MinecraftFileManager.Instance.IsReadedFiles == false)
+            {
+                SceneManager.LoadScene("Mainmenu");
+            }
         }
 
         private void OnGUI()
         {
-            var rect = new Rect(Screen.width - 200, 70, Screen.width, Screen.height);
+            var rect = new Rect(Screen.width - 200, 100, Screen.width, Screen.height);
 
             var ms = _deltaTime * 1000f;
             var fps = 1.0f / _deltaTime;
             var text = $"{fps:0.} FPS ({ms:0.0} ms)";
         
-            var versionRect = new Rect(Screen.width - 200, 40, Screen.width, Screen.height);
+            var versionRect = new Rect(Screen.width - 200, 70, Screen.width, Screen.height);
             var version = string.Format("Version: {0}", Application.version);
 
             GUI.Label(rect, text, _style);
