@@ -15,6 +15,9 @@ namespace Animation.UI
 
         public RectTransform canvasRectTransform;
 
+        [Tooltip("패널 상단이 최대로 올라갈 수 있는 위치를 캔버스 높이 대비 비율로 설정합니다. (예: 0.9는 캔버스 높이의 90% 지점까지).")]
+        public float maxPanelTopRatio = 0.9f;
+
         private OnHoverCursor _onHoverCursor;
         private bool isOnOff;
 
@@ -45,15 +48,17 @@ namespace Animation.UI
             if (_isDragging)
             {
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvasRectTransform,  // ĵ������ RectTransform
-                    Input.mousePosition,                   // ���콺 ��ġ (Screen Space)
-                    null,                    // ���� ����ϴ� ī�޶�
-                    out var localPoint                         // ��ȯ�� UI ��ǥ
+                    canvasRectTransform,
+                    Input.mousePosition,                 
+                    null,                
+                    out var localPoint       
                 );
-                //Debug.Log(localPoint);
-                //Debug.Log(canvasRectTransform.rect.height);
+                
+                float targetY = canvasRectTransform.rect.height / 2 + localPoint.y;
+                float maxYPosition = canvasRectTransform.rect.height * maxPanelTopRatio;
+                targetY = Mathf.Min(targetY, maxYPosition);
 
-                SetPanelSize(canvasRectTransform.rect.height / 2 + localPoint.y);
+                SetPanelSize(targetY);
 
                 if (Input.GetMouseButtonUp(0))
                 {

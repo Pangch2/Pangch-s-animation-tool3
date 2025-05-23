@@ -50,9 +50,8 @@ namespace Minecraft
 
         // public static string MinecraftPath = ".minecraft/versions";
         // private const string MinecraftVersion = "1.21.4";
-        public static string MinecraftVersion = "1.21.4";
-
-        // [SerializeField] private string filePath = string.Empty;
+        public static string MinecraftVersion = "1.21.5";
+        public bool IsReadedFiles { get; private set; } = false;
 
         // 시작하면 마크 파일 읽음 
         public async UniTask<bool> ReadMinecraftFile(string path, string version)
@@ -61,7 +60,6 @@ namespace Minecraft
             try
             {
                 await ReadJarFile(path, "assets/minecraft");
-
             }
             catch (Exception e)
             {
@@ -69,8 +67,8 @@ namespace Minecraft
                 return false;
             }
             MinecraftVersion = version;
+            IsReadedFiles = true;
             return true;
-
         }
 
         #region Static functions

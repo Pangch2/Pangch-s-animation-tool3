@@ -16,7 +16,7 @@ namespace Mainmenu
 
         const string helpURL = "https://potangaming.tistory.com/319";
 
-        FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", ".jar");
+        readonly FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", ".jar");
 
         void Start()
         {
@@ -27,16 +27,12 @@ namespace Mainmenu
         private void SetupFileBrowser()
         {
             FileBrowser.AddQuickLink("Launcher Folder", Application.dataPath + "/../");
-            FileBrowser.AddQuickLink("Minecraft Folder", Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                ".minecraft"
-            ));
 
             var download = Path.GetDirectoryName(
                 Environment.GetFolderPath(Environment.SpecialFolder.Personal)
             );
-            download = Path.Combine(download, "Downloads");
-            FileBrowser.AddQuickLink("Downloads", download);
+            FileBrowser.AddQuickLink("Downloads", Path.Combine(download, "Downloads"));
+            FileBrowser.AddQuickLink("Appdata", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
         }
 
         public void OnPanelButton()

@@ -5,6 +5,9 @@ using TMPro;
 using System.Collections;
 using SimpleFileBrowser;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 namespace GameSystem
 {
@@ -41,7 +44,7 @@ namespace GameSystem
                 button.interactable = _saveManager.IsNoneSaved;
             }
         }
-        
+
         #region  Button Events
 
         public void OnSaveButton()
@@ -54,6 +57,14 @@ namespace GameSystem
             else
             {
                 _saveManager.SaveMCDEFile();
+            }
+        }
+
+        public void OnSaveKeyInput(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+            {
+                OnSaveButton();
             }
         }
 
@@ -75,6 +86,16 @@ namespace GameSystem
         public void OnGitHubButton()
         {
             Application.OpenURL(githubURL);
+        }
+
+        public void OnBacktoMainMenuButton()
+        {
+            GameManager.GetManager<UIManager>().canvasGroup.DOFade(0f, 0.5f).SetEase(Ease.InQuart).OnComplete(() =>
+            {
+                GameManager.GetManager<UIManager>().canvasGroup.interactable = false;
+                SceneManager.LoadScene("Mainmenu");
+            });
+            
         }
         #endregion
 
@@ -102,6 +123,7 @@ namespace GameSystem
             FilePanelButtons.SetActive(false);
             UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnMenuBarPanel;
         }
+        
 
         #endregion
     }

@@ -12,6 +12,7 @@ public class GridDrawer : MonoBehaviour
         DrawGrid();
     }
 
+    [ContextMenu("DrawGrid")]
     private void DrawGrid()
     {
         DrawLine(Vector3.zero, new Vector3(gridSize, 0.02f, 0.02f), Color.red);
@@ -25,7 +26,7 @@ public class GridDrawer : MonoBehaviour
         var obj = Instantiate(cube, pos, Quaternion.identity, transform);
         obj.transform.localScale = size;
 
-        obj.GetComponent<Renderer>().material.color = color;
+        // obj.GetComponent<Renderer>().material.color = color;
     }
 
     //private void OnDrawGizmos()

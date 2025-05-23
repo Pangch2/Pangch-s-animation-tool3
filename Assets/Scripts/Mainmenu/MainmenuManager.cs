@@ -24,7 +24,7 @@ namespace Mainmenu
         // public RawImage fadeImg;
         public CanvasGroup menu;
 
-        string backgroundColor = "303030";
+        const string backgroundColor = "303030";
         // public RectTransform previewPanel;
 
         public static bool isFirstVisiting = false;
