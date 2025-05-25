@@ -38,7 +38,6 @@ public class GameManager : MonoBehaviour
         return null;
     }
 
-
     public static void SetPlayerInput(bool OnOff)
     {
         if (OnOff)
@@ -70,9 +69,11 @@ public class GameManager : MonoBehaviour
         else if (Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
 
         playerInput = GetComponent<PlayerInput>();
+        Resources.UnloadUnusedAssets();
     }
 
     void OnDestroy()

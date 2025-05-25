@@ -7,10 +7,11 @@ using UnityEngine.UI;
 using Animation.UI;
 using Animation;
 using System;
+using UnityEngine.InputSystem;
 
 namespace Animation.AnimFrame
 {
-    public class Frame : MonoBehaviour, IPointerDownHandler//, IPointerUpHandler
+    public class Frame : MonoBehaviour, IPointerDownHandler
     {
         [Header("Frame Components")]
         public RectTransform rect;
@@ -19,9 +20,12 @@ namespace Animation.AnimFrame
 
         private Color _initColor;
         private readonly Color _selectedColor = Color.yellow;
+        private bool isMouseDown;
+        // isSelected는 이제 AnimObjList에 의해 SetSelectedVisual을 통해 관리됩니다.
+        // 드래그 로직 등 Frame 내부 로직에 필요할 수 있어 유지합니다.
+        private bool isSelected = false;
 
         [Header("Frame Info")]
-        public bool isSelected;
         public int tick;
         public int interpolation;
         public string fileName;
@@ -32,40 +36,43 @@ namespace Animation.AnimFrame
         public BdObject Info;
         public Dictionary<string, BdObject> leafObjects;
 
-        // 모델의 부모 자식 구조가 다를 경우
         public bool IsModelDiffrent;
         public Dictionary<string, Matrix4x4> worldMatrixDict = null;
-        // 모델의 모든 노드 ID:Matrix4x4을 저장하는 딕셔너리
         public Dictionary<string, Matrix4x4> modelMatrixDict = new Dictionary<string, Matrix4x4>();
         public Dictionary<string, Matrix4x4> interJumpDict = new Dictionary<string, Matrix4x4>();
         public bool IsJump = false;
 
         private Timeline _timeline;
+        private AnimObjList _animObjList; // AnimObjList 참조
 
         public void Init(string initFileName, int initTick, int inter, BdObject info, AnimObject obj, Timeline timeLine)
         {
             //Debug.Log("tick : " + tick);
             fileName = initFileName;
             animObject = obj;
-            _initColor = outlineImage.color;
+            if (outlineImage != null) // outlineImage가 할당되었는지 확인
+            {
+                _initColor = outlineImage.color;
+            }
             _timeline = timeLine;
             Info = info;
             tick = initTick;
             leafObjects = BdObjectHelper.SetDisplayDict(info, modelMatrixDict);
 
+            _animObjList = GameManager.GetManager<AnimObjList>(); // AnimObjList 인스턴스 가져오기
+
             UpdatePos();
-            _timeline.OnGridChanged += UpdatePos;
+            if (_timeline != null)
+            {
+                _timeline.OnGridChanged += UpdatePos;
+            }
 
-
-            IsModelDiffrent = animObject.animator.RootObject.BdObjectID != info.ID;
+            if (animObject != null && animObject.animator != null && animObject.animator.RootObject != null && info != null)
+            {
+                IsModelDiffrent = animObject.animator.RootObject.BdObjectID != info.ID;
+            }
             worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
             SetInter(inter);
-            //Debug.Log(animObject.animator);
-            // if (IsModelDiffrent)
-            // {
-            //     Debug.Log($"Model is different, name : {fileName}\nModel : {animObject.animator.RootObject.bdObjectID}\nInfo : {info.ID}");
-
-            // }
         }
 
         public Matrix4x4 GetMatrix(string id)
@@ -183,15 +190,19 @@ namespace Animation.AnimFrame
         public void UpdateInterpolationJump()
         {
             int idx = animObject.frames.IndexOfKey(tick);
-            if (idx <= 0 || idx >= animObject.frames.Count - 1) return;
-            // 범위 밖이면 업데이트 불가
+            if (idx <= 0 || idx >= animObject.frames.Count - 1)
+            {
+                IsJump = false;
+                interJumpDict.Clear();
+                return; // 범위 밖이면 Jump를 하지 않음
+            }
 
             // 다음 프레임
             Frame nextFrame = animObject.frames.Values[idx + 1];
 
             // (1) 점프 발생 여부 체크
             // "tick + interpolation > nextFrame.tick" → 보간점프 발생
-            
+
             bool isJump = (tick + interpolation) > nextFrame.tick;
 
             interJumpDict.Clear();
@@ -260,39 +271,106 @@ namespace Animation.AnimFrame
         /// <param name="eventData"></param>
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (eventData.button == PointerEventData.InputButton.Left)
-            {
-                isSelected = true;
-                outlineImage.color = _selectedColor;
-            }
-            else
+            if (eventData.button == PointerEventData.InputButton.Right)
             {
                 GameManager.GetManager<ContextMenuManager>().ShowContextMenu(this);
+                return; // 오른쪽 클릭 시 선택 로직 중단
+            }
+
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                bool isCtrlPressed = Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed;
+                bool isShiftPressed = Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed;
+
+                // AnimObjList에 클릭 이벤트 처리를 위임합니다.
+                // AnimObjList는 이 정보를 바탕으로 선택 상태를 결정하고,
+                // 필요한 프레임들의 SetSelectedVisual을 호출합니다.
+                _animObjList.HandleFrameClick(this, isCtrlPressed, isShiftPressed);
+
+                // 왼쪽 클릭 시 드래그 가능 상태로 만듭니다.
+                // 실제 드래그 동작은 Update 메서드에서 isSelected 상태를 확인 후 처리됩니다.
+                isMouseDown = true;
+            }
+        }
+
+        /// <summary>
+        /// 프레임의 선택된 시각적 상태를 설정합니다. AnimObjList에 의해 호출됩니다.
+        /// </summary>
+        /// <param name="select">선택 여부</param>
+        public void SetSelectedVisual(bool select)
+        {
+            this.isSelected = select;
+            if (outlineImage != null)
+            {
+                outlineImage.color = select ? _selectedColor : _initColor;
             }
         }
 
         private void Update()
         {
-            if (!isSelected) return;
+            // 기존의 Update 내 선택 해제 로직은 AnimObjList 또는 전역 클릭 관리자로 이전하는 것이 좋습니다.
+            // if (Mouse.current.leftButton.wasPressedThisFrame && isSelected && !isMouseDown) ... 부분 제거
 
-            Vector2 mouse = Input.mousePosition;
-            var line = _timeline.GetTickLine(mouse);
-
-            SetTick(line.Tick);
-
-            if (Input.GetMouseButtonUp(0))
+            if (isMouseDown)
             {
-                isSelected = false;
-                outlineImage.color = _initColor;
+                // 이 프레임이 선택된 상태일 때만 드래그 로직을 실행합니다.
+                if (isSelected)
+                {
+                    Vector2 mouse = Input.mousePosition;
+                    if (_timeline != null)
+                    {
+                        var line = _timeline.GetTickLine(mouse);
+                        if (line != null) // line이 null이 아닌지 확인
+                        {
+                            SetTick(line.Tick);
+                        }
+                    }
+                }
+
+                if (Mouse.current.leftButton.wasReleasedThisFrame)
+                {
+                    isMouseDown = false;
+                }
             }
         }
 
-
         public void RemoveFrame()
         {
-            _timeline.OnGridChanged -= UpdatePos;
-            animObject.RemoveFrame(this);
+            if (animObject != null)
+            {
+                animObject.RemoveFrame(this); // AnimObject에서 프레임 제거
+            }
+
+            // AnimObjList에 프레임 제거를 알려 선택 목록 등에서 처리하도록 합니다.
+            _animObjList.HandleFrameRemoval(this);
+            // 로컬 isSelected 상태는 SetSelectedVisual을 통해 AnimObjList가 관리하므로 직접 false로 설정할 필요는 없습니다.
+            // 만약 HandleFrameRemoval이 SetSelectedVisual(false)를 호출하지 않는다면 여기서 호출해야 할 수 있습니다.
         }
 
+        void OnDestroy()
+        {
+            if (_timeline != null)
+            {
+                _timeline.OnGridChanged -= UpdatePos;
+            }
+        }
+
+        public Frame Duplicate()
+        {
+            if (this.Info == null)
+            {
+                CustomLog.UnityLogErr("Cannot duplicate Frame: Original Info is null.");
+                return null;
+            }
+            if (animObject == null)
+            {
+                CustomLog.UnityLogErr("Cannot duplicate Frame: animObject is null.");
+                return null;
+            }
+
+            BdObject clonedInfo = this.Info.Clone();
+            // AddFrame 내부에서 tick 충돌을 처리하므로, 여기서는 원하는 tick (예: 현재 tick + 1)을 전달합니다.
+            return animObject.AddFrame(this.fileName + "_copy", clonedInfo, this.tick + 1, this.interpolation);
+        }
     }
 }

@@ -169,6 +169,12 @@ MonoBehaviour:
   title: {fileID: 8027856302380058809}
   firstFrame: {fileID: 7037197520870428462}
   bdFileName: 
+  animator:
+    RootObject: {fileID: 0}
+  tagName: 
+  uuidNumber: -1
+  triggerObject: {fileID: 715638419469086395}
+  DebugTick: 0
 --- !u!1 &6758444556846725055
 GameObject:
   m_ObjectHideFlags: 0
@@ -427,8 +433,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 5112992045832374482}
-        m_TargetAssemblyTypeName: AnimObject, Assembly-CSharp
-        m_MethodName: RemoveAnimObj
+        m_TargetAssemblyTypeName: Animation.AnimFrame.AnimObject, Assembly-CSharp
+        m_MethodName: OnRemoveButtonClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
