@@ -29,13 +29,16 @@ namespace FileSystem
         public HashSet<HeadGenerator> WorkingGenerators => fileLoadManager.WorkingGenerators; // FileLoadManager에서 이동
 
         public MCDEANIMFile currentMDEFile;
-        public bool IsNoneSaved { get; private set; } = true;
+        public bool IsNoneSaved = true;
         public bool SavingProgressStatus = false;
+
+        public ExportSettingUIManager exportSettingUIManager;
 
         private void Start()
         {
             bdObjManager = GameManager.GetManager<BdObjectManager>();
             fileLoadManager = GameManager.GetManager<FileLoadManager>();
+            exportSettingUIManager = GameManager.GetManager<ExportSettingUIManager>();
         }
 
         public void MakeNewMDEFile(string name)
@@ -61,27 +64,24 @@ namespace FileSystem
         // MDE 파일 업데이트하고 저장.
         public void SaveMCDEFile()
         {
-            currentMDEFile.UpdateInfo(GameManager.GetManager<AnimObjList>().animObjects);
-            // Serialize currentMDEFile to JSON and save to the specified path
-            // string json = JsonConvert.SerializeObject(currentMDEFile, Formatting.Indented);
-            // string fullPath = System.IO.Path.Combine(path, currentMDEFile.name + ".mde");
-            // System.IO.File.WriteAllText(MDEFilePath, json);
+            if (SavingProgressStatus) return;
 
-            if (SavingProgressStatus) return; // 저장 중이면 추가 저장 불가
+            // Export 설정을 MCDEANIMFile에 반영
+            if (currentMDEFile != null)
+            {
+                exportSettingUIManager.ApplySettingsToFile(currentMDEFile);
+            }
+            else if (currentMDEFile == null)
+            {
+                CustomLog.LogError("currentMDEFile이 null입니다. 저장을 진행할 수 없습니다.");
+                return;
+            }
+
+
+            currentMDEFile.UpdateInfo(GameManager.GetManager<AnimObjList>().animObjects);
+            // currentMDEFile.exportPath = MDEFilePath; // 파일 저장 경로도 MDEFile에 저장 (선택 사항, 이미 MDEFilePath 변수에 있음)
 
             SaveObjectCompressedAsync(currentMDEFile, MDEFilePath).Forget();
-
-            // var json = JsonConvert.SerializeObject(currentMDEFile);
-            // Debug.Log(json);
-            // var bytes = Encoding.UTF8.GetBytes(json);
-
-            // using (var fs = new FileStream(MDEFilePath, FileMode.Create))
-            // using (var gzip = new GZipStream(fs, CompressionLevel.Optimal))
-            // {
-            //     gzip.Write(bytes, 0, bytes.Length);
-            // }
-
-            // CustomLog.Log($"Saved MDE file to: {MDEFilePath}");
         }
 
 
@@ -296,7 +296,7 @@ namespace FileSystem
             // FrameInfo는 MDE 파일을 로드할 때는 사용하지 않으므로 비울 필요 없음 (이미 비어있거나 사용되지 않음)
             // FrameInfo.Clear();
 
-            GameManager.Setting.LoadMCDEAnim(currentMDEFile);
+            exportSettingUIManager.LoadSettingsFromFile(currentMDEFile);
 
             CustomLog.Log($"MDE File Processing 완료! BDObject 개수: {bdObjManager.bdObjectCount}");
         }

@@ -1,8 +1,8 @@
 using System;
 using Animation;
+using FileSystem;
 using GameSystem;
 using TMPro;
-using FileSystem;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -54,37 +54,59 @@ namespace GameSystem
         /// <summary>
         /// 생성 모드
         /// </summary>
-        public bool useFindMode = true;
+        // public bool useFindMode = true;
 
-        public string fakePlayer = "anim";
-        public string scoreboardName = "anim";
+        // public string fakePlayer = "anim";
+        // public string scoreboardName = "anim";
 
         /// <summary>
         /// 내보냈을 때 최초 틱 
         /// </summary>
-        public int startTick;
+        // public int startTick;
         /// <summary>
         /// 내보냈을 때 데이터팩 네임스페이스 
         /// </summary>
-        public string packNamespace = "PotanAnim:anim/";
+        // public string packNamespace = "PotanAnim:anim/";
         /// <summary>
         /// 프레임 파일들의 이름
         /// </summary>
-        public string frameFileName = "frame";
+        // public string frameFileName = "frame";
         /// <summary>
         /// 1초당 틱 수 
         /// </summary>
         public int tickUnit = 10;
 
-        [FormerlySerializedAs("FindModeToggle")] public Toggle findModeToggle;
+        // [FormerlySerializedAs("FindModeToggle")] public Toggle findModeToggle;
         public TMP_InputField[] inputFields;
         [FormerlySerializedAs("SettingPanel")] public GameObject settingPanel;
 
-        public ExportManager exportManager;
+        // public ExportManager exportManager; // 직접 참조 대신 GameManager 통해 접근하거나, ExportSettingUIManager가 관리
         public BdEngineStyleCameraMovement cameraMovement;
 
         public Slider[] sliders;
-        public Toggle[] toggleButtons;
+        public Toggle[] toggleButtons; // 배열 크기 및 인덱스 재조정 필요
+
+        // InputField 인덱스를 위한 Enum (권장)
+        enum SettingInputFieldType
+        {
+            DefaultTickInterval, // 0
+            DefaultInterpolation, // 1
+            // FakePlayer, // 제거 (ExportSettingUI)
+            // ScoreboardName, // 제거
+            // StartTick, // 제거
+            // PackNamespace, // 제거
+            // FrameFileName, // 제거
+            // ExportFolder, // 제거
+            TickUnit // 이전 인덱스 8에서 2로 변경될 수 있음
+        }
+
+        enum SettingToggleType
+        {
+            UseNameInfoExtract, // 0
+            UseFrameTxtFile, // 1
+            // FindMode // 제거 (ExportSettingUI)
+        }
+
 
         enum SliderType
         {
@@ -92,20 +114,15 @@ namespace GameSystem
             CameraMoveSpeed,
             CameraZoomSpeed,
         }
+
         #endregion
 
         private void Start()
         {
-            // 토글 이벤트 리스너 등록
-            findModeToggle.onValueChanged.AddListener(
-                value =>
-                {
-                    useFindMode = value;
-                    if (!useFindMode)
-                        inputFields[2].text = "@s";
-                });
+            // --- findModeToggle 리스너 제거 ---
+            // findModeToggle.onValueChanged.AddListener(...);
 
-            // PlayerPrefs에서 값 불러오기 (키가 없으면 현재 필드에 지정된 기본값 사용)
+            // PlayerPrefs에서 값 불러오기 (기존 로직 유지)
             defaultTickInterval = PlayerPrefs.GetInt("defaultTickInterval", defaultTickInterval);
             defaultInterpolation = PlayerPrefs.GetInt("defaultInterpolation", defaultInterpolation);
             UseNameInfoExtract = PlayerPrefs.GetInt("useNameInfoExtract", UseNameInfoExtract ? 1 : 0) == 1;
@@ -117,73 +134,35 @@ namespace GameSystem
             cameraMovement.panSpeed = PlayerPrefs.GetFloat("cameraMoveSpeed", cameraMovement.panSpeed);
             cameraMovement.zoomSpeed = PlayerPrefs.GetFloat("cameraZoomSpeed", cameraMovement.zoomSpeed);
 
-            // 슬라이더에 불러온 값 반영
             sliders[(int)SliderType.CameraSpeed].value = cameraMovement.rotateSpeed;
             sliders[(int)SliderType.CameraMoveSpeed].value = cameraMovement.panSpeed;
             sliders[(int)SliderType.CameraZoomSpeed].value = cameraMovement.zoomSpeed;
 
-            // inputFields에도 불러온 값 반영 (인덱스 순서에 맞게 할당)
-            // 인덱스 0: defaultTickInterval
-            inputFields[0].text = defaultTickInterval.ToString();
-            // 인덱스 1: defaultInterpolation
-            inputFields[1].text = defaultInterpolation.ToString();
-            // 인덱스 2: fakePlayer (useFindMode가 false이면 "@s")
-            inputFields[2].text = useFindMode ? fakePlayer : "@s";
-            // 인덱스 3: scoreboardName
-            inputFields[3].text = scoreboardName;
-            // 인덱스 4: startTick
-            inputFields[4].text = startTick.ToString();
-            // 인덱스 5: packNamespace
-            inputFields[5].text = packNamespace;
-            // 인덱스 6: frameFileName
-            inputFields[6].text = frameFileName;
-            // 인덱스 7: exportManager.ExportPath
-            inputFields[7].text = exportManager.ExportFolder;
-            // 인덱스 8: tickUnit
-            inputFields[8].text = tickUnit.ToString();
+            // inputFields에도 불러온 값 반영 (인덱스 수정 필요)
+            inputFields[(int)SettingInputFieldType.DefaultTickInterval].text = defaultTickInterval.ToString();
+            inputFields[(int)SettingInputFieldType.DefaultInterpolation].text = defaultInterpolation.ToString();
+            inputFields[(int)SettingInputFieldType.TickUnit].text = tickUnit.ToString();
+            // --- Export 관련 inputFields 반영 제거 ---
 
-            toggleButtons[0].isOn = UseNameInfoExtract;
-            toggleButtons[1].isOn = UseFrameTxtFile;
-            // toggleButtons[2].isOn = useFindMode;
-            // toggleButtons[3].isOn = !useFindMode;
+            toggleButtons[(int)SettingToggleType.UseNameInfoExtract].isOn = UseNameInfoExtract;
+            toggleButtons[(int)SettingToggleType.UseFrameTxtFile].isOn = UseFrameTxtFile;
+            // --- findModeToggle 반영 제거 ---
 
-            // 입력 필드 이벤트 리스너 등록
+
             for (var i = 0; i < inputFields.Length; i++)
             {
-                int idx = i;
-                inputFields[i].onEndEdit.AddListener(value => OnEndEditValue(value, idx));
+                // inputFields 배열이 Export 관련 필드를 제외하고 재구성되었다고 가정
+                // 또는 Enum을 사용하여 정확한 필드에 리스너 연결
+                int idx = i; // 이 인덱스는 SettingInputFieldType enum 값과 일치해야 함
+                inputFields[i].onEndEdit.AddListener(value => OnEndEditValue(value, (SettingInputFieldType)idx));
             }
 
-            // 슬라이더 이벤트 리스너 등록
             for (var i = 0; i < sliders.Length; i++)
             {
                 int idx = i;
                 sliders[i].onValueChanged.AddListener(value => OnSliderValueEdited(value, (SliderType)idx));
             }
         }
-
-        public void LoadMCDEAnim(MCDEANIMFile file)
-        {
-            //Debug.Log(file.name);
-            scoreboardName = file.scoreboardName;
-            startTick = file.startTick;
-            packNamespace = file.packNamespace;
-            frameFileName = file.frameFileName;
-            fakePlayer = file.fakePlayer;
-            useFindMode = file.findMode;
-            exportManager.ExportFolder = file.resultFileName;
-
-            inputFields[3].text = scoreboardName;
-            inputFields[4].text = startTick.ToString();
-            inputFields[5].text = packNamespace;
-            inputFields[6].text = frameFileName;
-            inputFields[2].text = fakePlayer;
-
-            findModeToggle.isOn = useFindMode;
-
-            exportManager.SetPathText(file.exportPath);
-        }
-
 
         public void SetSettingPanel(bool isOn)
         {
@@ -198,12 +177,12 @@ namespace GameSystem
             }
         }
 
-        private void OnEndEditValue(string value, int idx)
+        // OnEndEditValue의 idx는 SettingInputFieldType enum을 사용하도록 변경
+        private void OnEndEditValue(string value, SettingInputFieldType type)
         {
-            //Debug.Log(idx);
-            switch (idx)
+            switch (type)
             {
-                case 0:
+                case SettingInputFieldType.DefaultTickInterval:
                     if (int.TryParse(value, out var tickInterval) && tickInterval >= 1)
                     {
                         defaultTickInterval = tickInterval;
@@ -211,10 +190,10 @@ namespace GameSystem
                     }
                     else
                     {
-                        value = defaultTickInterval.ToString();
+                        inputFields[(int)type].text = defaultTickInterval.ToString(); // 수정된 부분: inputFields[idx] 대신 inputFields[(int)type]
                     }
                     break;
-                case 1:
+                case SettingInputFieldType.DefaultInterpolation:
                     if (int.TryParse(value, out var interpolation) && interpolation >= 0)
                     {
                         defaultInterpolation = interpolation;
@@ -222,34 +201,10 @@ namespace GameSystem
                     }
                     else
                     {
-                        value = interpolation.ToString();
+                        inputFields[(int)type].text = defaultInterpolation.ToString(); // 수정된 부분
                     }
                     break;
-                case 2:
-                    if (!useFindMode)
-                        value = "@s";
-                    else
-                        fakePlayer = value;
-                    break;
-                case 3:
-                    scoreboardName = value;
-                    break;
-                case 4:
-                    if (int.TryParse(value, out var tick) && tick >= 0)
-                        startTick = tick;
-                    else
-                        value = startTick.ToString();
-                    break;
-                case 5:
-                    packNamespace = value;
-                    break;
-                case 6:
-                    frameFileName = value;
-                    break;
-                case 7:
-                    exportManager.ExportFolder = value;
-                    break;
-                case 8:
+                case SettingInputFieldType.TickUnit:
                     if (int.TryParse(value, out var unit) && unit >= 1)
                     {
                         tickUnit = unit;
@@ -257,14 +212,19 @@ namespace GameSystem
                         PlayerPrefs.SetInt("tickUnit", tickUnit);
                     }
                     else
-                        value = tickUnit.ToString();
+                    {
+                        inputFields[(int)type].text = tickUnit.ToString(); // 수정된 부분
+                    }
                     break;
+                // --- Export 관련 case 제거 ---
             }
-            inputFields[idx].text = value;
+            // inputFields[idx].text = value; // 이 줄은 각 case 내부에서 처리하거나, 마지막에 한 번만 호출 (값이 변경되지 않았을 경우 대비)
         }
+
 
         private void OnSliderValueEdited(float value, SliderType type)
         {
+            // ... (기존 슬라이더 로직 유지) ...
             switch (type)
             {
                 case SliderType.CameraSpeed:

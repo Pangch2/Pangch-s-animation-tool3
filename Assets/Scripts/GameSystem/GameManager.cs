@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour
     // Managers
     private static readonly Dictionary<Type, BaseManager> _managers = new Dictionary<Type, BaseManager>();
 
-    public static SettingManager Setting => GetManager<SettingManager>();
+    // public static SettingManager Setting => GetManager<SettingManager>();
 
     public PlayerInput playerInput;
 
@@ -51,7 +51,7 @@ public class GameManager : MonoBehaviour
     }
 
     // Set Manager in GameManager
-    public void RegisterManager(BaseManager manager)
+    public static void RegisterManager(BaseManager manager)
     {
         var type = manager.GetType();
         if (!_managers.TryAdd(type, manager))

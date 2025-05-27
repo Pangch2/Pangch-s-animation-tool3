@@ -40,15 +40,7 @@ namespace FileSystem
                 }
             }
 
-            var setting = GameManager.Setting;
-            findMode = setting.useFindMode;
-            fakePlayer = setting.fakePlayer;
-            scoreboardName = setting.scoreboardName;
-            startTick = setting.startTick;
-            packNamespace = setting.packNamespace;
-            frameFileName = setting.frameFileName;
-            resultFileName = setting.exportManager.ExportFolder;
-            exportPath = setting.exportManager.currentPath;
+            GameManager.GetManager<ExportSettingUIManager>().ApplySettingsToFile(this);
         }
         #endregion
 

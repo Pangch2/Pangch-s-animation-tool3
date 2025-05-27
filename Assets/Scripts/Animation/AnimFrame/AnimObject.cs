@@ -228,7 +228,7 @@ namespace Animation.AnimFrame
         // get tick and inter from fileName
         private void GetTickAndInterByFileName(string fileName, out int tick, out int inter)
         {
-            var setting = GameManager.Setting;
+            var setting = GameManager.GetManager<SettingManager>();
 
             // default setting
             tick = MaxTick;

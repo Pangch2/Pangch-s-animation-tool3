@@ -28,8 +28,6 @@ namespace GameSystem
         {
             _exportManager = GetComponent<ExportManager>();
             _saveManager = GameManager.GetManager<SaveManager>();
-
-            GameManager.Setting.exportManager = _exportManager;
         }
 
         public void SetCurrentFileText(string fileName)

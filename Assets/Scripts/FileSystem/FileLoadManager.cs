@@ -107,7 +107,7 @@ namespace FileSystem
         private async UniTask ImportFilesAsync(List<string> filePaths)
         {
             var ui = GameManager.GetManager<UIManager>();
-            var settingManager = GameManager.Setting;
+            var settingManager = GameManager.GetManager<SettingManager>();
 
             // 1) frame.txt 파싱
             if (settingManager.UseFrameTxtFile)
@@ -303,7 +303,7 @@ namespace FileSystem
                         Path.GetFileNameWithoutExtension(filePath),
                         bdObject,
                         tick,
-                        GameManager.Setting.defaultInterpolation
+                        GameManager.GetManager<SettingManager>().defaultInterpolation
                     );
                 }
                 catch (Exception e)
