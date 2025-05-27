@@ -63,15 +63,10 @@ namespace Animation.AnimFrame
             _animObjList = GameManager.GetManager<AnimObjList>(); // AnimObjList 인스턴스 가져오기
 
             UpdatePos();
-            if (_timeline != null)
-            {
-                _timeline.OnGridChanged += UpdatePos;
-            }
+            _timeline.OnGridChanged += UpdatePos;
 
-            if (animObject != null && animObject.animator != null && animObject.animator.RootObject != null && info != null)
-            {
-                IsModelDiffrent = animObject.animator.RootObject.BdObjectID != info.ID;
-            }
+            IsModelDiffrent = animObject.animator.RootObject.BdObjectID != info.ID;
+            
             worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
             SetInter(inter);
         }

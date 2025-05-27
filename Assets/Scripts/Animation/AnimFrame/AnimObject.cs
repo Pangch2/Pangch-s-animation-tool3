@@ -47,6 +47,9 @@ namespace Animation.AnimFrame
             animator = GameManager.GetManager<BdObjectManager>().BDObjectAnim[fileName];
 
             GetTickAndInterByFileName(bdFileName, out _, out var inter);
+
+            Canvas.ForceUpdateCanvases();
+
             firstFrame.Init(bdFileName, 0, inter, animator.RootObject.BdObject, this, _manager.timeline);
 
             frames[0] = firstFrame;

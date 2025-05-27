@@ -21,7 +21,7 @@ namespace Animation.AnimFrame
         public List<AnimObject> animObjects = new();
 
         public Timeline timeline;
-        public Transform frameParent;
+        public RectTransform scrollViewContent;
 
         public HashSet<Frame> selectedFrames = new();
         private Frame _lastAnchorFrame = null; // Shift 선택의 기준점
@@ -46,11 +46,13 @@ namespace Animation.AnimFrame
         {
             //Debug.Log("EndAddObject: " + obj.name);
 
-            var animObject = Instantiate(animObjectPrefab, frameParent);
-            animObject.Init(fileName, this);
-            animObject.rect.anchoredPosition = new Vector2(animObject.rect.anchoredPosition.x, importButton.anchoredPosition.y - 60f);
+            var animObject = Instantiate(animObjectPrefab, scrollViewContent);
+            // animObject.rect.anchoredPosition = new Vector2(animObject.rect.anchoredPosition.x, importButton.anchoredPosition.y - 60f);
 
-            importButton.anchoredPosition = new Vector2(importButton.anchoredPosition.x, importButton.anchoredPosition.y - jump);
+            // importButton.anchoredPosition = new Vector2(importButton.anchoredPosition.x, importButton.anchoredPosition.y - jump);
+            // scrollViewContent.anchoredPosition = new Vector2(scrollViewContent.anchoredPosition.x, scrollViewContent.anchoredPosition.y - jump/2f);
+            scrollViewContent.sizeDelta = new Vector2(scrollViewContent.sizeDelta.x, scrollViewContent.sizeDelta.y + jump);
+            importButton.SetAsLastSibling();
 
             var animMan = GameManager.GetManager<AnimManager>();
             animMan.Tick = 0;
@@ -64,6 +66,7 @@ namespace Animation.AnimFrame
                 SaveMan.MakeNewMDEFile(fileName);
             }
             animObjects.Add(animObject);
+            animObject.Init(fileName, this);
 
             return animObject;
         }

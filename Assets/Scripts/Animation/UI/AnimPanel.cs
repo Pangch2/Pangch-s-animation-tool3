@@ -16,6 +16,7 @@ namespace Animation.UI
 {
     public class AnimPanel : MonoBehaviour
     {
+        #region Variables
         private AnimManager _manager;
 
         public DragPanel dragPanel;
@@ -36,6 +37,11 @@ namespace Animation.UI
 
         int tickMove = 0;
         private float _continuousTickMoveTimer = 0f; // 시간 누적을 위한 변수
+
+        public RectTransform specificScrollViewRect; // 스크롤뷰
+        #endregion
+
+        #region Unity Methods
 
         private void Start()
         {
@@ -144,6 +150,9 @@ namespace Animation.UI
             }
 
         }
+        #endregion
+
+        #region Unity Events
 
         public void OnTickFieldEndEdit(string value)
         {
@@ -229,10 +238,23 @@ namespace Animation.UI
             // 마지막으로 정확히 targetY 설정
             dragPanel.SetPanelSize(targetY);
         }
+        #endregion
+
+        #region Input Actions
 
         public void OnScrollWheel(InputAction.CallbackContext callback)
         {
             if (!isMouseEnter) return;
+
+            bool isMouseOverSpecificScrollView = RectTransformUtility.RectangleContainsScreenPoint(
+                specificScrollViewRect, Mouse.current.position.ReadValue(), null // UI 카메라가 필요하면 여기에 전달
+            );
+
+            if (isMouseOverSpecificScrollView)
+            {
+                // 스크롤이 특정 스크롤뷰 위에 있다면 무시
+                return;
+            }
 
             var scroll = callback.ReadValue<Vector2>();
 
@@ -336,5 +358,6 @@ namespace Animation.UI
 
             GameManager.GetManager<AnimObjList>().DuplicateSelectedFrames();
         }
+        #endregion
     }
 }
