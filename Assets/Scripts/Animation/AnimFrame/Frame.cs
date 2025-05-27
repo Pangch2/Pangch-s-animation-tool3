@@ -20,10 +20,11 @@ namespace Animation.AnimFrame
 
         private Color _initColor;
         private readonly Color _selectedColor = Color.yellow;
-        private bool isMouseDown;
+        // private bool isMouseDown;
         // isSelected는 이제 AnimObjList에 의해 SetSelectedVisual을 통해 관리됩니다.
         // 드래그 로직 등 Frame 내부 로직에 필요할 수 있어 유지합니다.
         private bool isSelected = false;
+        public bool IsBeingDragged { get; set; } = false;
 
         [Header("Frame Info")]
         public int tick;
@@ -285,11 +286,11 @@ namespace Animation.AnimFrame
                 // AnimObjList에 클릭 이벤트 처리를 위임합니다.
                 // AnimObjList는 이 정보를 바탕으로 선택 상태를 결정하고,
                 // 필요한 프레임들의 SetSelectedVisual을 호출합니다.
-                _animObjList.HandleFrameClick(this, isCtrlPressed, isShiftPressed);
+                _animObjList.HandleFramePointerDown(this, isCtrlPressed, isShiftPressed);
 
                 // 왼쪽 클릭 시 드래그 가능 상태로 만듭니다.
                 // 실제 드래그 동작은 Update 메서드에서 isSelected 상태를 확인 후 처리됩니다.
-                isMouseDown = true;
+                // isMouseDown = true;
             }
         }
 
@@ -306,33 +307,33 @@ namespace Animation.AnimFrame
             }
         }
 
-        private void Update()
-        {
-            // 기존의 Update 내 선택 해제 로직은 AnimObjList 또는 전역 클릭 관리자로 이전하는 것이 좋습니다.
-            // if (Mouse.current.leftButton.wasPressedThisFrame && isSelected && !isMouseDown) ... 부분 제거
+        // private void Update()
+        // {
+        //     // 기존의 Update 내 선택 해제 로직은 AnimObjList 또는 전역 클릭 관리자로 이전하는 것이 좋습니다.
+        //     // if (Mouse.current.leftButton.wasPressedThisFrame && isSelected && !isMouseDown) ... 부분 제거
 
-            if (isMouseDown)
-            {
-                // 이 프레임이 선택된 상태일 때만 드래그 로직을 실행합니다.
-                if (isSelected)
-                {
-                    Vector2 mouse = Input.mousePosition;
-                    if (_timeline != null)
-                    {
-                        var line = _timeline.GetTickLine(mouse);
-                        if (line != null) // line이 null이 아닌지 확인
-                        {
-                            SetTick(line.Tick);
-                        }
-                    }
-                }
+        //     if (isMouseDown)
+        //     {
+        //         // 이 프레임이 선택된 상태일 때만 드래그 로직을 실행합니다.
+        //         if (isSelected)
+        //         {
+        //             Vector2 mouse = Input.mousePosition;
+        //             if (_timeline != null)
+        //             {
+        //                 var line = _timeline.GetTickLine(mouse);
+        //                 if (line != null) // line이 null이 아닌지 확인
+        //                 {
+        //                     SetTick(line.Tick);
+        //                 }
+        //             }
+        //         }
 
-                if (Mouse.current.leftButton.wasReleasedThisFrame)
-                {
-                    isMouseDown = false;
-                }
-            }
-        }
+        //         if (Mouse.current.leftButton.wasReleasedThisFrame)
+        //         {
+        //             isMouseDown = false;
+        //         }
+        //     }
+        // }
 
         public void RemoveFrame()
         {

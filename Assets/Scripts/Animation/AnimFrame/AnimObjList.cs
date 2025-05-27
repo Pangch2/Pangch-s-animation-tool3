@@ -6,8 +6,8 @@ using Animation.UI;
 using BDObjectSystem;
 using FileSystem;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem; // Required for Mouse.current
 
 namespace Animation.AnimFrame
 {
@@ -27,6 +27,12 @@ namespace Animation.AnimFrame
         private Frame _lastAnchorFrame = null; // Shift 선택의 기준점
 
         public GameObject cancelPanel;
+
+        // Dragging state variables
+        [SerializeField]
+        private bool _isDraggingAnyFrame = false;
+        private int _dragInitialMouseTick;
+        private readonly Dictionary<Frame, int> _dragInitialFrameTicks = new Dictionary<Frame, int>();
 
 
         private void Start()
@@ -136,6 +142,87 @@ namespace Animation.AnimFrame
             selectedFrames.Remove(frame);
         }
 
+        void Update()
+        {
+            if (_isDraggingAnyFrame)
+            {
+                if (Mouse.current.leftButton.isPressed)
+                {
+                    var currentLine = timeline.GetTickLine(Mouse.current.position.ReadValue());
+                    if (currentLine != null)
+                    {
+                        int currentMouseTick = currentLine.Tick;
+                        int tickDelta = currentMouseTick - _dragInitialMouseTick;
+
+                        // Create a temporary list of frames to iterate over to avoid issues if a frame becomes invalid during SetTick
+                        List<Frame> framesToDrag = _dragInitialFrameTicks.Keys.ToList();
+
+                        foreach (var frameToDrag in framesToDrag)
+                        {
+                            if (frameToDrag != null && frameToDrag.gameObject.activeInHierarchy && _dragInitialFrameTicks.TryGetValue(frameToDrag, out int initialTick))
+                            {
+                                frameToDrag.SetTick(initialTick + tickDelta);
+                            }
+                        }
+                    }
+                }
+                else // Mouse button was released or is no longer pressed
+                {
+                    _isDraggingAnyFrame = false;
+                    foreach (var frame in _dragInitialFrameTicks.Keys)
+                    {
+                        if (frame != null)
+                        {
+                            frame.IsBeingDragged = false;
+                        }
+                    }
+                    _dragInitialFrameTicks.Clear();
+                }
+            }
+        }
+
+        public void HandleFramePointerDown(Frame clickedFrame, bool isCtrlPressed, bool isShiftPressed)
+        {
+            bool wasAlreadySelected = selectedFrames.Contains(clickedFrame);
+
+            if (wasAlreadySelected && !isCtrlPressed && !isShiftPressed)
+            {
+                // 이미 선택된 프레임을 클릭한 경우, 선택 로직(HandleFrameClick)을 건너뛰고 바로 드래그 준비
+                // Ctrl이나 Shift를 누르고 이미 선택된 프레임을 클릭해도, 선택 상태는 변경하지 않고 드래그만 시작
+                _lastAnchorFrame = clickedFrame; // 마지막으로 상호작용한 프레임을 anchor로 설정
+            }
+            else
+            {
+                // 선택되지 않은 프레임을 클릭한 경우, 먼저 선택 로직을 처리
+                HandleFrameClick(clickedFrame, isCtrlPressed, isShiftPressed);
+            }
+
+            // 클릭된 프레임이 (새롭게 또는 기존에) 선택된 상태라면 드래그 작업 시작
+            if (selectedFrames.Contains(clickedFrame))
+            {
+                _isDraggingAnyFrame = true;
+                var initialMouseLine = timeline.GetTickLine(Mouse.current.position.ReadValue());
+                _dragInitialMouseTick = initialMouseLine?.Tick ?? clickedFrame.tick; // Fallback if timeline returns null
+
+                _dragInitialFrameTicks.Clear();
+                foreach (var frame in selectedFrames)
+                {
+                    if (frame != null) // Ensure frame is not null
+                    {
+                        _dragInitialFrameTicks[frame] = frame.tick;
+                        frame.IsBeingDragged = true;
+                    }
+                }
+            }
+            else
+            {
+                // 클릭 후에도 프레임이 선택되지 않은 경우 (예: Ctrl 클릭으로 선택 해제) 드래그 상태 초기화
+                _isDraggingAnyFrame = false;
+                _dragInitialFrameTicks.Clear();
+            }
+        }
+
+
         public void HandleFrameClick(Frame clickedFrame, bool isCtrlPressed, bool isShiftPressed)
         {
             if (clickedFrame == null || clickedFrame.animObject == null) return;
@@ -165,26 +252,52 @@ namespace Animation.AnimFrame
             }
             else // Shift가 눌린 경우 (범위 선택)
             {
-                if (_lastAnchorFrame == null || _lastAnchorFrame.animObject != clickedFrame.animObject)
+                // _lastAnchorFrame이 유효하고, clickedFrame과 같은 AnimObject에 속하며,
+                // 실제로 해당 AnimObject의 frames 리스트에 존재하는지 확인합니다.
+                bool anchorIsValidForRangeSelection = _lastAnchorFrame != null &&
+                                                      _lastAnchorFrame.animObject == clickedFrame.animObject &&
+                                                      clickedFrame.animObject.frames.Values.Contains(_lastAnchorFrame);
+
+                if (!anchorIsValidForRangeSelection)
                 {
-                    // 기준점이 없거나 다른 AnimObject의 프레임이면 단일 선택처럼 동작
+                    // 기준점이 없거나, 다른 AnimObject의 프레임이거나,
+                    // AnimObject의 내부 리스트에 더 이상 존재하지 않으면 단일 선택처럼 동작합니다.
                     ClearAllSelections();
                     AddToSelection(clickedFrame);
                     _lastAnchorFrame = clickedFrame;
                 }
                 else
                 {
-                    // 같은 AnimObject 내에서 범위 선택
-                    if (!isCtrlPressed) // Ctrl이 안눌렸으면 기존 선택 모두 해제
+                    // 같은 AnimObject 내에서 범위 선택 (anchor가 유효함)
+                    if (!isCtrlPressed) // Ctrl 키가 눌리지 않았다면, 기존 선택을 모두 해제합니다.
                     {
+                        var saveAnchor = _lastAnchorFrame; // anchor를 저장해두고
                         ClearAllSelections();
+                        _lastAnchorFrame = saveAnchor; // anchor를 다시 설정합니다.
                     }
+                    // Ctrl 키가 눌렸다면, 기존 선택에 현재 범위를 추가합니다.
 
                     var framesInObject = clickedFrame.animObject.frames.Values.ToList();
                     int anchorIndex = framesInObject.IndexOf(_lastAnchorFrame);
+                    // clickedFrame은 방금 클릭되었으므로 해당 AnimObject의 frames 리스트에 반드시 있어야 합니다.
                     int clickedIndex = framesInObject.IndexOf(clickedFrame);
 
-                    if (anchorIndex == -1 || clickedIndex == -1) return; // 프레임 못찾음
+                    // ContainsValue로 확인했으므로 anchorIndex는 -1이 아니어야 하지만, 안전을 위해 체크합니다.
+                    if (anchorIndex == -1 || clickedIndex == -1)
+                    {
+                        // 예외 상황: 프레임을 찾지 못함.
+                        // Ctrl이 안 눌렸다면 ClearAllSelections가 이미 호출되었을 수 있으므로,
+                        // clickedFrame만 다시 선택하도록 합니다.
+                        if (!isCtrlPressed) {
+                             // ClearAllSelections(); // 이미 위에서 호출되었을 수 있음
+                             AddToSelection(clickedFrame); // 현재 클릭된 프레임만 선택
+                        } else {
+                            // Ctrl + Shift인데 인덱스를 못찾는 경우는 드물지만, 일단 현재 프레임 추가 시도
+                            AddToSelection(clickedFrame);
+                        }
+                        _lastAnchorFrame = clickedFrame; // anchor 재설정
+                        return;
+                    }
 
                     int startIndex = Mathf.Min(anchorIndex, clickedIndex);
                     int endIndex = Mathf.Max(anchorIndex, clickedIndex);
@@ -193,9 +306,7 @@ namespace Animation.AnimFrame
                     {
                         AddToSelection(framesInObject[i]);
                     }
-                    // Shift 선택 후에는 clickedFrame이 새로운 anchor가 될 수 있지만,
-                    // 일반적인 동작은 마지막 단일/Ctrl 클릭 프레임을 anchor로 유지하는 것입니다.
-                    // 여기서는 _lastAnchorFrame을 변경하지 않습니다.
+                    // _lastAnchorFrame은 변경하지 않아, 최초의 anchor를 기준으로 계속 범위 선택이 가능합니다.
                 }
             }
         }
@@ -233,9 +344,10 @@ namespace Animation.AnimFrame
             foreach (var frame in selectedFrames)
             {
                 frame.SetSelectedVisual(false);
+                frame.IsBeingDragged = false; // Ensure IsBeingDragged is reset if selection is cleared externally
             }
             selectedFrames.Clear();
-            _lastAnchorFrame = null;
+            // _lastAnchorFrame = null; // This was moved to CancelPanelClicked or handled by selection logic
         }
 
 
@@ -244,13 +356,14 @@ namespace Animation.AnimFrame
             if (selectedFrames.Count == 0) return;
 
             List<Frame> newlySelectedFrames = new List<Frame>();
-            List<Frame> originalSelectedFrames = selectedFrames.ToList(); // 반복 중 컬렉션 수정을 피하기 위해 복사
+            List<Frame> originalSelectedFrames = selectedFrames.ToList();
 
             foreach (var frame in originalSelectedFrames)
             {
-                frame.SetSelectedVisual(false); // 원본 프레임 선택 해제 (시각적으로)
+                frame.SetSelectedVisual(false);
+                frame.IsBeingDragged = false; 
             }
-            selectedFrames.Clear(); // 선택 목록에서 원본 모두 제거
+            selectedFrames.Clear(); 
 
             foreach (var frame in originalSelectedFrames)
             {
@@ -278,6 +391,7 @@ namespace Animation.AnimFrame
             && (pointerData.pointerCurrentRaycast.gameObject == cancelPanel || pointerData.pointerCurrentRaycast.gameObject == null))
             {
                 ClearAllSelections();
+                _lastAnchorFrame = null; // Explicitly clear anchor on background click
             }
         }
     }
