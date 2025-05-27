@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Threading;
 using Animation.AnimFrame;
 using BDObjectSystem;
 using Cysharp.Threading.Tasks;
@@ -14,6 +16,7 @@ namespace Animation.UI
 {
     public class AnimPanel : MonoBehaviour
     {
+        #region Variables
         private AnimManager _manager;
 
         public DragPanel dragPanel;
@@ -31,6 +34,14 @@ namespace Animation.UI
         public bool IsMiddleClicked;
         // 누적값 변수 선언 (픽셀 단위)
         private float accumulatedDelta = 0f;
+
+        int tickMove = 0;
+        private float _continuousTickMoveTimer = 0f; // 시간 누적을 위한 변수
+
+        public RectTransform specificScrollViewRect; // 스크롤뷰
+        #endregion
+
+        #region Unity Methods
 
         private void Start()
         {
@@ -114,7 +125,34 @@ namespace Animation.UI
                 }
             }
 
+            if (tickMove != 0)
+            {
+                _continuousTickMoveTimer += Time.deltaTime;
+                // AnimManager로부터 TickUnit 및 TickSpeed를 가져와 tickInterval 계산
+                float tickInterval = 0f;
+                if (_manager.TickSpeed > 0) // 0으로 나누는 것을 방지
+                {
+                    tickInterval = _manager.TickUnit / _manager.TickSpeed;
+                }
+
+                if (tickInterval > 0) // 유효한 간격일 때만 처리
+                {
+                    while (_continuousTickMoveTimer >= tickInterval)
+                    {
+                        _continuousTickMoveTimer -= tickInterval;
+                        _manager.TickAdd(tickMove * _manager.TickUnit);
+                    }
+                }
+            }
+            else
+            {
+                _continuousTickMoveTimer = 0f; // 이동이 멈추면 타이머 초기화
+            }
+
         }
+        #endregion
+
+        #region Unity Events
 
         public void OnTickFieldEndEdit(string value)
         {
@@ -200,10 +238,23 @@ namespace Animation.UI
             // 마지막으로 정확히 targetY 설정
             dragPanel.SetPanelSize(targetY);
         }
+        #endregion
+
+        #region Input Actions
 
         public void OnScrollWheel(InputAction.CallbackContext callback)
         {
             if (!isMouseEnter) return;
+
+            bool isMouseOverSpecificScrollView = RectTransformUtility.RectangleContainsScreenPoint(
+                specificScrollViewRect, Mouse.current.position.ReadValue(), null // UI 카메라가 필요하면 여기에 전달
+            );
+
+            if (isMouseOverSpecificScrollView)
+            {
+                // 스크롤이 특정 스크롤뷰 위에 있다면 무시
+                return;
+            }
 
             var scroll = callback.ReadValue<Vector2>();
 
@@ -221,15 +272,36 @@ namespace Animation.UI
         public void MoveTickLeft(InputAction.CallbackContext callback)
         {
             if (callback.started)
+            {
                 _manager.TickAdd(-1);
+            }
+            else if (callback.performed)
+            {
+                tickMove = -1;
+            }
+            else
+            {
+                tickMove = 0;
+            }
 
         }
 
         public void MoveTickRight(InputAction.CallbackContext callback)
         {
             if (callback.started)
+            {
                 _manager.TickAdd(1);
+            }
+            else if (callback.performed)
+            {
+                tickMove = 1;
+            }
+            else
+            {
+                tickMove = 0;
+            }
         }
+
 
         public void OnResetButton()
         {
@@ -243,25 +315,49 @@ namespace Animation.UI
             GameManager.GetManager<AnimObjList>().ResetAnimObject();
 
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-
         }
 
-        public void OnPressDeleteKey()
+        public void OnPressDeleteKey(InputAction.CallbackContext callback)
         {
+            if (!callback.performed) return;
+
             var contextMenu = GameManager.GetManager<ContextMenuManager>();
             if (contextMenu.currentType == ContextMenuManager.ContextMenuType.Frame && contextMenu.isMenuActive == true)
             {
                 contextMenu.OnFrameRemoveButton();
+                return;
+            }
+            // else if (GameManager.GetManager<AnimObjList>().selectedFrames.Count > 0)
+            var objList = GameManager.GetManager<AnimObjList>();
+            if (objList.selectedFrames.Count > 0)
+            {
+                // 선택된 프레임 삭제
+                var frames = new List<Frame>(objList.selectedFrames);
+                foreach (var frame in frames)
+                {
+                    frame.RemoveFrame();
+                }
+                objList.selectedFrames.Clear();
             }
         }
 
-        public void OnPressAddKey()
+        public void OnPressAddKey(InputAction.CallbackContext callback)
         {
+            if (!callback.performed) return;
+
             var contextMenu = GameManager.GetManager<ContextMenuManager>();
             if (contextMenu.currentType == ContextMenuManager.ContextMenuType.NewFrame && contextMenu.isMenuActive == true)
             {
                 contextMenu.OnAddFrameButtonClicked();
             }
         }
+
+        public void OnPressDuplicateKey(InputAction.CallbackContext callback)
+        {
+            if (!callback.performed) return;
+
+            GameManager.GetManager<AnimObjList>().DuplicateSelectedFrames();
+        }
+        #endregion
     }
 }

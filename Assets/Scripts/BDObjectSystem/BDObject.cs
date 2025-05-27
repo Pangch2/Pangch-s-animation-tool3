@@ -29,7 +29,7 @@ namespace BDObjectSystem
 
         // Additional Property
         [SerializeField]
-        [JsonIgnore] 
+        [JsonIgnore]
         private string _id;
         [JsonIgnore]
         public string ID => GetID();
@@ -94,6 +94,76 @@ namespace BDObjectSystem
             return isBlockDisplay ? "block_display" :
                    isItemDisplay ? "item_display" :
                    isTextDisplay ? "text_display" : null;
+        }
+
+        public BdObject Clone()
+        {
+            BdObject newObj = new BdObject
+            {
+                name = this.name,
+                nbt = this.nbt,
+                isBlockDisplay = this.isBlockDisplay,
+                isItemDisplay = this.isItemDisplay,
+                isTextDisplay = this.isTextDisplay,
+                _id = this._id, // 기존 _id 값을 복사합니다. GetID()를 통해 필요시 다시 계산될 수 있습니다.
+                Parent = null  // 복제된 객체는 초기에 부모가 없습니다.
+            };
+
+            // transforms 배열 복제
+            if (this.transforms != null)
+            {
+                newObj.transforms = new float[this.transforms.Length];
+                Array.Copy(this.transforms, newObj.transforms, this.transforms.Length);
+            }
+            else
+            {
+                newObj.transforms = null;
+            }
+
+            // options JObject 복제 (Newtonsoft.Json.Linq.JObject 사용 시)
+            if (this.options != null)
+            {
+                newObj.options = (JObject)this.options.DeepClone();
+            }
+            else
+            {
+                newObj.options = null;
+            }
+
+            // children 배열 복제 (재귀적으로 각 자식 객체도 복제)
+            if (this.children != null)
+            {
+                newObj.children = new BdObject[this.children.Length];
+                for (int i = 0; i < this.children.Length; i++)
+                {
+                    if (this.children[i] != null)
+                    {
+                        BdObject clonedChild = this.children[i].Clone();
+                        clonedChild.Parent = newObj; // 복제된 자식의 부모를 현재 새로 생성된 객체로 설정
+                        newObj.children[i] = clonedChild;
+                    }
+                    else
+                    {
+                        newObj.children[i] = null;
+                    }
+                }
+            }
+            else
+            {
+                newObj.children = null;
+            }
+
+            // ExtraData 딕셔너리 복제 (값은 얕은 복사 -> 수정할 일 없음)
+            if (this.ExtraData != null)
+            {
+                newObj.ExtraData = new Dictionary<string, object>(this.ExtraData);
+            }
+            else
+            {
+                newObj.ExtraData = null;
+            }
+
+            return newObj;
         }
     }
 }

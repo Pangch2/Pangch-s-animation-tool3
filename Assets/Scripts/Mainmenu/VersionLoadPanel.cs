@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Cysharp.Threading.Tasks;
+using SFB;
 using SimpleFileBrowser;
 using TMPro;
 using UnityEngine;
@@ -16,7 +17,8 @@ namespace Mainmenu
 
         const string helpURL = "https://potangaming.tistory.com/319";
 
-        readonly FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", ".jar");
+        // readonly FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", ".jar");
+        readonly ExtensionFilter extension = new ExtensionFilter("Jar Files", ".jar");
 
         void Start()
         {
@@ -42,19 +44,23 @@ namespace Mainmenu
 
         }
 
-        public async void OnLoadByFileBrowserButton()
+        public void OnLoadByFileBrowserButton()
         {
-            FileBrowser.SetFilters(false, loadFilter);
-            await FileBrowser.WaitForLoadDialog(
-                FileBrowser.PickMode.Files,
-                false,
-                string.IsNullOrEmpty(inputField.text) ? null : inputField.text,
-                "Select Minecraft Jar File",
-                "Select").ToUniTask();
+            // FileBrowser.SetFilters(false, loadFilter);
+            // await FileBrowser.WaitForLoadDialog(
+            //     FileBrowser.PickMode.Files,
+            //     false,
+            //     string.IsNullOrEmpty(inputField.text) ? null : inputField.text,
+            //     "Select Minecraft Jar File",
+            //     "Select").ToUniTask();
 
-            if (FileBrowser.Success)
+            var paths = StandaloneFileBrowser.OpenFilePanel("Select Minecraft Jar File", 
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
+                "jar", false);
+
+            if (paths.Length > 0)
             {
-                inputField.text = FileBrowser.Result[0];
+                inputField.text = paths[0];
             }
         }
 

@@ -28,8 +28,6 @@ namespace GameSystem
         {
             _exportManager = GetComponent<ExportManager>();
             _saveManager = GameManager.GetManager<SaveManager>();
-
-            GameManager.Setting.exportManager = _exportManager;
         }
 
         public void SetCurrentFileText(string fileName)
@@ -75,7 +73,7 @@ namespace GameSystem
 
         public void OnLoadButton()
         {
-            _saveManager.LoadMCDEFile();
+            _saveManager.LoadMCDEFile().Forget();
         }
 
         public void OnExportButton()

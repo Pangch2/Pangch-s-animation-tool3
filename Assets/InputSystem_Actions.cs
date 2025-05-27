@@ -660,6 +660,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Duplicate"",
+                    ""type"": ""Button"",
+                    ""id"": ""55322bc6-9cc8-496a-b4d3-40971fd081f4"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -667,7 +676,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""ab1ceb01-f4d3-4bb2-b7ed-80b6d536b04c"",
                     ""path"": ""<Keyboard>/leftArrow"",
-                    ""interactions"": """",
+                    ""interactions"": ""Hold"",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""MoveTickLeft"",
@@ -678,7 +687,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""23f04639-0004-4fad-b9a7-70810c721fb1"",
                     ""path"": ""<Keyboard>/rightArrow"",
-                    ""interactions"": """",
+                    ""interactions"": ""Hold"",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""MoveTickRight"",
@@ -761,6 +770,39 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""action"": ""Add"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""One Modifier"",
+                    ""id"": ""5a353aa4-b712-4492-a557-fa5974d4151d"",
+                    ""path"": ""OneModifier"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Duplicate"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""modifier"",
+                    ""id"": ""b7619bb7-7d53-4021-a2d8-5c0ea812aa24"",
+                    ""path"": ""<Keyboard>/ctrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Duplicate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""binding"",
+                    ""id"": ""36241d1b-7c58-44f2-a9e7-5694bee8923f"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Duplicate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         },
@@ -956,6 +998,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Animation_Save = m_Animation.FindAction("Save", throwIfNotFound: true);
         m_Animation_Delete = m_Animation.FindAction("Delete", throwIfNotFound: true);
         m_Animation_Add = m_Animation.FindAction("Add", throwIfNotFound: true);
+        m_Animation_Duplicate = m_Animation.FindAction("Duplicate", throwIfNotFound: true);
         // Camera
         m_Camera = asset.FindActionMap("Camera", throwIfNotFound: true);
         m_Camera_CameraReset = m_Camera.FindAction("CameraReset", throwIfNotFound: true);
@@ -1246,6 +1289,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Animation_Save;
     private readonly InputAction m_Animation_Delete;
     private readonly InputAction m_Animation_Add;
+    private readonly InputAction m_Animation_Duplicate;
     /// <summary>
     /// Provides access to input actions defined in input action map "Animation".
     /// </summary>
@@ -1281,6 +1325,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Animation/Add".
         /// </summary>
         public InputAction @Add => m_Wrapper.m_Animation_Add;
+        /// <summary>
+        /// Provides access to the underlying input action "Animation/Duplicate".
+        /// </summary>
+        public InputAction @Duplicate => m_Wrapper.m_Animation_Duplicate;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1325,6 +1373,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Add.started += instance.OnAdd;
             @Add.performed += instance.OnAdd;
             @Add.canceled += instance.OnAdd;
+            @Duplicate.started += instance.OnDuplicate;
+            @Duplicate.performed += instance.OnDuplicate;
+            @Duplicate.canceled += instance.OnDuplicate;
         }
 
         /// <summary>
@@ -1354,6 +1405,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Add.started -= instance.OnAdd;
             @Add.performed -= instance.OnAdd;
             @Add.canceled -= instance.OnAdd;
+            @Duplicate.started -= instance.OnDuplicate;
+            @Duplicate.performed -= instance.OnDuplicate;
+            @Duplicate.canceled -= instance.OnDuplicate;
         }
 
         /// <summary>
@@ -1719,6 +1773,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnAdd(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Duplicate" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDuplicate(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Camera" which allows adding and removing callbacks.

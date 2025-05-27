@@ -36,7 +36,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 124, y: -45}
+  m_AnchoredPosition: {x: 124, y: -38}
   m_SizeDelta: {x: 1672, y: 100.26}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8867019831654937634
@@ -169,6 +169,12 @@ MonoBehaviour:
   title: {fileID: 8027856302380058809}
   firstFrame: {fileID: 7037197520870428462}
   bdFileName: 
+  animator:
+    RootObject: {fileID: 0}
+  tagName: 
+  uuidNumber: -1
+  triggerObject: {fileID: 715638419469086395}
+  DebugTick: 0
 --- !u!1 &6758444556846725055
 GameObject:
   m_ObjectHideFlags: 0
@@ -341,7 +347,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 120, y: 10}
+  m_AnchoredPosition: {x: 101, y: 10}
   m_SizeDelta: {x: 200, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &473293585351434962
@@ -427,8 +433,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 5112992045832374482}
-        m_TargetAssemblyTypeName: AnimObject, Assembly-CSharp
-        m_MethodName: RemoveAnimObj
+        m_TargetAssemblyTypeName: Animation.AnimFrame.AnimObject, Assembly-CSharp
+        m_MethodName: OnRemoveButtonClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -508,7 +514,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1740301840027163537, guid: dc5b3b346633f6c43a247b981140b104, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 160.4
+      value: 26
       objectReference: {fileID: 0}
     - target: {fileID: 1740301840027163537, guid: dc5b3b346633f6c43a247b981140b104, type: 3}
       propertyPath: m_AnchoredPosition.y

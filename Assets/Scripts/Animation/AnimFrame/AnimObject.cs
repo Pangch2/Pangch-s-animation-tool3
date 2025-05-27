@@ -32,6 +32,8 @@ namespace Animation.AnimFrame
         public int uuidNumber = -1;
 
         private readonly HashSet<string> _noID = new HashSet<string>();
+
+        public GameObject triggerObject;
         #endregion
 
         #region Functions
@@ -45,6 +47,9 @@ namespace Animation.AnimFrame
             animator = GameManager.GetManager<BdObjectManager>().BDObjectAnim[fileName];
 
             GetTickAndInterByFileName(bdFileName, out _, out var inter);
+
+            Canvas.ForceUpdateCanvases();
+
             firstFrame.Init(bdFileName, 0, inter, animator.RootObject.BdObject, this, _manager.timeline);
 
             frames[0] = firstFrame;
@@ -88,9 +93,9 @@ namespace Animation.AnimFrame
                 uuidNumber = int.Parse(numbers[0]);
 
             }
-            
+
         }
-        
+
         #region Transform
 
         public void OnTickChanged(float tick)
@@ -174,16 +179,27 @@ namespace Animation.AnimFrame
         public void OnEventTriggerClick(BaseEventData eventData)
         {
             // right click
-            if (eventData is PointerEventData { button: PointerEventData.InputButton.Right } pointerData)
+            if (eventData is PointerEventData pointerData)
             {
+                if (pointerData.button == PointerEventData.InputButton.Left)
+                {
+                    if (pointerData.pointerCurrentRaycast.gameObject == triggerObject)
+                    {
+                        _manager.ClearAllSelections();
+                    }
+                }
+                else
+                {
+                    var line = _manager.timeline.GetTickLine(pointerData.position);
+                    GameManager.GetManager<ContextMenuManager>().ShowContextMenu(this, line.Tick);
+                }
                 //Debug.Log("Right Click");
-                var line = _manager.timeline.GetTickLine(pointerData.position);
-                GameManager.GetManager<ContextMenuManager>().ShowContextMenu(this, line.Tick);
+
             }
         }
 
         // add frame with tick and inter
-        public void AddFrame(string fileName, BdObject frameInfo, int tick, int inter)
+        public Frame AddFrame(string fileName, BdObject frameInfo, int tick, int inter)
         {
             //Debug.Log("fileName : " + fileName + ", tick : " + tick + ", inter : " + inter);
 
@@ -197,20 +213,22 @@ namespace Animation.AnimFrame
 
             frames.Add(tick, frame);
             frame.Init(fileName, tick, inter, frameInfo, this, _manager.timeline);
+
+            return frame;
         }
 
         // add frame with fileName
-        public void AddFrame(BdObject frameInfo, string fileName)
+        public Frame AddFrame(BdObject frameInfo, string fileName)
         {
             //CustomLog.Log("AddFrame : " + fileName);    
             GetTickAndInterByFileName(fileName, out var tick, out var inter);
-            AddFrame(fileName, frameInfo, tick, inter);
+            return AddFrame(fileName, frameInfo, tick, inter);
         }
 
         // get tick and inter from fileName
         private void GetTickAndInterByFileName(string fileName, out int tick, out int inter)
         {
-            var setting = GameManager.Setting;
+            var setting = GameManager.GetManager<SettingManager>();
 
             // default setting
             tick = MaxTick;
@@ -271,7 +289,6 @@ namespace Animation.AnimFrame
         // remove self
         public void RemoveAnimObj()
         {
-            AnimManager.TickChanged -= OnTickChanged;
             var frame = frames;
             frames = null;
             while (frame.Count > 0)
@@ -300,5 +317,35 @@ namespace Animation.AnimFrame
         }
         #endregion
         #endregion
+
+        void OnDestroy()
+        {
+            AnimManager.TickChanged -= OnTickChanged;
+        }
+
+        public async void OnRemoveButtonClicked()
+        {
+            var uiMan = GameManager.GetManager<UIManager>();
+            bool check = await uiMan.SetPopupPanelAsync("정말로 이 트랙을 삭제하시겠습니까?", bdFileName);
+
+            if (check)
+            {
+                RemoveAnimObj();
+            }
+            else
+            {
+                CustomLog.Log("Remove AnimObject Cancelled: " + bdFileName);
+            }
+
+        }
+
+        public int DebugTick;
+        [ContextMenu("Debug Find Frame")]
+        public void DebugFindFrame()
+        {
+            var left = GetLeftFrame(DebugTick);
+            CustomLog.Log($"DebugFindFrame: {DebugTick} -> {left}, {frames.Values[left].fileName} frames found.");
+        }
+
     }
 }

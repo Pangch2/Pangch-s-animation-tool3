@@ -574,6 +574,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Duplicate",
+                    "type": "Button",
+                    "id": "55322bc6-9cc8-496a-b4d3-40971fd081f4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -581,7 +590,7 @@
                     "name": "",
                     "id": "ab1ceb01-f4d3-4bb2-b7ed-80b6d536b04c",
                     "path": "<Keyboard>/leftArrow",
-                    "interactions": "",
+                    "interactions": "Hold",
                     "processors": "",
                     "groups": "",
                     "action": "MoveTickLeft",
@@ -592,7 +601,7 @@
                     "name": "",
                     "id": "23f04639-0004-4fad-b9a7-70810c721fb1",
                     "path": "<Keyboard>/rightArrow",
-                    "interactions": "",
+                    "interactions": "Hold",
                     "processors": "",
                     "groups": "",
                     "action": "MoveTickRight",
@@ -675,6 +684,39 @@
                     "action": "Add",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "One Modifier",
+                    "id": "5a353aa4-b712-4492-a557-fa5974d4151d",
+                    "path": "OneModifier",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Duplicate",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "modifier",
+                    "id": "b7619bb7-7d53-4021-a2d8-5c0ea812aa24",
+                    "path": "<Keyboard>/ctrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Duplicate",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "binding",
+                    "id": "36241d1b-7c58-44f2-a9e7-5694bee8923f",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Duplicate",
+                    "isComposite": false,
+                    "isPartOfComposite": true
                 }
             ]
         },

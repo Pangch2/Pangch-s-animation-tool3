@@ -222,6 +222,9 @@ namespace SimpleFileBrowser
 			set { m_checkWriteAccessToDestinationDirectory = value; }
 		}
 
+		public static bool CanDeleteFiles = true;
+		public static bool CanRenameFiles = true;
+
 #if UNITY_EDITOR || ( !UNITY_ANDROID && !UNITY_IOS && !UNITY_WSA && !UNITY_WSA_10_0 )
 		private static float m_drivesRefreshInterval = 5f;
 #else
@@ -378,12 +381,6 @@ namespace SimpleFileBrowser
 
 		[SerializeField]
 		private bool generateQuickLinksForDrives = true;
-
-		[SerializeField]
-		private bool contextMenuShowDeleteButton = true;
-
-		[SerializeField]
-		private bool contextMenuShowRenameButton = true;
 
 		[SerializeField]
 		private bool showResizeCursor = true;
@@ -1363,8 +1360,8 @@ namespace SimpleFileBrowser
 
 			bool selectAllButtonVisible = isMoreOptionsMenu && m_allowMultiSelection && validFileEntries.Count > 0;
 			bool deselectAllButtonVisible = isMoreOptionsMenu && selectedFileEntries.Count > 1;
-			bool deleteButtonVisible = contextMenuShowDeleteButton && selectedFileEntries.Count > 0;
-			bool renameButtonVisible = contextMenuShowRenameButton && selectedFileEntries.Count == 1;
+			bool deleteButtonVisible = CanDeleteFiles && selectedFileEntries.Count > 0;
+			bool renameButtonVisible = CanRenameFiles && selectedFileEntries.Count == 1;
 
 			if( selectAllButtonVisible && m_pickerMode == PickMode.Files )
 			{
@@ -2105,14 +2102,14 @@ namespace SimpleFileBrowser
 		}
 
 		// Returns whether or not the FileSystemEntry passes the file browser's filters and should be displayed in the files list
-		private bool FileSystemEntryMatchesFilters( FileSystemEntry item, bool allExtensionsHaveSingleSuffix )
+		private bool FileSystemEntryMatchesFilters( in FileSystemEntry item, bool allExtensionsHaveSingleSuffix )
 		{
+			if( ( item.Attributes & ignoredFileAttributes ) != 0 )
+				return false;
+
 			if( !item.IsDirectory )
 			{
 				if( m_pickerMode == PickMode.Folders )
-					return false;
-
-				if( ( item.Attributes & ignoredFileAttributes ) != 0 )
 					return false;
 
 				string extension = item.Extension;
@@ -2131,11 +2128,6 @@ namespace SimpleFileBrowser
 				}
 
 				if( !filters[filtersDropdown.value].MatchesExtension( extension, !allExtensionsHaveSingleSuffix ) )
-					return false;
-			}
-			else
-			{
-				if( ( item.Attributes & ignoredFileAttributes ) != 0 )
 					return false;
 			}
 
@@ -2259,7 +2251,7 @@ namespace SimpleFileBrowser
 		// Prompts user to rename the selected file/folder
 		public void RenameSelectedFile()
 		{
-			if( selectedFileEntries.Count != 1 )
+			if( !CanRenameFiles || selectedFileEntries.Count != 1 )
 				return;
 
 			MultiSelectionToggleSelectionMode = false;
@@ -2320,7 +2312,7 @@ namespace SimpleFileBrowser
 		// Prompts user to delete the selected files & folders
 		public void DeleteSelectedFiles()
 		{
-			if( selectedFileEntries.Count == 0 )
+			if( !CanDeleteFiles || selectedFileEntries.Count == 0 )
 				return;
 
 			selectedFileEntries.Sort();
@@ -2514,7 +2506,7 @@ namespace SimpleFileBrowser
 			}
 		}
 
-		internal Sprite GetIconForFileEntry( FileSystemEntry fileInfo )
+		internal Sprite GetIconForFileEntry( in FileSystemEntry fileInfo )
 		{
 			return m_skin.GetIconForFileEntry( fileInfo, !AllExtensionsHaveSingleSuffix );
 		}
@@ -2903,10 +2895,11 @@ namespace SimpleFileBrowser
 													 string initialPath = null, string initialFilename = null,
 													 string title = "Save", string saveButtonText = "Save" )
 		{
-			if( !ShowSaveDialog( null, null, pickMode, allowMultiSelection, initialPath, initialFilename, title, saveButtonText ) )
+			bool? result = null;
+			if( !ShowSaveDialog( ( paths ) => result = true, () => result = false, pickMode, allowMultiSelection, initialPath, initialFilename, title, saveButtonText ) )
 				yield break;
 
-			while( Instance.gameObject.activeSelf )
+			while( !result.HasValue )
 				yield return null;
 		}
 
@@ -2914,10 +2907,11 @@ namespace SimpleFileBrowser
 													 string initialPath = null, string initialFilename = null,
 													 string title = "Load", string loadButtonText = "Select" )
 		{
-			if( !ShowLoadDialog( null, null, pickMode, allowMultiSelection, initialPath, initialFilename, title, loadButtonText ) )
+			bool? result = null;
+			if( !ShowLoadDialog( ( paths ) => result = true, () => result = false, pickMode, allowMultiSelection, initialPath, initialFilename, title, loadButtonText ) )
 				yield break;
 
-			while( Instance.gameObject.activeSelf )
+			while( !result.HasValue )
 				yield return null;
 		}
 
