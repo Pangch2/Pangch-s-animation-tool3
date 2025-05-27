@@ -11,6 +11,7 @@ using BDObjectSystem.Utility;
 using Cysharp.Threading.Tasks;
 using GameSystem;
 using Newtonsoft.Json;
+using SFB;
 using SimpleFileBrowser;
 using UnityEngine;
 using CompressionLevel = System.IO.Compression.CompressionLevel;
@@ -19,10 +20,10 @@ namespace FileSystem
 {
     public class SaveManager : BaseManager
     {
-        public const string MDEFileExtension = ".mcdeanim";
+        public const string MDEFileExtension = "mcdeanim";
         public string MDEFilePath = string.Empty;
 
-        private FileBrowser.Filter saveFilter = new FileBrowser.Filter("Files", MDEFileExtension);
+        // private FileBrowser.Filter saveFilter = new FileBrowser.Filter("Files", MDEFileExtension);
         public BdObjectManager bdObjManager;// BDObjectManager 참조
         FileLoadManager fileLoadManager; // FileLoadManager 참조
         public AnimObjList animObjList => fileLoadManager.animObjList; // AnimObjList (애니메이션 관련)
@@ -39,6 +40,7 @@ namespace FileSystem
             bdObjManager = GameManager.GetManager<BdObjectManager>();
             fileLoadManager = GameManager.GetManager<FileLoadManager>();
             exportSettingUIManager = GameManager.GetManager<ExportSettingUIManager>();
+
         }
 
         public void MakeNewMDEFile(string name)
@@ -108,17 +110,16 @@ namespace FileSystem
                     // 이 블록 안의 코드는 백그라운드 스레드에서 실행됩니다.
                     JsonSerializer serializer = JsonSerializer.CreateDefault(settings);
 
-                    using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-                    using (BrotliStream brotliStream = new BrotliStream(fileStream, CompressionLevel.Optimal))
-                    using (StreamWriter streamWriter = new StreamWriter(brotliStream, Encoding.UTF8))
-                    using (JsonTextWriter jsonWriter = new JsonTextWriter(streamWriter))
+                    using FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+                    using BrotliStream brotliStream = new BrotliStream(fileStream, CompressionLevel.Optimal);
+                    using StreamWriter streamWriter = new StreamWriter(brotliStream, Encoding.UTF8);
+                    using JsonTextWriter jsonWriter = new JsonTextWriter(streamWriter);
+                    if (settings?.Formatting == Formatting.Indented)
                     {
-                        if (settings?.Formatting == Formatting.Indented)
-                        {
-                            jsonWriter.Formatting = Formatting.Indented;
-                        }
-                        serializer.Serialize(jsonWriter, dataToSave);
-                    } // using 블록 종료 시 자동으로 닫힘
+                        jsonWriter.Formatting = Formatting.Indented;
+                    }
+                    serializer.Serialize(jsonWriter, dataToSave);
+                    // using 블록 종료 시 자동으로 닫힘
                 });
                 // Task.Run 내부에서 예외가 발생하면 아래 catch 블록으로 전달됩니다.
                 CustomLog.Log($"파일 저장 성공: {filePath}");
@@ -134,19 +135,18 @@ namespace FileSystem
             }
         }
 
-
-        //public void SaveMDEFile() => SaveMDEFile(MDEFilePath);
-        // public void SaveAsNewFile() => StartCoroutine(SaveAsNewFileCotoutine());
-        public void SaveAsNewFile() => SaveAsNewFileCoroutine().Forget(); // UniTask로 변경
-        private async UniTaskVoid SaveAsNewFileCoroutine()
+        public void SaveAsNewFile()
         {
-            FileBrowser.SetFilters(false, saveFilter);
-            await FileBrowser.WaitForSaveDialog(FileBrowser.PickMode.Files, false, null, currentMDEFile.name).ToUniTask();
+            // FileBrowser.SetFilters(false, saveFilter);
+            // await FileBrowser.WaitForSaveDialog(FileBrowser.PickMode.Files, false, null, currentMDEFile.name).ToUniTask();
+            var path = StandaloneFileBrowser.SaveFilePanel("Save MDE File", 
+                TagUUIDAdder.LauncherPath, 
+                currentMDEFile.name, MDEFileExtension);
 
-            if (FileBrowser.Success)
+            if (!string.IsNullOrEmpty(path))
             {
                 // Debug.Log("Selected Folder: " + FileBrowser.Result[0]);
-                SetMCDEFilePath(FileBrowser.Result[0]);
+                SetMCDEFilePath(path);
                 SaveMCDEFile();
             }
         }
@@ -155,24 +155,19 @@ namespace FileSystem
         #region  Load Logic
 
         // public void LoadMCDEFile() => StartCoroutine(LoadMDEFileCoroutine());
-        public void LoadMCDEFile()
+        public async UniTaskVoid LoadMCDEFile()
         {
             if (SavingProgressStatus) return; // 저장/로드 중이면 추가 로드 불가
-            LoadMDEFileCoroutine().Forget(); // UniTask로 변경
-        }
-        private async UniTaskVoid LoadMDEFileCoroutine()
-        {
+
+
             SavingProgressStatus = true;
-            FileBrowser.SetFilters(false, saveFilter); // MDE 파일 필터
-            await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files, false, null, "Select MDE File").ToUniTask(); // 파일 선택 모드
+            var paths = StandaloneFileBrowser.OpenFilePanel("Select MCDE File",
+                TagUUIDAdder.LauncherPath,
+                MDEFileExtension,
+                false);
 
-            if (!FileBrowser.Success)
-            {
-                CustomLog.Log("MDE 파일 선택 취소/실패");
-                return; // 파일 선택 취소 시
-            }
-
-            string filePath = FileBrowser.Result[0];
+            if (paths.Length == 0) return;
+            string filePath = paths[0];
             CustomLog.Log($"선택된 MDE 파일: {filePath}");
 
             var ui = GameManager.GetManager<UIManager>();
@@ -201,7 +196,7 @@ namespace FileSystem
             }
             catch (Exception e) // ProcessLoadedMDEFileAsync 호출 자체에서 예외 발생 시
             {
-                Debug.LogError($"파일 로드 중 예외: {e.Message}, {e.StackTrace}");
+                Debug.LogError($"파일 로드 중 오류: {e.Message}, {e.StackTrace}");
             }
             finally
             {
@@ -209,8 +204,59 @@ namespace FileSystem
                 ui.SetLoadingPanel(false);
                 SavingProgressStatus = false;
             }
-
+            // LoadMDEFileCoroutine().Forget(); // UniTask로 변경
         }
+        // private async UniTaskVoid LoadMDEFileCoroutine()
+        // {
+        //     SavingProgressStatus = true;
+        //     FileBrowser.SetFilters(false, saveFilter); // MDE 파일 필터
+        //     await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files, false, null, "Select MDE File").ToUniTask(); // 파일 선택 모드
+
+        //     if (!FileBrowser.Success)
+        //     {
+        //         CustomLog.Log("MDE 파일 선택 취소/실패");
+        //         return; // 파일 선택 취소 시
+        //     }
+
+        //     string filePath = FileBrowser.Result[0];
+        //     CustomLog.Log($"선택된 MDE 파일: {filePath}");
+
+        //     var ui = GameManager.GetManager<UIManager>();
+        //     ui.SetLoadingPanel(true);
+        //     ui.SetLoadingText("Loading MDE File...");
+
+        //     // 1. 파일 로드 (비동기)
+        //     // Task<MCDEANIMFile> loadTask = LoadObjectCompressedAsync<MCDEANIMFile>(filePath);
+        //     // yield return new WaitUntil(() => loadTask.IsCompleted);
+        //     currentMDEFile = await LoadObjectCompressedAsync<MCDEANIMFile>(filePath); // UniTask로 변경
+        //     if (currentMDEFile == default)
+        //     {
+        //         CustomLog.LogError($"MDE 파일 로드 실패: {filePath}");
+        //         ui.SetLoadingPanel(false);
+        //         return;
+        //     }
+
+        //     SetMCDEFilePath(filePath); // MDE 파일 경로 설정
+
+        //     // 2. 로드된 데이터 처리 (비동기)
+        //     CustomLog.Log("MDE 파일 로드 완료. 데이터 처리 시작...");
+        //     ui.SetLoadingText("Processing MDE Data..."); // 로딩 텍스트 변경
+        //     try
+        //     {
+        //         await ProcessLoadedMDEFileAsync(currentMDEFile);
+        //     }
+        //     catch (Exception e) // ProcessLoadedMDEFileAsync 호출 자체에서 예외 발생 시
+        //     {
+        //         Debug.LogError($"파일 로드 중 예외: {e.Message}, {e.StackTrace}");
+        //     }
+        //     finally
+        //     {
+        //         // 3. 로딩 패널 닫기
+        //         ui.SetLoadingPanel(false);
+        //         SavingProgressStatus = false;
+        //     }
+
+        // }
 
         /// <summary>
                 /// 로드된 MCDEANIMFile 데이터를 기반으로 AnimObject와 Frame들을 생성합니다.

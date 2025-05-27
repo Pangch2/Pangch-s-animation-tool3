@@ -20,7 +20,6 @@ namespace FileSystem
         public int startTick;
         public string packNamespace;
         public string frameFileName;
-        public string resultFileName;
         public string exportPath;
 
         public List<AnimObjectFile> animObjects = new List<AnimObjectFile>();

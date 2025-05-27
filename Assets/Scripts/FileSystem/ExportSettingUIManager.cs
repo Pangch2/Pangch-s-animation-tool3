@@ -13,7 +13,6 @@ namespace FileSystem
         public TMP_InputField startTickInput;
         public TMP_InputField packNamespaceInput;
         public TMP_InputField frameFileNameInput;
-        public TMP_InputField exportFolderInput; // ExportManager의 ExportFolder와 연동
         public Toggle findModeToggle;
 
         private ExportManager exportManager; // ExportManager 참조
@@ -38,7 +37,6 @@ namespace FileSystem
             startTickInput.onEndEdit.AddListener(OnEndEditStartTick);
             packNamespaceInput.onEndEdit.AddListener(OnEndEditPackNamespace);
             frameFileNameInput.onEndEdit.AddListener(OnEndEditFrameFileName);
-            exportFolderInput.onEndEdit.AddListener(OnEndEditExportFolder);
 
             // 초기 UI 업데이트 (기본값 또는 로드된 값으로)
             UpdateUIFromData();
@@ -100,14 +98,6 @@ namespace FileSystem
             frameFileName = value;
         }
 
-        private void OnEndEditExportFolder(string value)
-        {
-            if (exportManager != null)
-            {
-                exportManager.ExportFolder = value;
-            }
-        }
-
         /// <summary>
         /// MCDEANIMFile 데이터로 UI와 내부 데이터를 업데이트합니다.
         /// </summary>
@@ -120,7 +110,6 @@ namespace FileSystem
             fakePlayer = file.fakePlayer;
             useFindMode = file.findMode;
 
-            exportManager.ExportFolder = file.resultFileName;
             exportManager.SetPathText(file.exportPath);
             UpdateUIFromData();
         }
@@ -137,8 +126,7 @@ namespace FileSystem
             file.fakePlayer = fakePlayer;
             file.findMode = useFindMode;
 
-
-            file.resultFileName = exportManager.ExportFolder;
+            file.exportPath = exportManager.currentPath;
         }
 
         /// <summary>
@@ -152,10 +140,6 @@ namespace FileSystem
             frameFileNameInput.text = frameFileName;
             fakePlayerInput.text = fakePlayer; // _useFindMode에 따라 @s가 될 수 있음
             findModeToggle.isOn = useFindMode;
-            if (exportManager != null)
-            {
-                exportFolderInput.text = exportManager.ExportFolder;
-            }
         }
     }
 }

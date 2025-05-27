@@ -18,6 +18,7 @@ namespace FileSystem
     public class FileLoadManager : BaseManager
     {
         #region 필드 & 프로퍼티
+        public static string[] FileExtensions = { ".bdengine", ".bdstudio" };
 
         public BdObjectManager bdObjManager;    // BDObjectManager 참조
         public AnimObjList animObjList;         // AnimObjList (애니메이션 관련)
@@ -32,7 +33,7 @@ namespace FileSystem
         /// </summary>
         public readonly Dictionary<string, (int, int)> FrameInfo = new Dictionary<string, (int, int)>();
 
-        private FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", ".bdengine", ".bdstudio");
+        private FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", FileExtensions);
 
         public TagUUIDAdder tagUUIDAdder;
 

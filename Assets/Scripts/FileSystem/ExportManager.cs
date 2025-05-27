@@ -15,6 +15,7 @@ using Minecraft;
 using System.Text.RegularExpressions;
 using DG.Tweening;
 using UnityEngine.UI;
+using SFB;
 
 namespace FileSystem
 {
@@ -27,18 +28,7 @@ namespace FileSystem
         public ExportSettingUIManager exportSetting;
 
         public TextMeshProUGUI exportPathText;
-        private string exportFolder = "result";
-        public string ExportFolder
-        {
-            get => exportFolder;
-            set
-            {
-                exportFolder = value;
-                SetPathText(currentPath);
-            }
-        }
         public string currentPath;
-        private string finalPath;
 
         public readonly Regex FNumberRegex = new Regex(@"f(\d+)", RegexOptions.IgnoreCase);
         public static readonly Regex UuidExtractedFormatRegex = new Regex(@"^(-?\d+),(-?\d+),(-?\d+),(-?\d+)$", RegexOptions.Compiled);
@@ -108,17 +98,10 @@ namespace FileSystem
 
         public void SetPathText(string path)
         {
+            if (string.IsNullOrEmpty(path)) return;
             // Debug.Log($"Export path: {path}");
             currentPath = path.Replace("\\", "/");
-            if (currentPath.EndsWith(exportFolder))
-            {
-                finalPath = currentPath;
-            }
-            else
-            {
-                finalPath = path + '/' + exportFolder;
-            }
-            exportPathText.text = finalPath;
+            exportPathText.text = currentPath;
         }
 
         public async void SetExportPanel(bool isShow)
@@ -163,14 +146,15 @@ namespace FileSystem
         }
 
         // 경로 변경하는 버튼 클릭 시 호출
-        public async void GetNewPath()
+        public void GetNewPath()
         {
-            await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Folders, false, Application.dataPath).ToUniTask();
+            // await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Folders, false, Application.dataPath).ToUniTask();
+            var paths = StandaloneFileBrowser.OpenFolderPanel("Select Export Folder", currentPath, false);
 
-            if (FileBrowser.Success)
+            if (paths.Length > 0)
             {
                 //Debug.Log("Selected Folder: " + FileBrowser.Result[0]);
-                SetPathText(FileBrowser.Result[0]);
+                SetPathText(paths[0]);
             }
         }
 
@@ -193,11 +177,11 @@ namespace FileSystem
         public async UniTask ExportFile()
         {
             // 1. Export path 설정
-            if (!Directory.Exists(finalPath))
-                Directory.CreateDirectory(finalPath);
+            if (!Directory.Exists(currentPath))
+                Directory.CreateDirectory(currentPath);
 
             // 2. 폴더 내 기존 파일 삭제
-            DeleteFrameAndFnumberFiles(finalPath);
+            DeleteFrameAndFnumberFiles(currentPath);
 
             // 3. 트랙별 데이터 가져오기
             List<SortedList<int, ExportFrame>> allTracks =
@@ -313,7 +297,7 @@ namespace FileSystem
             int idx = 1;
             foreach (var kv in result)
             {
-                string path = Path.Combine(finalPath, $"f{idx++}.mcfunction");
+                string path = Path.Combine(currentPath, $"f{idx++}.mcfunction");
                 await File.WriteAllLinesAsync(path, kv.Value, utf8NoBom);
             }
 
@@ -334,9 +318,9 @@ namespace FileSystem
                                  ? "frame.mcfunction"
                                  : $"{exportSetting.frameFileName}.mcfunction";
             await File.WriteAllLinesAsync(
-                Path.Combine(finalPath, scoreFile), scoreLines, utf8NoBom);
+                Path.Combine(currentPath, scoreFile), scoreLines, utf8NoBom);
 
-            CustomLog.Log($"Export is Done! Export path: {finalPath}");
+            CustomLog.Log($"Export is Done! Export path: {currentPath}");
         }
         #endregion
 

@@ -72,6 +72,7 @@ namespace Mainmenu
             if (!isInstalled)
             {
                 versionText.text = "Version not found";
+                PlayerPrefs.SetString("MinecraftPath", string.Empty);
                 return false;
             }
 

@@ -8,6 +8,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using FileSystem;
 using Newtonsoft.Json;
+using SFB;
 using SimpleFileBrowser;
 using TMPro;
 using UnityEngine;
@@ -19,6 +20,9 @@ namespace BDObjectSystem
 {
     public class TagUUIDAdder : MonoBehaviour
     {
+        public static string LauncherPath;
+        readonly ExtensionFilter[] extension = new[] { new ExtensionFilter("BDEngine Files", FileLoadManager.FileExtensions) };
+
         readonly string[] TEXTLIST =
         {
             "설정될 태그의 이름을 적어주세요",
@@ -29,7 +33,7 @@ namespace BDObjectSystem
             "모든 디스플레이에 {0}0 태그,\n각 디스플레이에 UUID:[I;{1},(숫자),0,0]이 들어갑니다.",
         };
 
-        readonly FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", ".bdengine", ".bdstudio");
+        // readonly FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", ".bdengine", ".bdstudio");
 
         /// <summary>
         /// 0 - 설정될 태그의 이름을 ~
@@ -130,6 +134,8 @@ namespace BDObjectSystem
 
         void Start()
         {
+            LauncherPath = Application.dataPath + "/../";
+
             addTypeToggles[0].onValueChanged.AddListener((_) => { AddType = ADDTYPE.TAG; });
             addTypeToggles[1].onValueChanged.AddListener((_) => { AddType = ADDTYPE.UUID; });
 
@@ -143,20 +149,29 @@ namespace BDObjectSystem
             // gameObject.SetActive(false);
         }
 
-        public async void OnAddFileButton()
+        public void OnAddFileButton()
         {
-            await AddFileCoroutine();
+            var path = StandaloneFileBrowser.OpenFilePanel("Select File",
+                LauncherPath,
+                extension
+                , false);
+
+            if (path.Length > 0)
+            {
+                SetFilePath(path[0]);
+            }
+            // await AddFileCoroutine();
         }
 
-        async UniTask AddFileCoroutine()
-        {
-            FileBrowser.SetFilters(false, loadFilter);
-            await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files).ToUniTask();
+        // async UniTask AddFileCoroutine()
+        // {
+        //     FileBrowser.SetFilters(false, loadFilter);
+        //     await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files).ToUniTask();
 
-            if (!FileBrowser.Success) return;
+        //     if (!FileBrowser.Success) return;
 
-            SetFilePath(FileBrowser.Result[0]);
-        }
+        //     SetFilePath(FileBrowser.Result[0]);
+        // }
 
         public void SetFilePath(string path)
         {
