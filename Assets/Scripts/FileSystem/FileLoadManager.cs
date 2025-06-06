@@ -18,7 +18,7 @@ namespace FileSystem
     public class FileLoadManager : BaseManager
     {
         #region 필드 & 프로퍼티
-        public static string[] FileExtensions = { ".bdengine", ".bdstudio" };
+        public static string[] FileExtensions = { "bdengine", "bdstudio" };
 
         public BdObjectManager bdObjManager;    // BDObjectManager 참조
         public AnimObjList animObjList;         // AnimObjList (애니메이션 관련)

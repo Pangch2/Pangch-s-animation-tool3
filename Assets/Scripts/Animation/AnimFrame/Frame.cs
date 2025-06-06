@@ -66,7 +66,7 @@ namespace Animation.AnimFrame
             _timeline.OnGridChanged += UpdatePos;
 
             IsModelDiffrent = animObject.animator.RootObject.BdObjectID != info.ID;
-            
+
             worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
             SetInter(inter);
         }
@@ -302,34 +302,6 @@ namespace Animation.AnimFrame
             }
         }
 
-        // private void Update()
-        // {
-        //     // 기존의 Update 내 선택 해제 로직은 AnimObjList 또는 전역 클릭 관리자로 이전하는 것이 좋습니다.
-        //     // if (Mouse.current.leftButton.wasPressedThisFrame && isSelected && !isMouseDown) ... 부분 제거
-
-        //     if (isMouseDown)
-        //     {
-        //         // 이 프레임이 선택된 상태일 때만 드래그 로직을 실행합니다.
-        //         if (isSelected)
-        //         {
-        //             Vector2 mouse = Input.mousePosition;
-        //             if (_timeline != null)
-        //             {
-        //                 var line = _timeline.GetTickLine(mouse);
-        //                 if (line != null) // line이 null이 아닌지 확인
-        //                 {
-        //                     SetTick(line.Tick);
-        //                 }
-        //             }
-        //         }
-
-        //         if (Mouse.current.leftButton.wasReleasedThisFrame)
-        //         {
-        //             isMouseDown = false;
-        //         }
-        //     }
-        // }
-
         public void RemoveFrame()
         {
             if (animObject != null)
@@ -367,6 +339,34 @@ namespace Animation.AnimFrame
             BdObject clonedInfo = this.Info.Clone();
             // AddFrame 내부에서 tick 충돌을 처리하므로, 여기서는 원하는 tick (예: 현재 tick + 1)을 전달합니다.
             return animObject.AddFrame(this.fileName + "_copy", clonedInfo, this.tick + 1, this.interpolation);
+        }
+
+        /// <summary>
+        /// 두 Frame의 leafObjects를 비교하여 이름이 다른 객체들의 리스트를 반환합니다.
+        /// </summary>
+        /// <returns></returns>
+        public static List<string> CompareFrameLeafObjects(Dictionary<string, BdObject> frame1Objects, Dictionary<string, BdObject> frame2Objects)
+        {
+            List<string> differences = new List<string>();
+
+            if (frame1Objects == null || frame2Objects == null)
+            {
+                CustomLog.UnityLogErr("One or both frame objects are null.");
+                return differences;
+            }
+
+            foreach (var obj1 in frame1Objects)
+            {
+                if (frame2Objects.TryGetValue(obj1.Key, out var obj2))
+                {
+                    // 이름이 다르면 differences에 추가
+                    if (obj1.Value != obj2)
+                    {
+                        differences.Add(obj1.Key);
+                    }
+                }
+            }
+            return differences;
         }
     }
 }
