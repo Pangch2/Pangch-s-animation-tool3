@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace Mainmenu
     {
         MinecraftFileManager minecraftFileManager;
         public TextMeshProUGUI versionText;
+        public TextMeshProUGUI versionErrorMsg;
 
         public bool isInstalled = false;
 
@@ -24,6 +26,8 @@ namespace Mainmenu
         // public RawImage fadeImg;
         public CanvasGroup menu;
 
+        public TextMeshProUGUI supportVersionText;
+
         const string backgroundColor = "303030";
         // public RectTransform previewPanel;
 
@@ -31,22 +35,75 @@ namespace Mainmenu
 
         // public static readonly Regex VersionRegex = new Regex(@"(\d+)\.(\d+)\.(\d+)", RegexOptions.Compiled);
 
-        void Start()
+        async void Start()
         {
             minecraftFileManager = MinecraftFileManager.Instance;
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var version in MinecraftFileManager.SurportedVersions)
+            {
+                sb.Append(version + '\n');
+            }
+            supportVersionText.text = sb.ToString();
 
             string path = PlayerPrefs.GetString("MinecraftPath", string.Empty);
             if (string.IsNullOrEmpty(path))
             {
-                path = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    ".minecraft/versions",
-                    MinecraftFileManager.MinecraftVersion,
-                    MinecraftFileManager.MinecraftVersion + ".jar"
+                string applicationPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var SurportedVersions = MinecraftFileManager.SurportedVersions;
+
+                // Minecraft 폴더 찾기
+                string minecraftFolder = Path.Combine(applicationPath, ".minecraft", "versions");
+
+                if (Directory.Exists(minecraftFolder))
+                {
+                    // 가장 최신부터 찾기
+                    foreach (var version in SurportedVersions)
+                    {
+                        string versionPath = Path.Combine(minecraftFolder, version, version + ".jar");
+                        if (File.Exists(versionPath))
+                        {
+                            path = versionPath;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    // Minecraft 폴더가 없으면 프리즘 런처를 수색함
+                    //PrismLauncher/libraries\com\mojang\minecraft
+                    string prismLauncherPath = Path.Combine(
+                        applicationPath,
+                        "PrismLauncher",
+                        "libraries",
+                        "com",
+                        "mojang",
+                        "minecraft"
                     );
+                    // 프리즘의 jar 파일 이름은 minecraft-1.21.6-client.jar
+                    foreach (var version in SurportedVersions)
+                    {
+                        string versionPath = Path.Combine(
+                            prismLauncherPath,
+                            "minecraft-" + version + "-client.jar"
+                        );
+                        if (File.Exists(versionPath))
+                        {
+                            path = versionPath;
+                            break;
+                        }
+                    }
+
+                }
             }
             // Debug.Log(path);
-            SetNewPath(path).Forget();
+            bool isSuccess = await SetNewPath(path);
+
+            if (!isSuccess)
+            {
+                // 파일을 못찾았을 경우 버전 패널을 띄움
+                GetComponent<VersionLoadPanel>().OnPanelButton();
+            }
 
             isFirstVisiting = true;
         }
@@ -58,26 +115,32 @@ namespace Mainmenu
             string version = Regex.Match(path, versionPattern).Value;
             if (string.IsNullOrEmpty(version))
             {
-                versionText.text = "Version not found";
+                versionText.text = "File not found";
+                versionErrorMsg.text = "File not found";
                 buttons[0].interactable = false;
                 buttons[1].interactable = false;
                 return false;
             }
 
-            isInstalled = await minecraftFileManager.ReadMinecraftFile(path, version);
+            string error;
+            (isInstalled, error) = await minecraftFileManager.ReadMinecraftFile(path, version);
 
             buttons[0].interactable = isInstalled;
             buttons[1].interactable = isInstalled;
 
             if (!isInstalled)
             {
-                versionText.text = "Version not found";
+                versionText.text = error;
+                versionErrorMsg.text = error;
                 PlayerPrefs.SetString("MinecraftPath", string.Empty);
+                
                 return false;
             }
 
             versionText.text = "Version: " + version;
             PlayerPrefs.SetString("MinecraftPath", path);
+            versionErrorMsg.text = string.Empty;
+            PlayerPrefs.Save();
             return true;
         }
 

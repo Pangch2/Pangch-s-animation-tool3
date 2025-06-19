@@ -50,13 +50,23 @@ namespace Minecraft
 
         // public static string MinecraftPath = ".minecraft/versions";
         // private const string MinecraftVersion = "1.21.4";
-        public static string MinecraftVersion = "1.21.5";
+
+        public static readonly List<string> SurportedVersions = new List<string>
+        {
+            "1.21.6",
+            "1.21.5",
+            "1.21.4"
+        };
+
+        private static int currentMinecraftVersionIndex = 0;
+        public static string MinecraftVersion => SurportedVersions[currentMinecraftVersionIndex];
         public bool IsReadedFiles { get; private set; } = false;
 
         // 시작하면 마크 파일 읽음 
-        public async UniTask<bool> ReadMinecraftFile(string path, string version)
+        public async UniTask<(bool success, string error)> ReadMinecraftFile(string path, string version)
         {
             // filePath = path;
+            currentMinecraftVersionIndex = SurportedVersions.IndexOf(version);
             try
             {
                 await ReadJarFile(path, "assets/minecraft");
@@ -64,11 +74,16 @@ namespace Minecraft
             catch (Exception e)
             {
                 CustomLog.UnityLogErr("Error reading Minecraft file: " + e.Message);
-                return false;
+                return (false, "Error reading Minecraft file");
             }
-            MinecraftVersion = version;
+
+            if (currentMinecraftVersionIndex < 0)
+            {
+                CustomLog.UnityLogErr("Unsupported Minecraft version: " + version);
+                return (false, "Unsupported Minecraft version");
+            }
             IsReadedFiles = true;
-            return true;
+            return (true, string.Empty);
         }
 
         #region Static functions

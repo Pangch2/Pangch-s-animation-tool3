@@ -159,6 +159,10 @@ namespace BDObjectSystem.Display
                     //CustomLog.Log("Shield: " + baseModel);
                     GenerateUsingBlockModel(baseModel);
                     break;
+                case "minecraft:player_head":
+                    var playerHead = Instantiate(GameManager.GetManager<BdObjectManager>().headPrefab, transform);
+                    playerHead.GenerateHead("player");
+                    break;
 
             }
         }
