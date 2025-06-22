@@ -7,12 +7,13 @@ using UnityEngine;
 using BDObjectSystem;
 using Minecraft;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 namespace GameSystem
 {
     public class SystemManager : BaseManager
     {
-        public string[] filesDropped;
+        public List<string> filesDropped;
 
 
         private float _deltaTime;
@@ -27,9 +28,6 @@ namespace GameSystem
             base.Awake();
 
             Application.targetFrameRate = 165;
-
-            //UnityDragAndDropHook.InstallHook();
-            //UnityDragAndDropHook.OnDroppedFiles += OnFiles;
         }
 
         private void Start()
@@ -48,6 +46,9 @@ namespace GameSystem
             {
                 SceneManager.LoadScene("Mainmenu");
             }
+
+            GetComponent<FildDragAndDrop>().OnFilesDropped.AddListener(OnFilesDropped);
+
         }
 
         private void OnGUI()
@@ -57,7 +58,7 @@ namespace GameSystem
             var ms = _deltaTime * 1000f;
             var fps = 1.0f / _deltaTime;
             var text = $"{fps:0.} FPS ({ms:0.0} ms)";
-        
+
             var versionRect = new Rect(Screen.width - 200, 70, Screen.width, Screen.height);
             var version = string.Format("Version: {0}", Application.version);
 
@@ -65,64 +66,28 @@ namespace GameSystem
             GUI.Label(versionRect, version, _style);
         }
 
-        //private void OnDestroy()
-        //{
-        //    UnityDragAndDropHook.UninstallHook();
-        //}
-
-        //public void OnFiles(List<string> aPathNames, POINT aDropPoint)
-        //{
-        //    GameManager.GetManager<FileManager>().AfterLoadFile(aPathNames.ToArray());
-        //}
-
-        // Update is called once per frame
         private void Update()
         {
             _deltaTime += (Time.unscaledDeltaTime - _deltaTime) * 0.1f;
         }
-
-//             // paste from clipboard
-//             if (!Input.GetKey(KeyCode.LeftControl) || !Input.GetKeyDown(KeyCode.V)) return;
-//             try
-//             {
-//                 var clipboard = GUIUtility.systemCopyBuffer;
-
-//                 CustomLog.Log("Clipboard: " + clipboard);
-
-//                 //_ = GameManager.GetManager<FileManager>().MakeDisplay(clipboard);
-//             }
-//             catch (Exception e)
-//             {
-//                 CustomLog.Log("Clipboard is not BDEFile");
-// #if UNITY_EDITOR
-//                 Debug.LogError(e);
-// #endif
-//             }
-//         }
         
-        // public void ExportPrefab(int idx)
-        // {
-        //     var bdObjParent = GameManager.GetManager<BdObjectManager>().bdObjectParent;
-        //     if (idx >= bdObjParent.childCount) return;
-            
-        //     var prefab = bdObjParent.GetChild(idx).gameObject;
-            
-        //     if (!prefab)
-        //     {
-        //         Debug.LogError("Target object is null. Assign a GameObject.");
-        //         return;
-        //     }
+        private void OnFilesDropped(List<string> files)
+        {
+            filesDropped = files;
 
-        //     const string directory = "Assets/RuntimePrefabs";
-        //     if (!Directory.Exists(directory))
-        //     {
-        //         Directory.CreateDirectory(directory);
-        //     }
+            foreach (var file in files)
+            {
+                if (File.Exists(file))
+                {
+                    CustomLog.Log($"File dropped: {file}");
+                    // 여기에 파일 처리 로직을 추가할 수 있습니다.
+                }
+                else
+                {
+                    Debug.LogWarning($"File not found: {file}");
+                }
+            }
+        }
 
-        //     var prefabPath = $"{directory}/{prefab.name}.prefab";
-
-        //     // 프리팹 저장
-        //     PrefabUtility.SaveAsPrefabAsset(prefab, prefabPath);
-        // }
     }
 }

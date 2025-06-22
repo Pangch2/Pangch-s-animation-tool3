@@ -335,9 +335,13 @@ namespace FileSystem
             foreach (string file in files)
             {
                 string fileName = Path.GetFileName(file);
+                string fileNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
 
-                // frame 파일 이름 또는 f{number}.mcfunction 패턴 확인
-                if (fileName.Equals(frameFileNameToDelete, StringComparison.OrdinalIgnoreCase) || FNumberRegex.IsMatch(fileName))
+                // frame 파일 이름 또는 정확히 f{number} 형태인 파일인지 확인
+                Match fNumberMatch = FNumberRegex.Match(fileNameWithoutExt);
+
+                if (fileName.Equals(frameFileNameToDelete, StringComparison.OrdinalIgnoreCase) || 
+                    (fNumberMatch.Success && fNumberMatch.Value.Length == fileNameWithoutExt.Length))
                 {
                     try
                     {

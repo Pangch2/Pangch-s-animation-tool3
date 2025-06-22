@@ -133,7 +133,7 @@ namespace Mainmenu
                 versionText.text = error;
                 versionErrorMsg.text = error;
                 PlayerPrefs.SetString("MinecraftPath", string.Empty);
-                
+
                 return false;
             }
 
@@ -166,6 +166,11 @@ namespace Mainmenu
         public void OnDisplayMakerButton()
         {
 
+        }
+
+        public void OnOpenGoogleFormButton()
+        {
+            Application.OpenURL("https://docs.google.com/forms/d/e/1FAIpQLSfZpYsPRXoxlwlYd3d9ZHFvd27EZ-ZFE9T20LnA31ig4AY6hA/viewform?usp=header");
         }
     }
 }
