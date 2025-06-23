@@ -8,6 +8,7 @@ using BDObjectSystem;
 using Minecraft;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using UnityEngine.InputSystem;
 
 namespace GameSystem
 {
@@ -15,6 +16,7 @@ namespace GameSystem
     {
         public List<string> filesDropped;
 
+        private WindowFileHandler _fileDragAndDrop; // FildDragAndDrop 참조 저장
 
         private float _deltaTime;
 
@@ -27,7 +29,7 @@ namespace GameSystem
         {
             base.Awake();
 
-            Application.targetFrameRate = 165;
+            // QualitySettings.vSyncCount = 1;
         }
 
         private void Start()
@@ -47,7 +49,8 @@ namespace GameSystem
                 SceneManager.LoadScene("Mainmenu");
             }
 
-            GetComponent<FildDragAndDrop>().OnFilesDropped.AddListener(OnFilesDropped);
+            _fileDragAndDrop = GetComponent<WindowFileHandler>(); // 컴포넌트 참조 가져오기
+            _fileDragAndDrop.OnFilesDropped.AddListener(OnFilesDropped);
 
         }
 
@@ -70,7 +73,7 @@ namespace GameSystem
         {
             _deltaTime += (Time.unscaledDeltaTime - _deltaTime) * 0.1f;
         }
-        
+
         private void OnFilesDropped(List<string> files)
         {
             filesDropped = files;
@@ -89,5 +92,45 @@ namespace GameSystem
             }
         }
 
+        public void OnCopyKey(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+            {
+                CustomLog.Log("Copy key pressed");
+                // 여기에 복사 로직을 추가할 수 있습니다.
+            }
+        }
+
+        public void OnPasteKey(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+            {
+                // 1. 클립보드에서 파일 경로 목록을 가져옵니다.
+                // var pastedFiles = _fileDragAndDrop.GetCopiedFilePaths();
+                _fileDragAndDrop.CheckForPastedFiles(); 
+                // Debug.Log($"Pasted files count: {pastedFiles}");
+
+                // if (pastedFiles != null && pastedFiles.Count > 0)
+                // {
+                //     // 파일이 붙여넣기 된 경우, OnFilesDropped를 호출하여 동일한 로직으로 처리
+                //     CustomLog.Log($"Pasted files detected via clipboard: {pastedFiles.Count} file(s).");
+                //     OnFilesDropped(pastedFiles);
+                // }
+                // else
+                // {
+                //     // 파일이 아닌 경우, 기존의 텍스트 클립보드 로직 수행
+                //     var clipboardText = GUIUtility.systemCopyBuffer;
+                //     if (!string.IsNullOrEmpty(clipboardText))
+                //     {
+                //         CustomLog.Log($"Paste key pressed. Clipboard text: {clipboardText}");
+                //     }
+                //     else
+                //     {
+                //         CustomLog.Log("Paste key pressed, but clipboard is empty or contains no files.");
+                //     }
+                // }
+            }
+        }
+        
     }
 }

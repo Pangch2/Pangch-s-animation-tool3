@@ -3304,6 +3304,38 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 55322bc6-9cc8-496a-b4d3-40971fd081f4
     m_ActionName: 'Animation/Duplicate[/Keyboard/ctrl,/Keyboard/d]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1933708893}
+        m_TargetAssemblyTypeName: GameSystem.SystemManager, Assembly-CSharp
+        m_MethodName: OnPasteKey
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: e55cb51c-8550-4c4c-9145-949e518c6d43
+    m_ActionName: 'Animation/Paste[/Keyboard/ctrl,/Keyboard/v]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1933708893}
+        m_TargetAssemblyTypeName: GameSystem.SystemManager, Assembly-CSharp
+        m_MethodName: OnCopyKey
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: e71b9c8c-20f1-420d-9547-28012874b4ce
+    m_ActionName: 'Animation/Copy[/Keyboard/ctrl,/Keyboard/c]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: UI
@@ -35786,7 +35818,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2130217948
 RectTransform:
   m_ObjectHideFlags: 0

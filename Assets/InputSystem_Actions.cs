@@ -669,6 +669,24 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Paste"",
+                    ""type"": ""Button"",
+                    ""id"": ""e55cb51c-8550-4c4c-9145-949e518c6d43"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Copy"",
+                    ""type"": ""Button"",
+                    ""id"": ""e71b9c8c-20f1-420d-9547-28012874b4ce"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -682,6 +700,39 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""action"": ""MoveTickLeft"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""One Modifier"",
+                    ""id"": ""ee1308c5-355c-4f76-a438-24709465e61b"",
+                    ""path"": ""OneModifier"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Paste"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""modifier"",
+                    ""id"": ""f7ccc556-fcc3-4826-a127-06ed8fe6ee90"",
+                    ""path"": ""<Keyboard>/ctrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Paste"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""binding"",
+                    ""id"": ""1e65b75d-5f40-4cb6-8345-82cf89f4a41d"",
+                    ""path"": ""<Keyboard>/v"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Paste"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": """",
@@ -801,6 +852,39 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Duplicate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""One Modifier"",
+                    ""id"": ""5c22abd0-b197-4cb6-9c76-911331cc4e5e"",
+                    ""path"": ""OneModifier"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Copy"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""modifier"",
+                    ""id"": ""4f1b2e0d-585d-4c8f-bd70-98b0a757373e"",
+                    ""path"": ""<Keyboard>/ctrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Copy"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""binding"",
+                    ""id"": ""d7d87f73-38f6-4e12-a088-05ecf81f0a3d"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Copy"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 }
@@ -999,6 +1083,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Animation_Delete = m_Animation.FindAction("Delete", throwIfNotFound: true);
         m_Animation_Add = m_Animation.FindAction("Add", throwIfNotFound: true);
         m_Animation_Duplicate = m_Animation.FindAction("Duplicate", throwIfNotFound: true);
+        m_Animation_Paste = m_Animation.FindAction("Paste", throwIfNotFound: true);
+        m_Animation_Copy = m_Animation.FindAction("Copy", throwIfNotFound: true);
         // Camera
         m_Camera = asset.FindActionMap("Camera", throwIfNotFound: true);
         m_Camera_CameraReset = m_Camera.FindAction("CameraReset", throwIfNotFound: true);
@@ -1290,6 +1376,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Animation_Delete;
     private readonly InputAction m_Animation_Add;
     private readonly InputAction m_Animation_Duplicate;
+    private readonly InputAction m_Animation_Paste;
+    private readonly InputAction m_Animation_Copy;
     /// <summary>
     /// Provides access to input actions defined in input action map "Animation".
     /// </summary>
@@ -1329,6 +1417,14 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Animation/Duplicate".
         /// </summary>
         public InputAction @Duplicate => m_Wrapper.m_Animation_Duplicate;
+        /// <summary>
+        /// Provides access to the underlying input action "Animation/Paste".
+        /// </summary>
+        public InputAction @Paste => m_Wrapper.m_Animation_Paste;
+        /// <summary>
+        /// Provides access to the underlying input action "Animation/Copy".
+        /// </summary>
+        public InputAction @Copy => m_Wrapper.m_Animation_Copy;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1376,6 +1472,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Duplicate.started += instance.OnDuplicate;
             @Duplicate.performed += instance.OnDuplicate;
             @Duplicate.canceled += instance.OnDuplicate;
+            @Paste.started += instance.OnPaste;
+            @Paste.performed += instance.OnPaste;
+            @Paste.canceled += instance.OnPaste;
+            @Copy.started += instance.OnCopy;
+            @Copy.performed += instance.OnCopy;
+            @Copy.canceled += instance.OnCopy;
         }
 
         /// <summary>
@@ -1408,6 +1510,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Duplicate.started -= instance.OnDuplicate;
             @Duplicate.performed -= instance.OnDuplicate;
             @Duplicate.canceled -= instance.OnDuplicate;
+            @Paste.started -= instance.OnPaste;
+            @Paste.performed -= instance.OnPaste;
+            @Paste.canceled -= instance.OnPaste;
+            @Copy.started -= instance.OnCopy;
+            @Copy.performed -= instance.OnCopy;
+            @Copy.canceled -= instance.OnCopy;
         }
 
         /// <summary>
@@ -1780,6 +1888,20 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnDuplicate(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Paste" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPaste(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Copy" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCopy(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Camera" which allows adding and removing callbacks.
