@@ -27,33 +27,30 @@ namespace GameSystem
             OnPopupPanel = 1 << 5,
         }
 
-        private static UIStatus _currentUIStatus = UIStatus.None;
-        public static UIStatus CurrentUIStatus
+        public static UIStatus CurrentUIStatus { get; private set; } = UIStatus.None;
+
+        public static void SetUIStatus(UIStatus status, bool isOn = true)
         {
-            get => _currentUIStatus;
-            set
+            if (isOn)
             {
-                _currentUIStatus = value;
-                GameManager.SetPlayerInput((_currentUIStatus | UIStatus.OnMenuBarPanel | UIStatus.OnExportPanel) != UIStatus.None);
-                //Debug.Log($"CurrentUIStatus: {_currentUIStatus}");
+                CurrentUIStatus |= status;
             }
+            else
+            {
+                CurrentUIStatus &= ~status;
+            }
+            GameManager.SetPlayerInput((CurrentUIStatus | UIStatus.OnMenuBarPanel | UIStatus.OnExportPanel) != UIStatus.None);
         }
 
         const string DefaultLoadingText = "Loading...";
 
         private FileLoadManager _fileManager;
+        public PopupPanelManager popupManager;
 
         [FormerlySerializedAs("LoadingPanel")] public GameObject loadingPanel;
         public TextMeshProUGUI loadingText;
 
         private int _cursorID;
-
-        public GameObject popupPanel;
-        public TextMeshProUGUI popupText1;
-        public TextMeshProUGUI popupText2;
-        public Button popupApplyButton;
-        public Button popupCancelButton;
-        public Action<bool> onApplyOrCancel;
 
         public CanvasGroup canvasGroup;
 
@@ -61,10 +58,7 @@ namespace GameSystem
         {
             _fileManager = GameManager.GetManager<FileLoadManager>();
 
-            _currentUIStatus = UIStatus.None;
-
-            popupApplyButton.onClick.AddListener(() => OnPopupButton(true));
-            popupCancelButton.onClick.AddListener(() => OnPopupButton(false));
+            CurrentUIStatus = UIStatus.None;
 
             canvasGroup = GetComponent<CanvasGroup>();
 
@@ -104,33 +98,31 @@ namespace GameSystem
             _fileManager.ImportFile();
         }
 
-        public void SetPopupPanel(string text1, string text2, Action<bool> OnApplyOrCancel = null)
+        public void ShowPopupPanel(string text1, string text2, Action<bool> OnApplyOrCancel = null)
         {
-            CurrentUIStatus |= UIStatus.OnPopupPanel;
-            popupPanel.SetActive(true);
-            popupText1.text = text1;
-            popupText2.text = text2;
+            // CurrentUIStatus |= UIStatus.OnPopupPanel;
+            // SetUIStatus(UIStatus.OnPopupPanel, true);
 
-            onApplyOrCancel = OnApplyOrCancel;
+            // 콜백을 래핑하여 UI 상태를 다시 해제하는 로직 추가
+            // Action<bool> wrappedCallback = isApply =>
+            // {
+            //     CurrentUIStatus &= ~UIStatus.OnPopupPanel;
+            //     OnApplyOrCancel?.Invoke(isApply);
+            // };
+
+            popupManager.ShowPopup(text1, text2, OnApplyOrCancel);
         }
 
-        void OnPopupButton(bool isApply)
-        {
-            CurrentUIStatus &= ~UIStatus.OnPopupPanel;
-            popupPanel.SetActive(false);
-
-            onApplyOrCancel?.Invoke(isApply);
-        }
-
-        public async UniTask<bool> SetPopupPanelAsync(string text1, string text2)
+        /// <summary>
+        /// 팝업을 비동기적으로 표시하고 사용자의 선택(true/false)을 반환합니다.
+        /// </summary>
+        public async UniTask<bool> ShowPopupPanelAsync(string text1, string text2)
         {
             var tcs = new UniTaskCompletionSource<bool>();
-
-            SetPopupPanel(text1, text2, isApply =>
+            popupManager.ShowPopup(text1, text2, isApply =>
             {
                 tcs.TrySetResult(isApply);
             });
-
             return await tcs.Task;
         }
     }

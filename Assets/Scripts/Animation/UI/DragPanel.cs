@@ -63,7 +63,8 @@ namespace Animation.UI
                 if (Input.GetMouseButtonUp(0))
                 {
                     _isDragging = false;
-                    UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnDraggingPanel;
+                    // UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnDraggingPanel;
+                    UIManager.SetUIStatus(UIManager.UIStatus.OnDraggingPanel, false);
                 }
             }
         }
@@ -73,7 +74,8 @@ namespace Animation.UI
             if (!isOnOff) return;
 
             _isDragging = true;
-            UIManager.CurrentUIStatus |= UIManager.UIStatus.OnDraggingPanel;
+            // UIManager.CurrentUIStatus |= UIManager.UIStatus.OnDraggingPanel;
+            UIManager.SetUIStatus(UIManager.UIStatus.OnDraggingPanel, true);
         }
 
         public void SetPanelSize(float y)

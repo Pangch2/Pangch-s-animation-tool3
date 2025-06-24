@@ -9,6 +9,7 @@ using Minecraft;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
+using FileSystem;
 
 namespace GameSystem
 {
@@ -24,6 +25,8 @@ namespace GameSystem
         [SerializeField] private Color color = Color.white;
 
         private GUIStyle _style;
+
+        private FileLoadManager fileLoadManager;
 
         protected override void Awake()
         {
@@ -52,6 +55,8 @@ namespace GameSystem
             _fileDragAndDrop = GetComponent<WindowFileHandler>(); // 컴포넌트 참조 가져오기
             _fileDragAndDrop.OnFilesDropped.AddListener(OnFilesDropped);
 
+            fileLoadManager = GameManager.GetManager<FileLoadManager>();
+
         }
 
         private void OnGUI()
@@ -76,20 +81,17 @@ namespace GameSystem
 
         private void OnFilesDropped(List<string> files)
         {
+            if (files == null || files.Count == 0)
+            {
+                return;
+            }
+
             filesDropped = files;
 
-            foreach (var file in files)
-            {
-                if (File.Exists(file))
-                {
-                    CustomLog.Log($"File dropped: {file}");
-                    // 여기에 파일 처리 로직을 추가할 수 있습니다.
-                }
-                else
-                {
-                    Debug.LogWarning($"File not found: {file}");
-                }
-            }
+            CustomLog.Log($"{files.Count}개의 파일을 인식했습니다. 1번: {files[0]}");
+            
+            // FileLoadManager가 파일/폴더 처리 로직을 모두 담당하도록 전달합니다.
+            fileLoadManager.FileDroped(files);
         }
 
         public void OnCopyKey(InputAction.CallbackContext context)
@@ -105,9 +107,16 @@ namespace GameSystem
         {
             if (context.performed)
             {
-                // 1. 클립보드에서 파일 경로 목록을 가져옵니다.
-                // var pastedFiles = _fileDragAndDrop.GetCopiedFilePaths();
-                _fileDragAndDrop.CheckForPastedFiles(); 
+                var clipboardText = GUIUtility.systemCopyBuffer;
+                if (!string.IsNullOrEmpty(clipboardText))
+                {
+                    CustomLog.Log($"Paste key pressed. Clipboard text: {clipboardText}");
+                }
+                else
+                {
+                    _fileDragAndDrop.CheckForPastedFiles(); 
+                    
+                }
                 // Debug.Log($"Pasted files count: {pastedFiles}");
 
                 // if (pastedFiles != null && pastedFiles.Count > 0)

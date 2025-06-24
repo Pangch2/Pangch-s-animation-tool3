@@ -101,37 +101,37 @@ namespace FileSystem
         }
 
         /// <summary>
-        /// 경로 중에 폴더가 있다면 폴더 내의 bdengine 파일을 리스트에 추가하기
-        /// 해당 폴더 경로는 제거됨.
+        /// 경로 중에 폴더가 있다면 폴더 내의 지원되는 모든 파일을 리스트에 추가하기
         /// </summary>
-        /// <param name="paths"></param>
-        public static void GetAllFileFromFolder(ref List<string> paths)
+        /// <param name="paths">파일 및 폴더 경로가 섞인 리스트</param>
+        /// <returns>폴더가 파일로 모두 변환된 새로운 리스트</returns>
+        public static List<string> GetAllFileFromFolder(IEnumerable<string> paths)
         {
-            // 새로운 리스트로 결과를 구성
-            var newPaths = new List<string>();
+            var resultFiles = new List<string>();
+            // FileLoadManager에 정의된 지원 확장자 목록을 가져옵니다.
+            var supportedExtensions = FileLoadManager.FileExtensions;
 
-            for (int i = paths.Count - 1; i >= 0; i--)
+            foreach (var path in paths)
             {
-                var path = paths[i];
-
                 if (Directory.Exists(path))
                 {
-                    var files = Directory.GetFiles(path, "*.bdengine", SearchOption.TopDirectoryOnly);
-
-                    if (files.Length > 0)
+                    // 지원하는 모든 확장자에 대해 파일을 검색하고 결과에 추가합니다.
+                    foreach (var ext in supportedExtensions)
                     {
-                        // 폴더 안의 파일들을 추가
-                        newPaths.AddRange(files);
+                        resultFiles.AddRange(Directory.GetFiles(path, $"*.{ext}", SearchOption.TopDirectoryOnly));
                     }
-
-                    // 폴더는 원본 리스트에서 제거
-                    paths.RemoveAt(i);
+                }
+                else if (File.Exists(path))
+                {
+                    // 단일 파일인 경우, 지원하는 확장자인지 확인 후 추가합니다.
+                    var fileExt = Path.GetExtension(path).TrimStart('.');
+                    if (supportedExtensions.Contains(fileExt, StringComparer.OrdinalIgnoreCase))
+                    {
+                        resultFiles.Add(path);
+                    }
                 }
             }
-
-            // 파일들을 원본 리스트에 추가
-            paths.AddRange(newPaths);
+            return resultFiles;
         }
-
     }
 }

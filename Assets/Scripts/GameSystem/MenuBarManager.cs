@@ -102,13 +102,15 @@ namespace GameSystem
         public void OnMenuBarMouseEnter()
         {
             UpdateSaveButtonInteraction();
-            UIManager.CurrentUIStatus |= UIManager.UIStatus.OnMenuBarPanel;
+            // UIManager.CurrentUIStatus |= UIManager.UIStatus.OnMenuBarPanel;
+            UIManager.SetUIStatus(UIManager.UIStatus.OnMenuBarPanel, true);
         }
 
         public void OnMenuBarMouseExit()
         {
             if (FilePanelButtons.activeSelf) return;
-            UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnMenuBarPanel;
+            // UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnMenuBarPanel;
+            UIManager.SetUIStatus(UIManager.UIStatus.OnMenuBarPanel, false);
         }
 
         public void OnFilesButtonMouseEnter()
@@ -119,7 +121,8 @@ namespace GameSystem
         public void OnFilesButtonMouseExit()
         {
             FilePanelButtons.SetActive(false);
-            UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnMenuBarPanel;
+            // UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnMenuBarPanel;
+            UIManager.SetUIStatus(UIManager.UIStatus.OnMenuBarPanel, false);
         }
         
 

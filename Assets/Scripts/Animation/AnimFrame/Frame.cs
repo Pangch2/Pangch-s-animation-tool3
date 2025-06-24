@@ -283,6 +283,8 @@ namespace Animation.AnimFrame
                 // 필요한 프레임들의 SetSelectedVisual을 호출합니다.
                 _animObjList.HandleFramePointerDown(this, isCtrlPressed, isShiftPressed);
 
+                _animObjList.SelectAnimObject(animObject);
+
                 // 왼쪽 클릭 시 드래그 가능 상태로 만듭니다.
                 // 실제 드래그 동작은 Update 메서드에서 isSelected 상태를 확인 후 처리됩니다.
                 // isMouseDown = true;

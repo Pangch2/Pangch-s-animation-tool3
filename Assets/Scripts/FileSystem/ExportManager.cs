@@ -114,7 +114,8 @@ namespace FileSystem
                 // await UniTask.Yield();
 
                 exportPanelShowSequence.Restart();
-                UIManager.CurrentUIStatus |= UIManager.UIStatus.OnExportPanel;
+                // UIManager.CurrentUIStatus |= UIManager.UIStatus.OnExportPanel;
+                UIManager.SetUIStatus(UIManager.UIStatus.OnExportPanel, true);
             }
             else
             {
@@ -124,7 +125,8 @@ namespace FileSystem
                     await exportSettingPanelHideSequence.AsyncWaitForCompletion();
                 }
                 exportPanelHideSequence.Restart();
-                UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnExportPanel;
+                // UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnExportPanel;
+                UIManager.SetUIStatus(UIManager.UIStatus.OnExportPanel, false);
             }
         }
 

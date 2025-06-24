@@ -27,6 +27,7 @@ namespace Animation.AnimFrame
         private AnimObjList _manager;
 
         public BDObjectAnimator animator;
+        public Transform framePanel;
 
         public string tagName = string.Empty;
         public int uuidNumber = -1;
@@ -34,6 +35,8 @@ namespace Animation.AnimFrame
         private readonly HashSet<string> _noID = new HashSet<string>();
 
         public GameObject triggerObject;
+        public GameObject selectPanel;
+        public bool IsSelected => selectPanel.activeSelf;
         #endregion
 
         #region Functions
@@ -55,6 +58,7 @@ namespace Animation.AnimFrame
             frames[0] = firstFrame;
 
             AnimManager.TickChanged += OnTickChanged;
+            selectPanel.SetActive(false);
 
             SetTagName(animator.RootObject.BdObject);
         }
@@ -175,18 +179,23 @@ namespace Animation.AnimFrame
 
         #region EditFrame
 
-        // mouse click event
+        // 이름은 클릭이지만 down 이벤트로 처리
         public void OnEventTriggerClick(BaseEventData eventData)
         {
-            // right click
+            // click event
             if (eventData is PointerEventData pointerData)
             {
                 if (pointerData.button == PointerEventData.InputButton.Left)
                 {
                     if (pointerData.pointerCurrentRaycast.gameObject == triggerObject)
                     {
+                        // 선택한 프레임 초기화 
                         _manager.ClearAllSelections();
+
                     }
+                    // 타임 라인에 메세지 전달
+                    _manager.timeline.OnPointerDown(pointerData);
+                    _manager.SelectAnimObject(this);
                 }
                 else
                 {
@@ -199,16 +208,16 @@ namespace Animation.AnimFrame
         }
 
         // add frame with tick and inter
-        public Frame AddFrame(string fileName, BdObject frameInfo, int tick, int inter)
+        public Frame AddFrame(string fileName, BdObject frameInfo, int tick, int inter, bool useDefaultTickInterval = false)
         {
             //Debug.Log("fileName : " + fileName + ", tick : " + tick + ", inter : " + inter);
 
-            var frame = Instantiate(_manager.framePrefab, transform.GetChild(0));
+            var frame = Instantiate(_manager.framePrefab, framePanel);
 
             // if already exists, tick increment
             while (frames.ContainsKey(tick))
             {
-                tick++;
+                tick += useDefaultTickInterval ? GameManager.GetManager<SettingManager>().defaultTickInterval : 1;
             }
 
             frames.Add(tick, frame);
@@ -326,7 +335,7 @@ namespace Animation.AnimFrame
         public async void OnRemoveButtonClicked()
         {
             var uiMan = GameManager.GetManager<UIManager>();
-            bool check = await uiMan.SetPopupPanelAsync("정말로 이 트랙을 삭제하시겠습니까?", bdFileName);
+            bool check = await uiMan.ShowPopupPanelAsync("정말로 이 트랙을 삭제하시겠습니까?", bdFileName);
 
             if (check)
             {
@@ -345,6 +354,11 @@ namespace Animation.AnimFrame
         {
             var left = GetLeftFrame(DebugTick);
             CustomLog.Log($"DebugFindFrame: {DebugTick} -> {left}, {frames.Values[left].fileName} frames found.");
+        }
+
+        public void SetSelectPanel(bool isOn)
+        {
+            selectPanel.SetActive(isOn);
         }
 
     }

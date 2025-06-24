@@ -19,6 +19,7 @@ namespace Animation.AnimFrame
         public AnimObject animObjectPrefab;
         public Frame framePrefab;
         public List<AnimObject> animObjects = new();
+        public AnimObject selectedAnimObject = null; // 현재 선택된 AnimObject
 
         public Timeline timeline;
         public RectTransform scrollViewContent;
@@ -51,7 +52,7 @@ namespace Animation.AnimFrame
 
             // importButton.anchoredPosition = new Vector2(importButton.anchoredPosition.x, importButton.anchoredPosition.y - jump);
             // scrollViewContent.anchoredPosition = new Vector2(scrollViewContent.anchoredPosition.x, scrollViewContent.anchoredPosition.y - jump/2f);
-            scrollViewContent.sizeDelta = new Vector2(scrollViewContent.sizeDelta.x, scrollViewContent.sizeDelta.y + jump);
+            // scrollViewContent.sizeDelta = new Vector2(scrollViewContent.sizeDelta.x, scrollViewContent.sizeDelta.y + jump);
             importButton.SetAsLastSibling();
 
             var animMan = GameManager.GetManager<AnimManager>();
@@ -291,10 +292,13 @@ namespace Animation.AnimFrame
                         // 예외 상황: 프레임을 찾지 못함.
                         // Ctrl이 안 눌렸다면 ClearAllSelections가 이미 호출되었을 수 있으므로,
                         // clickedFrame만 다시 선택하도록 합니다.
-                        if (!isCtrlPressed) {
-                             // ClearAllSelections(); // 이미 위에서 호출되었을 수 있음
-                             AddToSelection(clickedFrame); // 현재 클릭된 프레임만 선택
-                        } else {
+                        if (!isCtrlPressed)
+                        {
+                            // ClearAllSelections(); // 이미 위에서 호출되었을 수 있음
+                            AddToSelection(clickedFrame); // 현재 클릭된 프레임만 선택
+                        }
+                        else
+                        {
                             // Ctrl + Shift인데 인덱스를 못찾는 경우는 드물지만, 일단 현재 프레임 추가 시도
                             AddToSelection(clickedFrame);
                         }
@@ -364,9 +368,9 @@ namespace Animation.AnimFrame
             foreach (var frame in originalSelectedFrames)
             {
                 frame.SetSelectedVisual(false);
-                frame.IsBeingDragged = false; 
+                frame.IsBeingDragged = false;
             }
-            selectedFrames.Clear(); 
+            selectedFrames.Clear();
 
             foreach (var frame in originalSelectedFrames)
             {
@@ -390,12 +394,26 @@ namespace Animation.AnimFrame
 
         public void CancelPanelClicked(BaseEventData eventData)
         {
-            if (eventData is PointerEventData pointerData && pointerData.button == PointerEventData.InputButton.Left
-            && (pointerData.pointerCurrentRaycast.gameObject == cancelPanel || pointerData.pointerCurrentRaycast.gameObject == null))
+            if (eventData is PointerEventData pointerData && pointerData.button == PointerEventData.InputButton.Left)
             {
-                ClearAllSelections();
-                _lastAnchorFrame = null; // Explicitly clear anchor on background click
+                if (pointerData.pointerCurrentRaycast.gameObject == cancelPanel || pointerData.pointerCurrentRaycast.gameObject == null)
+                {
+                    ClearAllSelections();
+                    _lastAnchorFrame = null; // Explicitly clear anchor on background click
+                }
+                timeline.OnPointerDown(pointerData); // Ensure timeline handles pointer down event
+                SelectAnimObject(null); // 선택된 AnimObject를 해제합니다.
             }
+        }
+
+        public void SelectAnimObject(AnimObject animObject)
+        {
+            foreach (var obj in animObjects)
+            {
+                obj.SetSelectPanel(false);
+            }
+            animObject?.SetSelectPanel(true);
+            selectedAnimObject = animObject;
         }
     }
 }

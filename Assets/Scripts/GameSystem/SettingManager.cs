@@ -169,11 +169,13 @@ namespace GameSystem
             settingPanel.SetActive(isOn);
             if (isOn)
             {
-                UIManager.CurrentUIStatus |= UIManager.UIStatus.OnSettingPanel;
+                // UIManager.CurrentUIStatus |= UIManager.UIStatus.OnSettingPanel;
+                UIManager.SetUIStatus(UIManager.UIStatus.OnSettingPanel, true);
             }
             else
             {
-                UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnSettingPanel;
+                // UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnSettingPanel;
+                UIManager.SetUIStatus(UIManager.UIStatus.OnSettingPanel, false);
             }
         }
 

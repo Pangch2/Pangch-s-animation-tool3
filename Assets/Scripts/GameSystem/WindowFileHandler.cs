@@ -65,7 +65,7 @@ namespace GameSystem
 
             if (_processedFiles.Count > 0)
             {
-                OnFilesDropped.Invoke(_processedFiles);
+                OnFilesDropped.Invoke(new List<string>(_processedFiles));
                 _processedFiles.Clear();
             }
         }
