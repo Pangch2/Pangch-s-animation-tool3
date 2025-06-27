@@ -236,7 +236,7 @@ namespace BDObjectSystem
             }
             catch (Exception e)
             {
-                CustomLog.UnityLogErr(e.Message);
+                CustomLog.UnityLog(e.Message);
             }
             finally
             {

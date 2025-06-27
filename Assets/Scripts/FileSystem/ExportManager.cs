@@ -22,10 +22,9 @@ namespace FileSystem
     public class ExportManager : BaseManager
     {
         public GameObject exportPanel;
-        public CanvasGroup exportPanelCanvasGroup;
-        public CanvasGroup exportSettingPanelCanvasGroup;
-        
-        public ExportSettingUIManager exportSetting;
+        CanvasGroup exportPanelCanvasGroup;
+
+        ExportSettingUIManager exportSetting;
 
         public TextMeshProUGUI exportPathText;
         public string currentPath;
@@ -37,8 +36,6 @@ namespace FileSystem
 
         Sequence exportPanelShowSequence;
         Sequence exportPanelHideSequence;
-        Sequence exportSettingPanelShowSequence;
-        Sequence exportSettingPanelHideSequence;
 
         #region UI and Initialization
 
@@ -48,15 +45,12 @@ namespace FileSystem
 
             SetPathText(Directory.GetParent(Application.dataPath).FullName);
 
+            exportPanelCanvasGroup = exportPanel.GetComponent<CanvasGroup>();
+
             exportPanelCanvasGroup.alpha = 0f;
             exportPanelCanvasGroup.transform.localScale = Vector3.zero;
             exportPanelCanvasGroup.interactable = false;
             exportPanel.SetActive(false); // 처음에는 비활성화
-
-            exportSettingPanelCanvasGroup.interactable = false;
-            exportSettingPanelCanvasGroup.alpha = 0f;
-            exportSettingPanelCanvasGroup.transform.localScale = Vector3.zero;
-            exportSettingPanelCanvasGroup.gameObject.SetActive(false); // 처음에는 비활성화
 
             exportPanelShowSequence = DOTween.Sequence().SetAutoKill(false)
                 .Append(exportPanelCanvasGroup.DOFade(1f, 0.2f))
@@ -73,27 +67,6 @@ namespace FileSystem
                 .Join(exportPanelCanvasGroup.transform.DOScale(Vector3.zero, 0.2f))
                 .OnComplete(() => exportPanel.SetActive(false)).Pause();
 
-            exportSettingPanelShowSequence = DOTween.Sequence().SetAutoKill(false)
-                .Append(exportPanelCanvasGroup.transform.DOLocalMoveX(-350f, 0.2f))
-                .Append(exportSettingPanelCanvasGroup.DOFade(1f, 0.2f))
-                .Join(exportSettingPanelCanvasGroup.transform.DOScale(Vector3.one, 0.2f))
-                .OnComplete(() => exportSettingPanelCanvasGroup.interactable = true)
-                .Pause();
-
-            exportSettingPanelHideSequence = DOTween.Sequence().SetAutoKill(false)
-                .OnStart(() =>
-                {
-                    exportSettingPanelCanvasGroup.interactable = false;
-                })
-                .Append(exportSettingPanelCanvasGroup.DOFade(0f, 0.2f))
-                .Join(exportSettingPanelCanvasGroup.transform.DOScale(Vector3.zero, 0.2f))
-                .Join(exportPanelCanvasGroup.transform.DOLocalMoveX(0f, 0.2f))
-                .OnComplete(() =>
-                {
-                    exportSettingPanelCanvasGroup.gameObject.SetActive(false);
-                })
-                .Pause();
-
         }
 
         public void SetPathText(string path)
@@ -104,7 +77,7 @@ namespace FileSystem
             exportPathText.text = currentPath;
         }
 
-        public async void SetExportPanel(bool isShow)
+        public void SetExportPanel(bool isShow)
         {
             // Debug.Log($"SetExportPanel: {isShow}, Current UI Status: {UIManager.CurrentUIStatus}");
             if (isShow)
@@ -119,32 +92,12 @@ namespace FileSystem
             }
             else
             {
-                if (exportSettingPanelCanvasGroup.gameObject.activeSelf)
-                {
-                    exportSettingPanelHideSequence.Restart();
-                    await exportSettingPanelHideSequence.AsyncWaitForCompletion();
-                }
                 exportPanelHideSequence.Restart();
                 // UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnExportPanel;
                 UIManager.SetUIStatus(UIManager.UIStatus.OnExportPanel, false);
             }
-        }
 
-        public void SetExportSettingPanel(bool isShow)
-        {
-            if (isShow)
-            {
-                if (exportSettingPanelCanvasGroup.gameObject.activeSelf)
-                {
-                    return;
-                }
-                exportSettingPanelCanvasGroup.gameObject.SetActive(true);
-                exportSettingPanelShowSequence.Restart();
-            }
-            else
-            {
-                exportSettingPanelHideSequence.Restart();
-            }
+            GameManager.SetPlayerInput(!isShow);
         }
 
         // 경로 변경하는 버튼 클릭 시 호출
@@ -169,8 +122,6 @@ namespace FileSystem
         {
             exportPanelShowSequence?.Kill();
             exportPanelHideSequence?.Kill();
-            exportSettingPanelHideSequence?.Kill();
-            exportSettingPanelShowSequence?.Kill();
         }
         #endregion
 
@@ -316,6 +267,21 @@ namespace FileSystem
                 );
             }
 
+            var addtionalCommands = exportSetting.commandLineManager.commandLines;
+            if (addtionalCommands.Count > 0)
+            {
+                scoreLines.Add("# Additional Commands");
+                foreach (var cmd in addtionalCommands)
+                {
+                    if (!string.IsNullOrWhiteSpace(cmd.commandLineText))
+                    {
+                        // 명령어가 비어있지 않으면 추가
+                        scoreLines.Add(cmd.commandLineText);
+                    }
+                }
+
+            }
+
             string scoreFile = string.IsNullOrWhiteSpace(exportSetting.frameFileName)
                                  ? "frame.mcfunction"
                                  : $"{exportSetting.frameFileName}.mcfunction";
@@ -342,7 +308,7 @@ namespace FileSystem
                 // frame 파일 이름 또는 정확히 f{number} 형태인 파일인지 확인
                 Match fNumberMatch = FNumberRegex.Match(fileNameWithoutExt);
 
-                if (fileName.Equals(frameFileNameToDelete, StringComparison.OrdinalIgnoreCase) || 
+                if (fileName.Equals(frameFileNameToDelete, StringComparison.OrdinalIgnoreCase) ||
                     (fNumberMatch.Success && fNumberMatch.Value.Length == fileNameWithoutExt.Length))
                 {
                     try
@@ -444,12 +410,13 @@ namespace FileSystem
             // 이전 버전 NBT: return $"item:{{id:\"minecraft:player_head\",Count:1b,tag:{{SkullOwner:{{Properties:{{textures:[{{Value:\"{textureValue}\"}}]}}}}}}}}";
         }
 
-        // Matrix 비교 함수 (Tolerance 사용)
-        private bool MatricesAreEqual(Matrix4x4 m1, Matrix4x4 m2, float tolerance = 0.0001f)
+        // Matrix 비교 함수
+        private bool MatricesAreEqual(Matrix4x4 m1, Matrix4x4 m2)
         {
             for (int i = 0; i < 16; i++)
             {
-                if (Mathf.Abs(m1[i] - m2[i]) > tolerance)
+                // if (Mathf.Abs(m1[i] - m2[i]) > tolerance)
+                if (Mathf.Approximately(m1[i], m2[i]) == false)
                 {
                     return false;
                 }

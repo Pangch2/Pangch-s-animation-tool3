@@ -108,9 +108,10 @@ namespace GameSystem
             if (context.performed)
             {
                 var clipboardText = GUIUtility.systemCopyBuffer;
+                CustomLog.Log("Paste key pressed");
                 if (!string.IsNullOrEmpty(clipboardText))
                 {
-                    CustomLog.Log($"Paste key pressed. Clipboard text: {clipboardText}");
+                    CustomLog.Log($"Clipboard text: {clipboardText}");
                 }
                 else
                 {

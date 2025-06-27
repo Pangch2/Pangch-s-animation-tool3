@@ -41,6 +41,7 @@ namespace Animation.AnimFrame
         public Dictionary<string, Matrix4x4> worldMatrixDict = null;
         public Dictionary<string, Matrix4x4> modelMatrixDict = new Dictionary<string, Matrix4x4>();
         public Dictionary<string, Matrix4x4> interJumpDict = new Dictionary<string, Matrix4x4>();
+
         public bool IsJump = false;
 
         private Timeline _timeline;
@@ -81,7 +82,7 @@ namespace Animation.AnimFrame
             {
                 return matrix;
             }
-            CustomLog.UnityLogErr($"Matrix not found for ID: {id}");
+            CustomLog.UnityLog($"Matrix not found for ID: {id}");
             return Matrix4x4.identity;
         }
 
@@ -95,7 +96,7 @@ namespace Animation.AnimFrame
             {
                 return matrix;
             }
-            CustomLog.UnityLogErr($"World Matrix not found for ID: {id}");
+            CustomLog.UnityLog($"World Matrix not found for ID: {id}");
             return Matrix4x4.identity;
         }
 
@@ -329,12 +330,12 @@ namespace Animation.AnimFrame
         {
             if (this.Info == null)
             {
-                CustomLog.UnityLogErr("Cannot duplicate Frame: Original Info is null.");
+                CustomLog.UnityLog("Cannot duplicate Frame: Original Info is null.");
                 return null;
             }
             if (animObject == null)
             {
-                CustomLog.UnityLogErr("Cannot duplicate Frame: animObject is null.");
+                CustomLog.UnityLog("Cannot duplicate Frame: animObject is null.");
                 return null;
             }
 
@@ -353,7 +354,7 @@ namespace Animation.AnimFrame
 
             if (frame1Objects == null || frame2Objects == null)
             {
-                CustomLog.UnityLogErr("One or both frame objects are null.");
+                CustomLog.UnityLog("One or both frame objects are null.");
                 return differences;
             }
 

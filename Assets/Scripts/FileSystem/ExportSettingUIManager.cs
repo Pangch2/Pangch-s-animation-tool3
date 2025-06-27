@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using GameSystem;
+using System;
 
 namespace FileSystem
 {
@@ -14,17 +15,24 @@ namespace FileSystem
         public TMP_InputField packNamespaceInput;
         public TMP_InputField frameFileNameInput;
         public Toggle findModeToggle;
+        public Toggle datapackExportModeToggle;
 
         private ExportManager exportManager; // ExportManager 참조
+
+        [Header("Internal Data")]
 
         // 내부 데이터 저장용 (MCDEANIMFile과 동기화될 값들)
         public string fakePlayer = "anim";
         public string scoreboardName = "anim";
         public int startTick = 0;
-        public string packNamespace = "PotanAnim:anim/";
+        public string packNamespace = "potananim:anim/";
         public string frameFileName = "frame";
         public bool useFindMode = true;
+        public bool datapackExportMode = true;
         // exportManager.ExportFolder는 exportManager가 직접 관리
+
+        [Header("Other Settings")]
+        public CommandLineManager commandLineManager;
 
         void Start()
         {
@@ -37,10 +45,13 @@ namespace FileSystem
             startTickInput.onEndEdit.AddListener(OnEndEditStartTick);
             packNamespaceInput.onEndEdit.AddListener(OnEndEditPackNamespace);
             frameFileNameInput.onEndEdit.AddListener(OnEndEditFrameFileName);
+            datapackExportModeToggle.onValueChanged.AddListener(OnDatapackExportModeToggleChanged);
 
             // 초기 UI 업데이트 (기본값 또는 로드된 값으로)
             UpdateUIFromData();
         }
+
+        #region UI Event Handlers
 
         private void OnFindModeToggleChanged(bool value)
         {
@@ -69,11 +80,13 @@ namespace FileSystem
             {
                 fakePlayer = value;
             }
+            commandLineManager.UpdatePresetLines();
         }
 
         private void OnEndEditScoreboardName(string value)
         {
             scoreboardName = value;
+            commandLineManager.UpdatePresetLines();
         }
 
         private void OnEndEditStartTick(string value)
@@ -98,6 +111,12 @@ namespace FileSystem
             frameFileName = value;
         }
 
+        private void OnDatapackExportModeToggleChanged(bool arg0)
+        {
+            datapackExportMode = arg0;
+        }
+        #endregion
+
         /// <summary>
         /// MCDEANIMFile 데이터로 UI와 내부 데이터를 업데이트합니다.
         /// </summary>
@@ -109,8 +128,10 @@ namespace FileSystem
             frameFileName = file.frameFileName;
             fakePlayer = file.fakePlayer;
             useFindMode = file.findMode;
+            datapackExportMode = file.datapackExportMode;
 
             exportManager.SetPathText(file.exportPath);
+            commandLineManager.LoadMCDEAFile(file);
             UpdateUIFromData();
         }
 
@@ -125,8 +146,11 @@ namespace FileSystem
             file.frameFileName = frameFileName;
             file.fakePlayer = fakePlayer;
             file.findMode = useFindMode;
+            file.datapackExportMode = datapackExportMode;
 
             file.exportPath = exportManager.currentPath;
+
+            commandLineManager.SetMCDEAnimFile(file);
         }
 
         /// <summary>
@@ -140,6 +164,9 @@ namespace FileSystem
             frameFileNameInput.text = frameFileName;
             fakePlayerInput.text = fakePlayer; // _useFindMode에 따라 @s가 될 수 있음
             findModeToggle.isOn = useFindMode;
+            datapackExportModeToggle.isOn = datapackExportMode;
         }
+
+
     }
 }

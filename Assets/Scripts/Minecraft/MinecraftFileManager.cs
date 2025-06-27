@@ -73,13 +73,13 @@ namespace Minecraft
             }
             catch (Exception e)
             {
-                CustomLog.UnityLogErr("Error reading Minecraft file: " + e.Message);
+                CustomLog.UnityLog("Error reading Minecraft file: " + e.Message);
                 return (false, "Error reading Minecraft file");
             }
 
             if (currentMinecraftVersionIndex < 0)
             {
-                CustomLog.UnityLogErr("Unsupported Minecraft version: " + version);
+                CustomLog.UnityLog("Unsupported Minecraft version: " + version);
                 return (false, "Unsupported Minecraft version");
             }
             IsReadedFiles = true;

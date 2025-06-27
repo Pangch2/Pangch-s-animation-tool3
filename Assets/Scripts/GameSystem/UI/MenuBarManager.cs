@@ -66,6 +66,14 @@ namespace GameSystem
             }
         }
 
+        public void OnSaveAsKeyInput(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+            {
+                OnSaveAsButton();
+            }
+        }
+
         public void OnSaveAsButton()
         {
             _saveManager.SaveAsNewFile();

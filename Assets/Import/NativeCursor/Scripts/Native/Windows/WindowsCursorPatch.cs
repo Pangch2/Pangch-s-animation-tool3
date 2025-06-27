@@ -75,6 +75,7 @@ namespace Riten.Native.Cursors
 
         void Awake()
         {
+            
             cursorHandle = LoadCursor(IntPtr.Zero, IDC_HAND);
 
             hMainWindow = new HandleRef(null, GetActiveWindow());

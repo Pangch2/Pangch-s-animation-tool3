@@ -23,7 +23,7 @@ namespace FileSystem
         /// <summary>
         /// [Async] 파일 하나를 읽어 BDObject 배열 로드 후, 첫 번째를 반환
         /// </summary>
-        public static async UniTask<BdObject> ProcessFileAsync(string filePath)
+        public static async UniTask<BdObject> ProcessFileAsync(string filePath, bool logJSON = false)
         {
             return await UniTask.RunOnThreadPool(() =>
             {
@@ -33,6 +33,11 @@ namespace FileSystem
 
                 // 2) gzip 해제 → JSON 문자열
                 string jsonData = DecompressGzip(gzipData);
+
+                if (logJSON)
+                {
+                    CustomLog.UnityLog($"[FileProcessingHelper] JSON Data: {jsonData}", false);
+                }
 
                 // 3) JSON → BdObject 배열 → 첫 번째를 루트로
                 var bdObjects = JsonConvert.DeserializeObject<BdObject[]>(jsonData);

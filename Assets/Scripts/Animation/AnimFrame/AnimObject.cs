@@ -100,6 +100,12 @@ namespace Animation.AnimFrame
 
         }
 
+        public void SetSelectPanel(bool isOn)
+        {
+            selectPanel.SetActive(isOn);
+        }
+        #endregion
+
         #region Transform
 
         public void OnTickChanged(float tick)
@@ -127,6 +133,12 @@ namespace Animation.AnimFrame
             {
                 SetObjectTransformationInterpolation(tick, left);
             }
+
+            /*
+            모델의 텍스쳐가 바뀌는 경우
+            1. NBT - 아이템의 name, 블록의 name이 바뀌는 경우
+            2. 머리의 텍스쳐 값이 바뀌는 경우
+            */
         }
 
         private void SetObjectTransformationInterpolation(float tick, int indexOf)
@@ -173,6 +185,11 @@ namespace Animation.AnimFrame
             {
                 frame.UpdateInterpolationJump();
             }
+        }
+
+        void ApplyTextureChange()
+        {
+
         }
         #endregion
 
@@ -325,7 +342,6 @@ namespace Animation.AnimFrame
             return true;
         }
         #endregion
-        #endregion
 
         void OnDestroy()
         {
@@ -348,6 +364,58 @@ namespace Animation.AnimFrame
 
         }
 
+        #region Change Frame Texture
+
+        /// <summary>
+        /// 프레임이 BDObject와 모델의 텍스쳐를 비교해서 다른 부분이 있으면 프레임의 텍스쳐로 수정한다.
+        /// </summary>
+        /// <param name="back"></param>
+        /// <param name="now"></param>
+        /// <returns></returns>
+        public void SetDiffrentTexture(Frame current)
+        {
+            var model = animator.modelDict;
+            var bdobject = current.leafObjects;
+
+            foreach (var leaf in bdobject)
+            {
+                var leafID = leaf.Key;
+                var leafObj = leaf.Value;
+
+                if (model.TryGetValue(leafID, out var modelObj))
+                {
+                    if (leafObj.name != modelObj.name)
+                    {
+                        // 이름 다른 케이스 (블록이 다름)
+                        // TODO: 블록의 텍스쳐를 프레임의 텍스쳐로 변경하는 로직 구현
+                    }
+                    else if (leafObj.name.Contains("player_head"))
+                    {
+                        // 플레이어 머리 텍스쳐 변경 케이스
+                        string frameTexture = leafObj.GetHeadTexture();
+                        string modelTexture = modelObj.BdObject.GetHeadTexture();
+
+                        if (frameTexture != modelTexture)
+                        {
+                            // 프레임의 텍스쳐가 모델의 텍스쳐와 다르면 프레임의 텍스쳐로 변경
+                            // TODO: 프레임의 텍스쳐를 변경하는 로직 구현
+
+                        }
+                    }
+                }
+                else
+                {
+                    // 모델에 ID가 없는 경우 소환
+                    // ! 미구현
+                }
+            }
+
+
+
+        }
+
+        #endregion
+
         public int DebugTick;
         [ContextMenu("Debug Find Frame")]
         public void DebugFindFrame()
@@ -355,11 +423,5 @@ namespace Animation.AnimFrame
             var left = GetLeftFrame(DebugTick);
             CustomLog.Log($"DebugFindFrame: {DebugTick} -> {left}, {frames.Values[left].fileName} frames found.");
         }
-
-        public void SetSelectPanel(bool isOn)
-        {
-            selectPanel.SetActive(isOn);
-        }
-
     }
 }

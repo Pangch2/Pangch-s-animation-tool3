@@ -78,6 +78,8 @@ public class GameManager : MonoBehaviour
 
     void OnDestroy()
     {
+        playerInput?.actions.Disable();
+
         _instance = null;
         _managers.Clear();
     }

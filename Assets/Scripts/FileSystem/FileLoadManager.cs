@@ -87,7 +87,7 @@ namespace FileSystem
                 }
                 catch (Exception e)
                 {
-                    CustomLog.LogError($"파일 임포트 중 오류 발생: {e}");
+                    CustomLog.LogError($"파일 임포트 중 오류 발생: {e.Message}");
                 }
                 finally
                 {
@@ -140,7 +140,7 @@ namespace FileSystem
             // var mainAnimObject = await MakeDisplayAsync(filePaths[0], mainName);
 
             // BDObject 읽은 뒤 BDObjectManager에 추가, AnimObject 추가 
-            var mainBdObject = await FileProcessingHelper.ProcessFileAsync(filePaths[0]);
+            var mainBdObject = await FileProcessingHelper.ProcessFileAsync(filePaths[0], true);
 
             bool isCorrectTag = BdObjectHelper.HasVaildID(mainBdObject);
             if (!isCorrectTag)
@@ -400,49 +400,63 @@ namespace FileSystem
 
         public async void FileDroped(List<string> paths)
         {
-            // 1. 트랙이 없는 경우: 새로운 트랙으로 전체 임포트
-            if (animObjList.animObjects.Count == 0)
-            {
-                CustomLog.Log("애니메이션 트랙이 없습니다. 파일을 임포트합니다.");
-                // 전처리 없이 ImportFilesAsync에 위임. ImportFilesAsync가 폴더 처리를 담당.
-                await ImportFilesAsync(paths);
-                return;
-            }
-
             var ui = GameManager.GetManager<UIManager>();
-
-            // 2. 선택된 트랙이 없는 경우: 사용자에게 확인 후 새로운 트랙으로 전체 임포트
-            if (animObjList.selectedAnimObject == null)
+            ui.SetLoadingPanel(true);
+            try
             {
-                bool isConfirmed = await ui.ShowPopupPanelAsync("새로운 트랙을 추가하시겠습니까?", "선택된 트랙이 없습니다.");
-                if (isConfirmed)
+
+
+                // 1. 트랙이 없는 경우: 새로운 트랙으로 전체 임포트
+                if (animObjList.animObjects.Count == 0)
                 {
-                    CustomLog.Log("새로운 트랙에 파일을 추가합니다.");
+                    CustomLog.Log("애니메이션 트랙이 없습니다. 파일을 임포트합니다.");
                     // 전처리 없이 ImportFilesAsync에 위임. ImportFilesAsync가 폴더 처리를 담당.
                     await ImportFilesAsync(paths);
+                    return;
                 }
-                return;
-            }
 
-            // 3. 선택된 트랙이 있는 경우: 사용자에게 확인 후 프레임 추가
-            // 이 경우에는 폴더를 파일로 변환하는 전처리가 필요함.
-            paths = FileProcessingHelper.GetAllFileFromFolder(paths);
-            if (paths.Count == 0) return; // 처리할 파일이 없음
 
-            bool isConfirmedAdd = await ui.ShowPopupPanelAsync("선택된 트랙에 파일을 추가하시겠습니까?", "해당 틱에 파일을 추가합니다.");
-            if (isConfirmedAdd)
-            {
-                CustomLog.Log("선택된 트랙에 파일을 추가합니다.");
-                var currentTick = GameManager.GetManager<AnimManager>().Tick;
-                foreach (var path in paths)
+                // 2. 선택된 트랙이 없는 경우: 사용자에게 확인 후 새로운 트랙으로 전체 임포트
+                if (animObjList.selectedAnimObject == null)
                 {
-                    await ImportSingleFrameAsync(
-                        animObjList.selectedAnimObject,
-                        path,
-                        Mathf.RoundToInt(currentTick),
-                        true
-                    );
+                    bool isConfirmed = await ui.ShowPopupPanelAsync("새로운 트랙을 추가하시겠습니까?", "선택된 트랙이 없습니다.");
+                    if (isConfirmed)
+                    {
+                        CustomLog.Log("새로운 트랙에 파일을 추가합니다.");
+                        // 전처리 없이 ImportFilesAsync에 위임. ImportFilesAsync가 폴더 처리를 담당.
+                        await ImportFilesAsync(paths);
+                    }
+                    return;
                 }
+
+                // 3. 선택된 트랙이 있는 경우: 사용자에게 확인 후 프레임 추가
+                // 이 경우에는 폴더를 파일로 변환하는 전처리가 필요함.
+                paths = FileProcessingHelper.GetAllFileFromFolder(paths);
+                if (paths.Count == 0) return; // 처리할 파일이 없음
+
+                bool isConfirmedAdd = await ui.ShowPopupPanelAsync("선택된 트랙에 파일을 추가하시겠습니까?", "해당 틱에 파일을 추가합니다.");
+                if (isConfirmedAdd)
+                {
+                    CustomLog.Log("선택된 트랙에 파일을 추가합니다.");
+                    var currentTick = GameManager.GetManager<AnimManager>().Tick;
+                    foreach (var path in paths)
+                    {
+                        await ImportSingleFrameAsync(
+                            animObjList.selectedAnimObject,
+                            path,
+                            Mathf.RoundToInt(currentTick),
+                            true
+                        );
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                CustomLog.LogError($"파일 드랍 처리 중 오류 발생: {e}");
+            }
+            finally
+            {
+                ui.SetLoadingPanel(false);
             }
         }
 

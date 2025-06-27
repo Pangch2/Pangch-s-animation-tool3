@@ -183,13 +183,13 @@ namespace Animation
 
         #region Matrix4x4 Functions
 
-        private Matrix4x4 ComputeParentWorldMatrix(BdObjectContainer node)
+        private static Matrix4x4 ComputeParentWorldMatrix(BdObjectContainer node)
         {
             Matrix4x4 result = Matrix4x4.identity;
             var current = node.parent;
             while (current != null)
             {
-                result = result * current.transformation; // ← 바꿔야 할 핵심
+                result *= current.transformation;
                 current = current.parent;
             }
             return result;

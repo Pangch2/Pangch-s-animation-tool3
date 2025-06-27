@@ -21,8 +21,10 @@ namespace FileSystem
         public string packNamespace;
         public string frameFileName;
         public string exportPath;
+        public bool datapackExportMode;
 
         public List<AnimObjectFile> animObjects = new List<AnimObjectFile>();
+        public List<string> commandLines = new List<string>();
 
         public void UpdateInfo(List<AnimObject> AnimObjects)
         {

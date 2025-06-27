@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using BDObjectSystem.Utility;
 using UnityEngine;
 using System;
+using Cysharp.Threading.Tasks;
 
 
 namespace BDObjectSystem
@@ -40,6 +41,8 @@ namespace BDObjectSystem
 
         [JsonIgnore]
         public bool IsDisplay => isBlockDisplay || isItemDisplay || isTextDisplay;
+
+        public string GetHeadTexture() => ExtraData.TryGetValue("defaultTextureValue", out var value) ? value as string : string.Empty;
 
         [OnDeserialized]
         public void OnDeserialized(StreamingContext context)

@@ -31,10 +31,13 @@ public static class CustomLog
         LogConsole.instance.Log(message, Color.yellow);
     }
 
-    public static void UnityLogErr(object message)
-    {
+        public static void UnityLog(object message, bool isError = true)
+        {
 #if UNITY_EDITOR
-        Debug.LogError(message);
+                if (isError)
+                        Debug.LogError(message);
+                else
+                        Debug.Log(message);
 #endif
-    }
+        }
 }

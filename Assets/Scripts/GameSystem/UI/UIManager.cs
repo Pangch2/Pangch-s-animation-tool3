@@ -39,7 +39,9 @@ namespace GameSystem
             {
                 CurrentUIStatus &= ~status;
             }
-            GameManager.SetPlayerInput((CurrentUIStatus | UIStatus.OnMenuBarPanel | UIStatus.OnExportPanel) != UIStatus.None);
+
+            bool checkPanelStatus = (CurrentUIStatus & (UIStatus.OnExportPanel | UIStatus.OnPopupPanel | UIStatus.OnSettingPanel)) == 0;
+            GameManager.SetPlayerInput(checkPanelStatus);
         }
 
         const string DefaultLoadingText = "Loading...";
@@ -124,6 +126,12 @@ namespace GameSystem
                 tcs.TrySetResult(isApply);
             });
             return await tcs.Task;
+        }
+
+        void OnDestroy()
+        {
+            CurrentUIStatus = UIStatus.None;
+            
         }
     }
 }

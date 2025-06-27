@@ -601,6 +601,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "SaveAs",
+                    "type": "Button",
+                    "id": "d5a2ae4a-14c7-4b94-b2df-3dea6d940fb2",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -799,6 +808,50 @@
                     "processors": "",
                     "groups": "",
                     "action": "Copy",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "Two Modifiers",
+                    "id": "0767775b-4b9b-46c0-b71b-8a346b605efa",
+                    "path": "TwoModifiers",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SaveAs",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "modifier1",
+                    "id": "67a9c245-89c3-4726-98f2-93fbdcd3f35e",
+                    "path": "<Keyboard>/leftCtrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SaveAs",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "modifier2",
+                    "id": "99196f71-dc83-42e5-9ffa-118d28cd511a",
+                    "path": "<Keyboard>/leftShift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SaveAs",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "binding",
+                    "id": "59b3e4a6-fa5c-480a-8c84-e635f2f4fd47",
+                    "path": "<Keyboard>/s",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SaveAs",
                     "isComposite": false,
                     "isPartOfComposite": true
                 }

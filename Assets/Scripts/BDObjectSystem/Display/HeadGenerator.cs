@@ -122,10 +122,17 @@ namespace BDObjectSystem.Display
             // Get Playter Texture
             var data = transform.parent.parent.GetComponent<BdObjectContainer>().BdObject;
 
-            if (!data.ExtraData.TryGetValue("defaultTextureValue", out var value))
-                return MinecraftFileManager.GetTextureFile(DefaultTexturePath + "player/wide/steve.png");
+            string headTexture = data.GetHeadTexture();
 
-            var jsonDataBytes = Convert.FromBase64String(value.ToString());
+            // if (!data.ExtraData.TryGetValue("defaultTextureValue", out var value))
+            // return MinecraftFileManager.GetTextureFile(DefaultTexturePath + "player/wide/steve.png");
+            if (string.IsNullOrEmpty(headTexture))
+            {
+                // CustomLog.LogError("Head Texture is null or empty.");
+                return MinecraftFileManager.GetTextureFile(DefaultTexturePath + "player/wide/steve.png");
+            }
+
+            var jsonDataBytes = Convert.FromBase64String(headTexture);
             var jsonString = Encoding.UTF8.GetString(jsonDataBytes);
 
             var jsonObject = JObject.Parse(jsonString);
