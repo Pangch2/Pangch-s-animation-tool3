@@ -89,7 +89,7 @@ namespace GameSystem
             filesDropped = files;
 
             CustomLog.Log($"{files.Count}개의 파일을 인식했습니다. 1번: {files[0]}");
-            
+
             // FileLoadManager가 파일/폴더 처리 로직을 모두 담당하도록 전달합니다.
             fileLoadManager.FileDroped(files);
         }
@@ -115,8 +115,8 @@ namespace GameSystem
                 }
                 else
                 {
-                    _fileDragAndDrop.CheckForPastedFiles(); 
-                    
+                    _fileDragAndDrop.CheckForPastedFiles();
+
                 }
                 // Debug.Log($"Pasted files count: {pastedFiles}");
 
@@ -141,6 +141,5 @@ namespace GameSystem
                 // }
             }
         }
-        
     }
 }

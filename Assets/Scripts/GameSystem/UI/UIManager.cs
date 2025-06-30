@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using Riten.Native.Cursors;
 using UnityEngine;
 using UnityEngine.Serialization;
 using TMPro;
@@ -81,11 +80,11 @@ namespace GameSystem
             loadingPanel.SetActive(isOn);
             if (isOn)
             {
-                _cursorID = CursorStack.Push(NTCursors.Busy);
+                CursorManager.SetCursor(CursorManager.CursorType.Loading);
             }
             else
             {
-                CursorStack.Pop(_cursorID);
+                CursorManager.SetCursor(CursorManager.CursorType.Default);
                 loadingText.text = DefaultLoadingText;
             }
         }

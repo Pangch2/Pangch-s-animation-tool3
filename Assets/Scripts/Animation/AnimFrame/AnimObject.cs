@@ -32,11 +32,12 @@ namespace Animation.AnimFrame
         public string tagName = string.Empty;
         public int uuidNumber = -1;
 
-        private readonly HashSet<string> _noID = new HashSet<string>();
-
         public GameObject triggerObject;
         public GameObject selectPanel;
         public bool IsSelected => selectPanel.activeSelf;
+
+        public List<string> differentNames = new List<string>();
+        public Frame beforeFrame;
         #endregion
 
         #region Functions
@@ -59,6 +60,8 @@ namespace Animation.AnimFrame
 
             AnimManager.TickChanged += OnTickChanged;
             selectPanel.SetActive(false);
+
+            beforeFrame = firstFrame;
 
             SetTagName(animator.RootObject.BdObject);
         }
@@ -110,11 +113,6 @@ namespace Animation.AnimFrame
 
         public void OnTickChanged(float tick)
         {
-            if (tick <= 0.01f)
-            {
-                _noID.Clear();
-            }
-
             // get left frame index
             var left = GetLeftFrame(tick);
             if (left < 0) return;
@@ -139,6 +137,21 @@ namespace Animation.AnimFrame
             1. NBT - 아이템의 name, 블록의 name이 바뀌는 경우
             2. 머리의 텍스쳐 값이 바뀌는 경우
             */
+
+            // 이전 프레임과 다른 프레임에 도달한 경우
+            if (leftFrame != beforeFrame)
+            {
+                differentNames.Clear();
+                Frame.CompareFrameLeafObjects(beforeFrame?.leafObjects, leftFrame.leafObjects, differentNames);
+
+                foreach (var name in differentNames)
+                {   
+                    ApplyTextureChange(name, leftFrame);
+                }
+            }
+
+            beforeFrame = leftFrame;
+
         }
 
         private void SetObjectTransformationInterpolation(float tick, int indexOf)
@@ -187,8 +200,29 @@ namespace Animation.AnimFrame
             }
         }
 
-        void ApplyTextureChange()
+        void ApplyTextureChange(string tag, Frame currentFrame)
         {
+            if (animator.modelDict.TryGetValue(tag, out var container) && currentFrame.leafObjects.TryGetValue(tag, out var bdObject))
+            {
+                // 이름이 다르면 텍스쳐 변경
+                if (container.BdObject.name != bdObject.name)
+                {
+                    container.BdObject = bdObject;
+                    // container.UpdateTexture();
+                }
+                else if (bdObject.name.Contains("player_head"))
+                {
+                    // 플레이어 머리 텍스쳐 변경
+                    string frameTexture = bdObject.GetHeadTexture();
+                    string modelTexture = container.BdObject.GetHeadTexture();
+
+                    if (frameTexture != modelTexture)
+                    {
+                        // container.BdObject.SetHeadTexture(frameTexture);
+                        // container.UpdateTexture();
+                    }
+                }
+            }
 
         }
         #endregion
@@ -298,18 +332,23 @@ namespace Animation.AnimFrame
         {
             if (frames == null) return;
 
+            if (frame == beforeFrame)
+            {
+                beforeFrame = null;
+            }
+
             frames.Remove(frame.tick);
             Destroy(frame.gameObject);
 
             if (frames.Count == 0)
             {
                 RemoveAnimObj();
+                return;
             }
             else if (frame.tick == 0)
             {
                 frames.Values[0].SetTick(0);
             }
-
         }
 
         // remove self

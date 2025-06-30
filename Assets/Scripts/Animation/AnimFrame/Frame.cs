@@ -345,17 +345,16 @@ namespace Animation.AnimFrame
         }
 
         /// <summary>
-        /// 두 Frame의 leafObjects를 비교하여 이름이 다른 객체들의 리스트를 반환합니다.
+        /// 두 Frame의 leafObjects를 비교하여 이름이 다른 객체들을 리스트에 추가합니다.
+        /// 이름 다름 = 서로 다른 텍스쳐
         /// </summary>
         /// <returns></returns>
-        public static List<string> CompareFrameLeafObjects(Dictionary<string, BdObject> frame1Objects, Dictionary<string, BdObject> frame2Objects)
+        public static void CompareFrameLeafObjects(Dictionary<string, BdObject> frame1Objects, Dictionary<string, BdObject> frame2Objects, List<string> differences)
         {
-            List<string> differences = new List<string>();
-
             if (frame1Objects == null || frame2Objects == null)
             {
                 CustomLog.UnityLog("One or both frame objects are null.");
-                return differences;
+                return;
             }
 
             foreach (var obj1 in frame1Objects)
@@ -363,13 +362,22 @@ namespace Animation.AnimFrame
                 if (frame2Objects.TryGetValue(obj1.Key, out var obj2))
                 {
                     // 이름이 다르면 differences에 추가
-                    if (obj1.Value != obj2)
+                    if (obj1.Value.name != obj2.name)
                     {
                         differences.Add(obj1.Key);
                     }
+                    // 이름이 Head라면 TextureValue 비교
+                    else if (obj1.Value.name.Contains("player_head"))
+                    {
+                        string head1 = obj1.Value.GetHeadTexture();
+                        string head2 = obj2.GetHeadTexture();
+                        if (head1 != head2)
+                        {
+                            differences.Add(obj1.Key);
+                        }
+                    }
                 }
             }
-            return differences;
         }
     }
 }
