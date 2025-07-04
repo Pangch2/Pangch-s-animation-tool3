@@ -8,6 +8,8 @@ using Animation.UI;
 using Animation;
 using System;
 using UnityEngine.InputSystem;
+using BDObjectSystem.Display;
+using Cysharp.Threading.Tasks;
 
 namespace Animation.AnimFrame
 {
@@ -70,6 +72,27 @@ namespace Animation.AnimFrame
 
             worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
             SetInter(inter);
+
+            PreloadPlayerHeadTextures();
+        }
+
+        private void PreloadPlayerHeadTextures()
+        {
+            if (leafObjects == null) return;
+
+            foreach (var bdObject in leafObjects.Values)
+            {
+                // 이름에 player_head가 포함되어 있고, 텍스처 정보가 있는지 확인
+                if (bdObject.name.Contains("player_head"))
+                {
+                    var textureBase64 = bdObject.GetHeadTexture();
+                    if (!string.IsNullOrEmpty(textureBase64))
+                    {
+                        // 캐시 시스템에 사전 로딩 요청 (Forget()으로 비동기 실행)
+                        PlayerHeadTextureCache.PreloadPlayerHeadTextures(textureBase64);
+                    }
+                }
+            }
         }
 
         public Matrix4x4 GetMatrix(string id)

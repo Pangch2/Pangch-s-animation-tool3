@@ -207,8 +207,7 @@ namespace Animation.AnimFrame
                 // 이름이 다르면 텍스쳐 변경
                 if (container.BdObject.name != bdObject.name)
                 {
-                    container.BdObject = bdObject;
-                    // container.UpdateTexture();
+                    container.ChangeBDObject(bdObject);
                 }
                 else if (bdObject.name.Contains("player_head"))
                 {
@@ -218,8 +217,7 @@ namespace Animation.AnimFrame
 
                     if (frameTexture != modelTexture)
                     {
-                        // container.BdObject.SetHeadTexture(frameTexture);
-                        // container.UpdateTexture();
+                        container.ChangeBDObject(bdObject);
                     }
                 }
             }
