@@ -276,12 +276,12 @@ namespace BDObjectSystem
                         {
                             // 기존 UUID 블록이 있으면 대체
                             string existingUuids = matchUUID.Value;
-                            obj.nbt = obj.nbt.Replace(existingUuids, uuidToAdd);
+                            obj.Data.nbt = obj.nbt.Replace(existingUuids, uuidToAdd);
                         }
                         else
                         {
                             // 기존 UUID 블록이 없으면 새로 생성
-                            obj.nbt = string.IsNullOrEmpty(obj.nbt) ? uuidToAdd : $"{obj.nbt},{uuidToAdd}";
+                            obj.Data.nbt = string.IsNullOrEmpty(obj.nbt) ? uuidToAdd : $"{obj.nbt},{uuidToAdd}";
                         }
                     }
                     else if (AddType == ADDTYPE.TAG)
@@ -295,10 +295,10 @@ namespace BDObjectSystem
                     if (IsReplacingTag)
                     {
                         // 기존 Tags 블록을 새 태그로 대체 (대괄호 유지)
-                        obj.nbt = Regex.Replace(obj.nbt, tagPattern, $"Tags:[{tag}]");
+                        obj.Data.nbt = Regex.Replace(obj.nbt, tagPattern, $"Tags:[{tag}]");
                         if (!match.Success && !obj.nbt.Contains($"Tags:[{tag}]")) // 기존에 없었고 대체도 못했으면 추가
                         {
-                            obj.nbt = string.IsNullOrEmpty(obj.nbt) ? $"Tags:[{tag}]" : $"{obj.nbt},Tags:[{tag}]";
+                            obj.Data.nbt = string.IsNullOrEmpty(obj.nbt) ? $"Tags:[{tag}]" : $"{obj.nbt},Tags:[{tag}]";
                         }
                     }
                     else
@@ -308,21 +308,21 @@ namespace BDObjectSystem
                             // 기존 Tags 블록이 있으면 내부 태그 목록에 추가
                             string existingTags = match.Groups[1].Value;
                             string newTags = string.IsNullOrEmpty(existingTags) ? tag : $"{existingTags},{tag}";
-                            obj.nbt = Regex.Replace(obj.nbt, tagPattern, $"Tags:[{newTags}]");
+                            obj.Data.nbt = Regex.Replace(obj.nbt, tagPattern, $"Tags:[{newTags}]");
                         }
                         else
                         {
                             // 기존 Tags 블록이 없으면 새로 생성
-                            obj.nbt = string.IsNullOrEmpty(obj.nbt) ? $"Tags:[{tag}]" : $"{obj.nbt},Tags:[{tag}]";
+                            obj.Data.nbt = string.IsNullOrEmpty(obj.nbt) ? $"Tags:[{tag}]" : $"{obj.nbt},Tags:[{tag}]";
                         }
                     }
 
-                    obj.OnDeserialized(default);
+                    obj.Initialize();
                 }
 
 
-                if (obj.children == null) continue;
-                foreach (var child in obj.children)
+                if (obj.Children == null) continue;
+                foreach (var child in obj.Children)
                 {
                     queue.Enqueue(child);
                 }

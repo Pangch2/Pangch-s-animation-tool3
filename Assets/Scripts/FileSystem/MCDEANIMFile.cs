@@ -91,9 +91,10 @@ namespace FileSystem
             public int tick;
             public int interpolation;
 
-            public BdObject bdObject;
+            public BdObjectData bdObject;
+            
 
-            public FrameFile(){}
+            public FrameFile() { }
 
             public FrameFile(Frame frame)
             {
@@ -105,7 +106,7 @@ namespace FileSystem
                 name = frame.fileName;
                 tick = frame.tick;
                 interpolation = frame.interpolation;
-                bdObject = frame.Info;
+                bdObject = frame.Info.Data;
             }
         }
         #endregion

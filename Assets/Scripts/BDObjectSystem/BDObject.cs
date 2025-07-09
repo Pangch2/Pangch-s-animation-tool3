@@ -11,6 +11,14 @@ namespace BDObjectSystem
     {
         public BdObjectData Data { get; } // 원본 데이터
 
+        public float[] transforms => Data.transforms;
+        public string name => Data.name;
+        public string nbt => Data.nbt;
+        public bool isBlockDisplay => Data.isBlockDisplay;
+        public bool isItemDisplay => Data.isItemDisplay;
+        public bool isTextDisplay => Data.isTextDisplay;
+        public Dictionary<string, object> ExtraData => Data.ExtraData;
+
         // --- 런타임 속성 및 관계 ---
         public BdObject Parent { get; set; }
         public BdObject[] Children { get; private set; }
@@ -47,7 +55,7 @@ namespace BDObjectSystem
             Initialize();
         }
 
-        private void Initialize()
+        internal void Initialize()
         {
             // IsHeadDisplay 값 계산
             IsHeadDisplay = Data.isItemDisplay && (Data.name?.Contains("player_head") ?? false);
@@ -118,8 +126,20 @@ namespace BDObjectSystem
                    Data.isTextDisplay ? "text_display" : null;
         }
         
-        // Clone 메서드는 필요에 따라 수정해야 합니다.
-        // 이제 BdObjectData를 복제하고 새 BdObject를 생성하는 방식이 될 것입니다.
+        /// <summary>
+        /// 이 BdObject의 깊은 복사본을 생성합니다.
+        /// 복제된 객체는 원본과 상태를 공유하지 않으며, Parent 속성은 null로 초기화됩니다.
+        /// </summary>
+        /// <returns>완전히 새로운 BdObject 인스턴스입니다.</returns>
+        public BdObject Clone()
+        {
+            // 1. 데이터의 깊은 복사본을 만듭니다.
+            BdObjectData clonedData = Data.Clone();
+
+            // 2. 복제된 데이터를 사용하여 새로운 BdObject 런타임 인스턴스를 생성합니다.
+            // 생성자에서 자식 객체 생성 및 초기화가 모두 처리됩니다.
+            return new BdObject(clonedData);
+        }
     }
 }
 

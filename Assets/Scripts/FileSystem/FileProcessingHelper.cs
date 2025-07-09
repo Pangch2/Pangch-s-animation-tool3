@@ -40,14 +40,14 @@ namespace FileSystem
                 }
 
                 // 3) JSON → BdObject 배열 → 첫 번째를 루트로
-                var bdObjects = JsonConvert.DeserializeObject<BdObjectData[]>(jsonData);
-                if (bdObjects == null || bdObjects.Length == 0)
+                var bdObjectData = JsonConvert.DeserializeObject<BdObjectData[]>(jsonData);
+                if (bdObjectData == null || bdObjectData.Length == 0)
                 {
                     Debug.LogWarning($"BDObject가 비어있음: {filePath}");
                     return null;
                 }
 
-                var bdRoot = bdObjects[0];
+                var bdRoot = new BdObject(bdObjectData[0]);
                 BdObjectHelper.SetParent(null, bdRoot);
 
                 return bdRoot;

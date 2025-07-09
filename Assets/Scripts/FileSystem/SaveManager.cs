@@ -288,16 +288,17 @@ namespace FileSystem
 
                 // 1) 첫 번째 프레임으로 메인 AnimObject 생성
                 var firstFrameFile = animObjectFile.frameFiles[0];
-                BdObjectHelper.SetParent(null, firstFrameFile.bdObject);
                 if (firstFrameFile.bdObject == null)
                 {
                     CustomLog.LogError($"AnimObject '{animObjectFile.name}'의 첫 프레임 '{firstFrameFile.name}'에 BdObject 데이터가 없습니다. 건너뜁니다.");
                     continue;
                 }
+                var firstFrameBDObject = new BdObject(firstFrameFile.bdObject);
+                BdObjectHelper.SetParent(null, firstFrameBDObject);
 
                 // BdObjectManager에 등록하고 AnimObjList에서 AnimObject 생성
                 // MakeDisplayAsync와 유사한 로직 수행
-                await bdObjManager.AddObject(firstFrameFile.bdObject, animObjectFile.name);
+                await bdObjManager.AddObject(firstFrameBDObject, animObjectFile.name);
                 AnimObject currentRuntimeAnimObject = animObjList.AddAnimObject(animObjectFile.name);
                 // 첫번째 프레임은 자동 추가 
 
@@ -306,17 +307,18 @@ namespace FileSystem
                 for (int i = 1; i < animObjectFile.frameFiles.Count; i++)
                 {
                     var currentFrameFile = animObjectFile.frameFiles[i];
-                    BdObjectHelper.SetParent(null, currentFrameFile.bdObject);
                     if (currentFrameFile.bdObject == null)
                     {
                         CustomLog.LogWarning($"AnimObject '{animObjectFile.name}'의 프레임 '{currentFrameFile.name}'에 BdObject 데이터가 없습니다. 건너뜁니다.");
                         continue;
                     }
+                    var currentFrameBDObject = new BdObject(currentFrameFile.bdObject);
+                    BdObjectHelper.SetParent(null, currentFrameBDObject);
 
                     // AnimObject에 프레임 추가 (FrameFile에 저장된 tick, interpolation 사용)
                     currentRuntimeAnimObject.AddFrame(
                                currentFrameFile.name,
-                               currentFrameFile.bdObject,
+                               currentFrameBDObject,
                                currentFrameFile.tick,
                                currentFrameFile.interpolation
                              );

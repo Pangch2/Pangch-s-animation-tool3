@@ -73,7 +73,7 @@ namespace Animation.AnimFrame
             BdObject p = obj;
             while (p.IsDisplay == false)
             {
-                p = p.children[0];
+                p = p.Children[0];
             }
 
             var tags = BdObjectHelper.GetTags(p.nbt);

@@ -52,7 +52,7 @@ namespace BDObjectSystem.Display
             BdObject = obj;
 
             // �ɼ� ����
-            option = new Option(obj.options);
+            option = new Option(obj.Data.options);
 
             SetText();
 
