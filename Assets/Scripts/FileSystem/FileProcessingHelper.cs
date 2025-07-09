@@ -40,7 +40,7 @@ namespace FileSystem
                 }
 
                 // 3) JSON → BdObject 배열 → 첫 번째를 루트로
-                var bdObjects = JsonConvert.DeserializeObject<BdObject[]>(jsonData);
+                var bdObjects = JsonConvert.DeserializeObject<BdObjectData[]>(jsonData);
                 if (bdObjects == null || bdObjects.Length == 0)
                 {
                     Debug.LogWarning($"BDObject가 비어있음: {filePath}");

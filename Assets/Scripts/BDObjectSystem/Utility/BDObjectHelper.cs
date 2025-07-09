@@ -35,13 +35,13 @@ namespace BDObjectSystem.Utility
         {
             target.Parent = parent;
 
-            if (target.children == null) return;
-            foreach (var child in target.children)
+            if (target.Children == null) return;
+            foreach (var child in target.Children)
             {
                 SetParent(target, child);
             }
         }
-        
+
         // get number in input ({key}{number})
         public static int ExtractNumber(string input, string key, int defaultValue = 0)
         {
@@ -62,11 +62,11 @@ namespace BDObjectSystem.Utility
             var idDataDict = new Dictionary<string, BdObjectContainer>();
             var queue = new Queue<BdObjectContainer>();
             queue.Enqueue(root);
-        
+
             while (queue.Count > 0)
             {
                 var obj = queue.Dequeue();
-                
+
                 if (obj.BdObject.IsDisplay)
                 {
                     if (idDataDict.ContainsKey(obj.BdObjectID))
@@ -77,7 +77,7 @@ namespace BDObjectSystem.Utility
                     }
                     idDataDict[obj.BdObjectID] = obj;
                 }
-                
+
                 // BFS
                 if (obj.children == null) continue;
                 foreach (var child in obj.children)
@@ -99,20 +99,20 @@ namespace BDObjectSystem.Utility
             var resultList = new Dictionary<string, BdObject>();
             var queue = new Queue<BdObject>();
             queue.Enqueue(root);
-            
+
             while (queue.Count > 0)
             {
                 var obj = queue.Dequeue();
-                ModelMatrix[obj.ID] = obj.transforms.GetMatrix();
-            
+                ModelMatrix[obj.ID] = obj.Data.transforms.GetMatrix();
+
                 if (obj.IsDisplay)
                 {
                     resultList.Add(obj.ID, obj);
                 }
-                
+
                 // BFS
-                if (obj.children == null) continue;
-                foreach (var child in obj.children)
+                if (obj.Children == null) continue;
+                foreach (var child in obj.Children)
                 {
                     queue.Enqueue(child);
                 }
@@ -130,19 +130,19 @@ namespace BDObjectSystem.Utility
         {
             var queue = new Queue<BdObject>();
             queue.Enqueue(root);
-        
+
             while (queue.Count > 0)
             {
                 var obj = queue.Dequeue();
-                
+
                 if (obj.IsDisplay && string.IsNullOrEmpty(obj.ID))
                 {
                     return false;
                 }
-                
+
                 // BFS
-                if (obj.children == null) continue;
-                foreach (var child in obj.children)
+                if (obj.Children == null) continue;
+                foreach (var child in obj.Children)
                 {
                     queue.Enqueue(child);
                 }
@@ -151,7 +151,7 @@ namespace BDObjectSystem.Utility
         }
 
 
-        public enum IDValidationResult 
+        public enum IDValidationResult
         {
             Vaild, NoID, Mismatch
         }
@@ -168,11 +168,11 @@ namespace BDObjectSystem.Utility
             queue.Enqueue(root);
 
             int idx = 1;
-        
+
             while (queue.Count > 0)
             {
                 var obj = queue.Dequeue();
-                
+
                 if (obj.IsDisplay)
                 {
                     if (string.IsNullOrEmpty(obj.ID))
@@ -199,15 +199,67 @@ namespace BDObjectSystem.Utility
 
                     idx++;
                 }
-                
+
                 // BFS
-                if (obj.children == null) continue;
-                foreach (var child in obj.children)
+                if (obj.Children == null) continue;
+                foreach (var child in obj.Children)
                 {
                     queue.Enqueue(child);
                 }
             }
             return IDValidationResult.Vaild;
         }
+
+
+        /// <summary>
+        /// 최상위 부모 오브젝트(root)로부터 시작하여,
+        /// 트리 구조 내의 모든 '잎(leaf) 노드'들의 월드 행렬을 구해 반환한다.
+        /// </summary>
+        /// <param name="root">최상위 부모 BdObject</param>
+        /// <returns>잎 노드 -> 해당 월드행렬 딕셔너리</returns>
+        public static Dictionary<string, Matrix4x4> GetAllLeafWorldMatrices(BdObject root)
+        {
+            var result = new Dictionary<string, Matrix4x4>();
+
+            //Matrix4x4 bigMatrix = ScaleMatrixUp(Matrix4x4.identity, 10f);
+
+            // 재귀 호출 시작: 처음 parentWorld는 단위행렬(Identity)로 시작
+            TraverseAndCollectLeaf(root, Matrix4x4.identity, result);
+            //TraverseAndCollectLeaf(root, bigMatrix, result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// 현재 노드(node)와 누적 월드행렬(parentWorld)을 받아,
+        /// 자식들이 있으면 순회하고, 없으면 잎이므로 result에 저장
+        /// 이때 월드행렬은 부모의 월드행렬과 현재 노드의 로컬행렬을 곱하여 계산
+        /// </summary>
+        private static void TraverseAndCollectLeaf(
+            BdObject node,
+            Matrix4x4 parentWorld,
+            Dictionary<string, Matrix4x4> result)
+        {
+            // 1) 현재 노드의 로컬 행렬
+            Matrix4x4 localMatrix = node.Data.transforms.GetMatrix();
+
+            // 2) 부모 월드행렬 x 로컬행렬 => 현재 노드의 월드행렬
+            Matrix4x4 worldMatrix = parentWorld * localMatrix;
+
+            if (node.IsDisplay)
+            {
+                // result에 기록
+                result[node.ID] = worldMatrix;
+            }
+            else
+            {
+                // 자식이 있으면 모든 자식에 대해 재귀
+                foreach (var child in node.Children)
+                {
+                    TraverseAndCollectLeaf(child, worldMatrix, result);
+                }
+            }
+        }
+
     }
 }

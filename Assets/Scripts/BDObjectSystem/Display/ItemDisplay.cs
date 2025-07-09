@@ -14,6 +14,7 @@ namespace BDObjectSystem.Display
 
         public override void LoadDisplayModel(string mName, string state)
         {
+            // TODO: state 처리
             modelName = mName;
             var itemState = MinecraftFileManager.GetJsonData("items/" + mName + ".json");
 

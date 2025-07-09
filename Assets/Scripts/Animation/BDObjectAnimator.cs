@@ -14,7 +14,7 @@ namespace Animation
         public readonly Dictionary<string, BdObjectContainer> modelDict;
         public readonly Dictionary<string, Matrix4x4> parentMatrixDict = new();
         private readonly HashSet<BdObjectContainer> visitedObjects = new();
-        private Transform noParentTransform;
+        private readonly Transform noParentTransform;
 
         public BDObjectAnimator(BdObjectContainer rootObject)
         {
@@ -274,7 +274,7 @@ namespace Animation
             pureRotation.SetColumn(3, new Vector4(0, 0, 0, 1));
 
             // Quaternion으로 변환 (이미 정규화된 회전 행렬)
-            rot = AffineTransformation.QuaternionFromMatrix(pureRotation);
+            rot = MatrixHelper.QuaternionFromMatrix(pureRotation);
         }
         #endregion
 

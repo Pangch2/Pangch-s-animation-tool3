@@ -9,6 +9,7 @@ using Animation.UI;
 using BDObjectSystem.Utility;
 using FileSystem;
 using Animation;
+using FileSystem.Export;
 
 namespace Animation.AnimFrame
 {
@@ -209,7 +210,7 @@ namespace Animation.AnimFrame
                 {
                     container.ChangeBDObject(bdObject);
                 }
-                else if (bdObject.name.Contains("player_head"))
+                else if (bdObject.IsHeadDisplay)
                 {
                     // 플레이어 머리 텍스쳐 변경
                     string frameTexture = bdObject.GetHeadTexture();
@@ -426,7 +427,7 @@ namespace Animation.AnimFrame
                         // 이름 다른 케이스 (블록이 다름)
                         // TODO: 블록의 텍스쳐를 프레임의 텍스쳐로 변경하는 로직 구현
                     }
-                    else if (leafObj.name.Contains("player_head"))
+                    else if (leafObj.IsHeadDisplay)
                     {
                         // 플레이어 머리 텍스쳐 변경 케이스
                         string frameTexture = leafObj.GetHeadTexture();

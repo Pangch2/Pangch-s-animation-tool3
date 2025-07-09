@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using GameSystem;
 using System;
 
-namespace FileSystem
+namespace FileSystem.Export
 {
     public class ExportSettingUIManager : BaseManager
     {

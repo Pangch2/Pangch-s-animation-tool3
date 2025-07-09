@@ -70,7 +70,7 @@ namespace Animation.AnimFrame
 
             IsModelDiffrent = animObject.animator.RootObject.BdObjectID != info.ID;
 
-            worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
+            worldMatrixDict = BdObjectHelper.GetAllLeafWorldMatrices(info);
             SetInter(inter);
 
             PreloadPlayerHeadTextures();
@@ -83,7 +83,7 @@ namespace Animation.AnimFrame
             foreach (var bdObject in leafObjects.Values)
             {
                 // 이름에 player_head가 포함되어 있고, 텍스처 정보가 있는지 확인
-                if (bdObject.name.Contains("player_head"))
+                if (bdObject.IsHeadDisplay)
                 {
                     var textureBase64 = bdObject.GetHeadTexture();
                     if (!string.IsNullOrEmpty(textureBase64))
@@ -390,7 +390,7 @@ namespace Animation.AnimFrame
                         differences.Add(obj1.Key);
                     }
                     // 이름이 Head라면 TextureValue 비교
-                    else if (obj1.Value.name.Contains("player_head"))
+                    else if (obj1.Value.IsHeadDisplay)
                     {
                         string head1 = obj1.Value.GetHeadTexture();
                         string head2 = obj2.GetHeadTexture();
