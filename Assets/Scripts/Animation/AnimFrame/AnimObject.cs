@@ -76,8 +76,8 @@ namespace Animation.AnimFrame
                 p = p.Children[0];
             }
 
-            var tags = BdObjectHelper.GetTags(p.nbt);
-            string uuid = BdObjectHelper.GetUuid(p.nbt);
+            var tags = BdObjectHelper.GetTags(p.Nbt);
+            string uuid = BdObjectHelper.GetUuid(p.Nbt);
 
             if (string.IsNullOrEmpty(tags))
             {
@@ -206,7 +206,7 @@ namespace Animation.AnimFrame
             if (animator.modelDict.TryGetValue(tag, out var container) && currentFrame.leafObjects.TryGetValue(tag, out var bdObject))
             {
                 // 이름이 다르면 텍스쳐 변경
-                if (container.BdObject.name != bdObject.name)
+                if (container.BdObject.Name != bdObject.Name)
                 {
                     container.ChangeBDObject(bdObject);
                 }
@@ -422,7 +422,7 @@ namespace Animation.AnimFrame
 
                 if (model.TryGetValue(leafID, out var modelObj))
                 {
-                    if (leafObj.name != modelObj.name)
+                    if (leafObj.Name != modelObj.name)
                     {
                         // 이름 다른 케이스 (블록이 다름)
                         // TODO: 블록의 텍스쳐를 프레임의 텍스쳐로 변경하는 로직 구현

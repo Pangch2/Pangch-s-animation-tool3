@@ -9,7 +9,6 @@ namespace BDObjectSystem
     /// <summary>
     /// JSON 파일의 구조를 그대로 반영하는 순수한 데이터 모델 클래스입니다.
     /// </summary>
-    [Serializable]
     public class BdObjectData
     {
         public string name;

@@ -103,7 +103,7 @@ namespace BDObjectSystem.Utility
             while (queue.Count > 0)
             {
                 var obj = queue.Dequeue();
-                ModelMatrix[obj.ID] = obj.Data.transforms.GetMatrix();
+                ModelMatrix[obj.ID] = obj.Transforms.GetMatrix();
 
                 if (obj.IsDisplay)
                 {
@@ -241,7 +241,7 @@ namespace BDObjectSystem.Utility
             Dictionary<string, Matrix4x4> result)
         {
             // 1) 현재 노드의 로컬 행렬
-            Matrix4x4 localMatrix = node.Data.transforms.GetMatrix();
+            Matrix4x4 localMatrix = node.Transforms.GetMatrix();
 
             // 2) 부모 월드행렬 x 로컬행렬 => 현재 노드의 월드행렬
             Matrix4x4 worldMatrix = parentWorld * localMatrix;

@@ -263,7 +263,7 @@ namespace Animation.AnimFrame
                                 break;
 
                             Matrix4x4 aMatrix = beforeFrame.GetMatrix(current.ID);
-                            Matrix4x4 bMatrix = current.transforms.GetMatrix();
+                            Matrix4x4 bMatrix = current.Transforms.GetMatrix();
 
                             Matrix4x4 lerpedMatrix = BDObjectAnimator.InterpolateMatrixTRS(aMatrix, bMatrix, ratio);
                             interJumpDict.Add(current.ID, lerpedMatrix);
@@ -385,7 +385,7 @@ namespace Animation.AnimFrame
                 if (frame2Objects.TryGetValue(obj1.Key, out var obj2))
                 {
                     // 이름이 다르면 differences에 추가
-                    if (obj1.Value.name != obj2.name)
+                    if (obj1.Value.Name != obj2.Name)
                     {
                         differences.Add(obj1.Key);
                     }

@@ -32,14 +32,14 @@ namespace BDObjectSystem
         {
             // 기본 정보 설정
             BdObject = bdObject;
-            gameObject.name = bdObject.name;
+            gameObject.name = bdObject.Name;
             // bdObjectID = bdObject.ID;
 
             // 그룹과 디스플레이 구분 
-            if (!bdObject.isBlockDisplay && !bdObject.isItemDisplay && !bdObject.isTextDisplay) return;
+            if (!bdObject.IsBlockDisplay && !bdObject.IsItemDisplay && !bdObject.IsTextDisplay) return;
 
             // 블록 디스플레이
-            if (bdObject.isBlockDisplay)
+            if (bdObject.IsBlockDisplay)
             {
                 var obj = Instantiate(manager.blockDisplay, transform);
                 obj.LoadDisplayModel(bdObject.ParsedName, bdObject.ParsedState);
@@ -49,7 +49,7 @@ namespace BDObjectSystem
                 obj.transform.localPosition = -obj.AABBBound.min / 2;
             }
             // 아이템 디스플레이
-            else if (bdObject.isItemDisplay)
+            else if (bdObject.IsItemDisplay)
             {
                 var obj = Instantiate(manager.itemDisplay, transform);
                 obj.LoadDisplayModel(bdObject.ParsedName, bdObject.ParsedState);
@@ -69,7 +69,7 @@ namespace BDObjectSystem
         public void PostProcess(BdObjectContainer[] childArray)
         {
             // 좌표 설정
-            SetTransformation(BdObject.transforms);
+            SetTransformation(BdObject.Transforms);
             children = childArray;
 
             //if (displayObj == null)
@@ -90,7 +90,7 @@ namespace BDObjectSystem
         {
             // 1. 새로운 BdObject 정보로 교체합니다.
             this.BdObject = bdObject;
-            gameObject.name = bdObject.name;
+            gameObject.name = bdObject.Name;
 
             // 2. 기존에 있던 디스플레이 모델(블록, 아이템 등)을 파괴합니다.
             if (displayObj != null)
@@ -101,13 +101,13 @@ namespace BDObjectSystem
 
             // 3. Init 메서드의 로직을 재활용하여 새로운 디스플레이 모델을 생성합니다.
             // 그룹 객체는 디스플레이가 없으므로 바로 종료합니다.
-            if (!bdObject.isBlockDisplay && !bdObject.isItemDisplay && !bdObject.isTextDisplay) return;
+            if (!bdObject.IsBlockDisplay && !bdObject.IsItemDisplay && !bdObject.IsTextDisplay) return;
 
             // BdObjectManager 인스턴스를 가져옵니다.
             var manager = GameManager.GetManager<BdObjectManager>();
 
             // 블록 디스플레이
-            if (bdObject.isBlockDisplay)
+            if (bdObject.IsBlockDisplay)
             {
                 var obj = Instantiate(manager.blockDisplay, transform);
                 obj.LoadDisplayModel(bdObject.ParsedName, bdObject.ParsedState);
@@ -115,7 +115,7 @@ namespace BDObjectSystem
                 obj.transform.localPosition = -obj.AABBBound.min / 2;
             }
             // 아이템 디스플레이
-            else if (bdObject.isItemDisplay)
+            else if (bdObject.IsItemDisplay)
             {
                 var obj = Instantiate(manager.itemDisplay, transform);
                 obj.LoadDisplayModel(bdObject.ParsedName, bdObject.ParsedState);

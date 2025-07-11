@@ -119,10 +119,16 @@ public class CommandLineManager : MonoBehaviour
         AnimObjList animObjList = GameManager.GetManager<AnimObjList>();
 
         int tick = 0;
+        int inter = 0;
         foreach (var animObj in animObjList.animObjects)
         {
-            tick = Mathf.Max(tick, animObj.frames.Values[^1].tick);
+            var frame = animObj.frames.Values[^1];
+            if (tick < frame.tick)
+            {
+                tick = frame.tick;
+                inter = frame.interpolation;
+            }
         }
-        return tick;
+        return tick + inter + 1;
     }
 }

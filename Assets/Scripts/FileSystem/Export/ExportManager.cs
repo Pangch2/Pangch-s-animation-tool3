@@ -122,7 +122,7 @@ namespace FileSystem.Export
             }
             catch (Exception ex)
             {
-                CustomLog.LogError($"Export failed: {ex.Message}");
+                CustomLog.LogError($"Export failed: {ex}");
             }
             finally
             {
@@ -223,6 +223,8 @@ namespace FileSystem.Export
                         bool nameChanged = false;
                         bool textureChanged = false;
 
+                        BdObject prevObj = null;
+
                         // 만약 이전 프레임에도 존재했던 엔티티라면, 실제 변경이 있었는지 비교합니다.
                         if (existed)
                         {
@@ -234,10 +236,10 @@ namespace FileSystem.Export
                             if (prevTransforms.TryGetValue(id, out var pxf))
                                 tChanged = !MatrixHelper.MatricesAreEqual(xf, pxf);
 
-                            if (prevObjects.TryGetValue(id, out var prevObj))
+                            if (prevObjects.TryGetValue(id, out prevObj))
                             {
                                 // 이름 변경 여부: 이전 객체(prevObj)와 현재 객체(obj)의 이름을 비교하여 nameChanged에 저장합니다.
-                                nameChanged = !string.Equals(prevObj.Data.name, obj.Data.name);
+                                nameChanged = !string.Equals(prevObj.Name, obj.Name);
 
                                 if (obj.IsHeadDisplay)
                                 {
@@ -265,33 +267,87 @@ namespace FileSystem.Export
                         {
                             // 이름이 변경된 것은 디스플레이의 ID가 변경된 것으로
                             // NBT를 수정해야합니다. 디스플레이 종류별로 ID를 설정합니다.
-                            if (obj.Data.isBlockDisplay)
+                            if (obj.IsBlockDisplay)
                             {
                                 // block_state: {Name: "minecraft:dirt"} 형태로 설정
                                 // 만약 세부 설정이 존재하는 블록의 경우 {Name:"", Properties:{}} 형태로 설정
                                 // 여기서는 name이 Name[Properties] 형태로 설정되어 있음
 
+                                string namePart = $"Name:\"{obj.ParsedName}\"";
+                                if (!string.IsNullOrEmpty(obj.ParsedState))
+                                {
+                                    // "facing=east,half=bottom" 같은 문자열을 파싱합니다.
+                                    var properties = obj.ParsedState.Split(',')
+                                        .Select(part =>
+                                        {
+                                            var kv = part.Split('=');
+                                            // key=value 쌍이 맞는지 확인합니다.
+                                            if (kv.Length == 2)
+                                            {
+                                                // value를 큰따옴표로 감싸 NBT 문자열 형식으로 만듭니다. (예: facing:"east")
+                                                return $"{kv[0]}:\"{kv[1]}\"";
+                                            }
+                                            return null; // 형식이 맞지 않으면 무시합니다.
+                                        })
+                                        .Where(s => s != null);
 
+                                    // 파싱된 속성들을 쉼표로 연결합니다.
+                                    string propertiesString = string.Join(",", properties);
+                                    // 최종적으로 block_state NBT를 완성합니다.
+                                    parts.Add($"block_state:{{{namePart},Properties:{{{propertiesString}}}}}");
+                                }
+                                else
+                                {
+                                    // 상태값이 없는 경우 Name만 추가합니다.
+                                    parts.Add($"block_state:{{{namePart}}}");
+                                }
                             }
-                            else if (obj.Data.isItemDisplay)
+                            else if (obj.IsItemDisplay)
                             {
                                 // item: {id: "minecraft:stone"} 형태로 설정
-                                // 여기서는 이름이 id[display=none] 형태로 설정되어 있음
-                                // TODO: 현재 ItemDisplay가 display 처리를 하지 않아서 itemDisplay에서 처리하는 함수부터 구현해야함
+                                // 여기서는 이름이 id[display=none] 형태로 설정되어 있음 (display는 무시)
 
-                                
-                                
+                                parts.Add($"item:{{id:\"{obj.ParsedName}\"}}");
                             }
-                            else if (obj.Data.isTextDisplay)
+                            else if (obj.IsTextDisplay)
                             {
-                                // TODO: 미구현
+                                // TODO: 텍스트 디스플레이의 경우 일단 구현 자체를 갈아엎어야해서 미구현으로 유지   
                             }
-                            
+
                         }
 
                         if (textureChanged)
                         {
-                            // 텍스쳐값을 수정해야합니다. 텍스쳐값은 Component로 설정됩니다.
+                            // Debug.Log($"Texture changed for {id}: {prevObj?.GetHeadTexture()} -> {obj.GetHeadTexture()}");
+                            // 만약 이전 프레임이 player_head가 아니었는데 이번에 player_head가 된거라면
+                            if (!prevObj.IsHeadDisplay)
+                            {
+
+                                // 이미 위에서 parts에 item을 수정하는 부분이 추가되었음
+                                // 따라서 위 부분의 item 파트에 텍스쳐를 추가해야함.
+
+                                int itemPartIndex = parts.FindIndex(p => p.StartsWith("item:"));
+                                string itemPart = itemPartIndex >= 0 ? parts[itemPartIndex] : null;
+
+                                if (itemPart != null)
+                                {
+                                    // item 파트가 존재한다면, 텍스쳐를 추가합니다.
+                                    // 예시: item:{components:{"profile":{properties:[{name:"textures",value:"{defaultTextureValue}"}]}}}
+                                    itemPart = itemPart.TrimEnd('}');
+                                    itemPart += $",components:{{\"profile\":{{properties:[{{name:\"textures\",value:\"{obj.GetHeadTexture()}\"}}]}}}}}}";
+                                    parts[itemPartIndex] = itemPart;
+                                }
+
+                            }
+                            else
+                            {
+                                // 텍스쳐값을 수정해야합니다. 텍스쳐값은 Component로 설정됩니다.
+                                // 변경 예시
+                                //{item:{components:{"profile":{properties:[{name:"textures",value:"{defaultTextureValue}"}]}}}}
+
+                                parts.Add($"item:{{components:{{\"profile\":{{properties:[{{name:\"textures\",value:\"{obj.GetHeadTexture()}\"}}]}}}}}}");
+                            }
+
                         }
 
                         // 조합할 NBT 파트가 하나라도 있다면, 최종 명령어를 생성합니다.
@@ -320,6 +376,7 @@ namespace FileSystem.Export
                     // 얕은 복사가 아닌 새로운 Dictionary와 HashSet을 생성하여 상태가 섞이지 않도록 합니다.
                     prevTransforms = new Dictionary<string, Matrix4x4>(currTransforms);
                     prevEntities = new HashSet<string>(currEntities);
+                    prevObjects = new Dictionary<string, BdObject>(currObjects);
                 }
             }
             return result;
@@ -342,13 +399,16 @@ namespace FileSystem.Export
             string ns = exportSetting.packNamespace;
             if (!string.IsNullOrWhiteSpace(ns) && !ns.Contains(":"))
                 ns += ":";
+            else if (!ns.EndsWith('/'))
+                ns += "/";
+
             for (int i = 0; i < commandsByTick.Count; i++)
-            {
-                int scoreVal = exportSetting.startTick + commandsByTick.Keys[i];
-                scoreLines.Add(
-                    $"execute if score {exportSetting.fakePlayer} {exportSetting.scoreboardName} matches {scoreVal} run function {ns}f{i + 1}"
-                );
-            }
+                {
+                    int scoreVal = exportSetting.startTick + commandsByTick.Keys[i];
+                    scoreLines.Add(
+                        $"execute if score {exportSetting.fakePlayer} {exportSetting.scoreboardName} matches {scoreVal} run function {ns}f{i + 1}"
+                    );
+                }
 
             var addtionalCommands = exportSetting.commandLineManager.commandLines;
             if (addtionalCommands.Count > 0)

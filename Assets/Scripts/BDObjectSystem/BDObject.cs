@@ -11,12 +11,12 @@ namespace BDObjectSystem
     {
         public BdObjectData Data { get; } // 원본 데이터
 
-        public float[] transforms => Data.transforms;
-        public string name => Data.name;
-        public string nbt => Data.nbt;
-        public bool isBlockDisplay => Data.isBlockDisplay;
-        public bool isItemDisplay => Data.isItemDisplay;
-        public bool isTextDisplay => Data.isTextDisplay;
+        public float[] Transforms => Data.transforms;
+        public string Name => Data.name;
+        public string Nbt => Data.nbt;
+        public bool IsBlockDisplay => Data.isBlockDisplay;
+        public bool IsItemDisplay => Data.isItemDisplay;
+        public bool IsTextDisplay => Data.isTextDisplay;
         public Dictionary<string, object> ExtraData => Data.ExtraData;
 
         // --- 런타임 속성 및 관계 ---
@@ -100,7 +100,14 @@ namespace BDObjectSystem
             _isNameParsed = true;
         }
 
-        public string GetHeadTexture() => Data.ExtraData.GetValueOrDefault("defaultTextureValue", string.Empty) as string;
+        public string GetHeadTexture()
+        {
+            if (IsHeadDisplay)
+            {
+                return Data.ExtraData.GetValueOrDefault("defaultTextureValue", string.Empty) as string;
+            }
+            return string.Empty; // player_head가 아닌 경우 빈 문자열 반환
+        }
 
         private string GetID()
         {
