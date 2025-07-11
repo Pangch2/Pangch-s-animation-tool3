@@ -11,8 +11,8 @@ using BDObjectSystem.Display;
 using BDObjectSystem.Utility;
 using Cysharp.Threading.Tasks;
 using GameSystem;
-using SimpleFileBrowser;
 using UnityEngine;
+using SFB;
 
 namespace FileSystem
 {
@@ -20,6 +20,7 @@ namespace FileSystem
     {
         #region 필드 & 프로퍼티
         public static string[] FileExtensions = { "bdengine", "bdstudio" };
+        public static readonly ExtensionFilter[] extension = new[] { new ExtensionFilter("BDEngine Files", FileExtensions) };
 
         public BdObjectManager bdObjManager;    // BDObjectManager 참조
         public AnimObjList animObjList;         // AnimObjList (애니메이션 관련)
@@ -34,7 +35,7 @@ namespace FileSystem
         /// </summary>
         public readonly Dictionary<string, (int, int)> FrameInfo = new Dictionary<string, (int, int)>();
 
-        private FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", FileExtensions.ToArray());
+
 
         public TagUUIDAdder tagUUIDAdder;
 
@@ -65,25 +66,31 @@ namespace FileSystem
         /// </summary>
         private async UniTaskVoid ShowLoadDialogCoroutine()
         {
-            FileBrowser.SetFilters(false, loadFilter);
+            // FileBrowser.SetFilters(false, loadFilter);
 
-            await FileBrowser.WaitForLoadDialog(
-                pickMode: FileBrowser.PickMode.FilesAndFolders,
-                allowMultiSelection: true,
-                title: "Select Files",
-                loadButtonText: "Load"
-            ).ToUniTask();
+            // await FileBrowser.WaitForLoadDialog(
+            //     pickMode: FileBrowser.PickMode.FilesAndFolders,
+            //     allowMultiSelection: true,
+            //     title: "Select Files",
+            //     loadButtonText: "Load"
+            // ).ToUniTask();
 
-            if (FileBrowser.Success)
+            var paths = StandaloneFileBrowser.OpenFilePanel(
+                "Select Files",
+                null,
+                extension,
+                true
+            );
+
+            if (paths.Length > 0)
             {
-                var selectedPaths = FileBrowser.Result.ToList();
                 // 코루틴에서 async 메서드 호출
                 uiManager.SetLoadingPanel(true);
                 uiManager.SetLoadingText("Reading and Sorting Files...");
 
                 try
                 {
-                    await ImportFilesAsync(selectedPaths);
+                    await ImportFilesAsync(new List<string>(paths));
                 }
                 catch (Exception e)
                 {
@@ -275,16 +282,16 @@ namespace FileSystem
         /// </summary>
         private async UniTaskVoid ShowLoadDialogForSingleFrame(AnimObject target, int tick)
         {
-            await FileBrowser.WaitForLoadDialog(
-                pickMode: FileBrowser.PickMode.Files,
-                allowMultiSelection: false,
-                title: "Select Frame File",
-                loadButtonText: "Add"
-            ).ToUniTask();
+            var paths = StandaloneFileBrowser.OpenFilePanel(
+                "Select Frame File",
+                null,
+                extension,
+                false
+            );
 
-            if (FileBrowser.Success)
+            if (paths.Length > 0)
             {
-                var filePath = FileBrowser.Result[0];
+                var filePath = paths[0];
                 var ui = GameManager.GetManager<UIManager>();
                 ui.SetLoadingPanel(true);
 

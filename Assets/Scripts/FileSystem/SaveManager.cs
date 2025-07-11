@@ -13,7 +13,6 @@ using FileSystem.Export;
 using GameSystem;
 using Newtonsoft.Json;
 using SFB;
-using SimpleFileBrowser;
 using UnityEngine;
 using CompressionLevel = System.IO.Compression.CompressionLevel;
 

@@ -9,7 +9,6 @@ using DG.Tweening;
 using FileSystem;
 using Newtonsoft.Json;
 using SFB;
-using SimpleFileBrowser;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,7 +20,6 @@ namespace BDObjectSystem
     public class TagUUIDAdder : MonoBehaviour
     {
         public static string LauncherPath;
-        readonly ExtensionFilter[] extension = new[] { new ExtensionFilter("BDEngine Files", FileLoadManager.FileExtensions) };
 
         readonly string[] TEXTLIST =
         {
@@ -153,7 +151,7 @@ namespace BDObjectSystem
         {
             var path = StandaloneFileBrowser.OpenFilePanel("Select File",
                 LauncherPath,
-                extension
+                FileLoadManager.extension
                 , false);
 
             if (path.Length > 0)

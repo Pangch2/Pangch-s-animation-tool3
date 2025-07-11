@@ -28,7 +28,7 @@ namespace FileSystem
             return await UniTask.RunOnThreadPool(() =>
             {
                 // 1) base64 → gzip 바이트
-                string base64Text = SimpleFileBrowser.FileBrowserHelpers.ReadTextFromFile(filePath);
+                string base64Text = File.ReadAllText(filePath);
                 byte[] gzipData = Convert.FromBase64String(base64Text);
 
                 // 2) gzip 해제 → JSON 문자열
