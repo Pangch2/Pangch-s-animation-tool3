@@ -127,7 +127,9 @@ namespace BDObjectSystem
         public RectTransform panel;
 
         Tween PanelActiveTween;
-        Tweener PanelHideTween;
+        Tween PanelHideTween;
+
+        public RectTransform tagAdderPanel;
 
 
         void Start()
@@ -137,13 +139,18 @@ namespace BDObjectSystem
             addTypeToggles[0].onValueChanged.AddListener((_) => { AddType = ADDTYPE.TAG; });
             addTypeToggles[1].onValueChanged.AddListener((_) => { AddType = ADDTYPE.UUID; });
 
+            
+
             IsReplacingTagToggle.onValueChanged.AddListener((isOn) =>
             {
                 IsReplacingTag = isOn;
             });
 
+            panel.localPosition = new Vector3(panel.localPosition.x, -panel.rect.height * 2f, panel.localPosition.z);
+
             PanelActiveTween = panel.DOLocalMoveY(0, 0.5f).SetEase(Ease.OutBack).SetAutoKill(false).Pause();
-            PanelHideTween = panel.DOLocalMoveY(-panel.rect.height, 0.5f).SetEase(Ease.InQuad).SetAutoKill(false).OnComplete(() => gameObject.SetActive(false)).Pause();
+            PanelHideTween = panel.DOLocalMoveY(-panel.rect.height * 2f, 0.5f).SetEase(Ease.InQuad).SetAutoKill(false).
+                OnComplete(() => tagAdderPanel.gameObject.SetActive(false)).Pause();
             // gameObject.SetActive(false);
         }
 
@@ -161,16 +168,6 @@ namespace BDObjectSystem
             // await AddFileCoroutine();
         }
 
-        // async UniTask AddFileCoroutine()
-        // {
-        //     FileBrowser.SetFilters(false, loadFilter);
-        //     await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files).ToUniTask();
-
-        //     if (!FileBrowser.Success) return;
-
-        //     SetFilePath(FileBrowser.Result[0]);
-        // }
-
         public void SetFilePath(string path)
         {
             filePath = path;
@@ -183,19 +180,17 @@ namespace BDObjectSystem
         {
             if (active)
             {
-                gameObject.SetActive(true);
-                // panel.localPosition = new Vector3(panel.localPosition.x, -panel.rect.height, panel.localPosition.z);
+                tagAdderPanel.gameObject.SetActive(true);
+                
                 PanelActiveTween.Restart();
             }
             else
             {
-                // panel.position = initPos;
                 PanelHideTween.Restart();
             }
 
             IsReplacingTagToggle.isOn = IsReplacingTag;
             addTypeToggles[0].isOn = AddType == ADDTYPE.TAG;
-
         }
 
         void CheckSaveButton()
@@ -235,12 +230,8 @@ namespace BDObjectSystem
             catch (Exception e)
             {
                 CustomLog.UnityLog(e.Message);
-            }
-            finally
-            {
                 loadingPanel.SetActive(false);
             }
-
         }
 
         public async UniTask ApplyTagOrUUID(BdObject bdobject, bool SaveFile = true)
@@ -330,7 +321,7 @@ namespace BDObjectSystem
             {
 
                 // 3. File Save
-                string jsonFile = JsonConvert.SerializeObject(new BdObject[] { bdobject }, new JsonSerializerSettings()
+                string jsonFile = JsonConvert.SerializeObject(new BdObjectData[] { bdobject.Data }, new JsonSerializerSettings()
                 {
                     NullValueHandling = NullValueHandling.Ignore,
                     DefaultValueHandling = DefaultValueHandling.Ignore,
@@ -347,13 +338,13 @@ namespace BDObjectSystem
             }
 
 #if UNITY_EDITOR
-            string deugJson = JsonConvert.SerializeObject(new BdObject[] { bdobject }, new JsonSerializerSettings()
+            string debugJson = JsonConvert.SerializeObject(new BdObjectData[] { bdobject.Data }, new JsonSerializerSettings()
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 DefaultValueHandling = DefaultValueHandling.Ignore,
             });
 
-            Debug.Log(deugJson);
+            Debug.Log(debugJson);
 #endif
 
             await UniTask.SwitchToMainThread();

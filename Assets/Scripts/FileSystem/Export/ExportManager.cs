@@ -43,7 +43,10 @@ namespace FileSystem.Export
         {
             exportSetting = GameManager.GetManager<ExportSettingUIManager>();
 
-            SetPathText(Directory.GetParent(Application.dataPath).FullName);
+            string defaultPath = Path.Combine(
+                Directory.GetParent(Application.dataPath).FullName, "Result");
+
+            SetPathText(defaultPath);
 
             exportPanelCanvasGroup = exportPanel.GetComponent<CanvasGroup>();
 

@@ -5741,10 +5741,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: TagAdderCanvas
       objectReference: {fileID: 0}
-    - target: {fileID: 2245995832362950380, guid: 5339e625f9c3a384289d3b9ad6bda51a, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 2259874690588172451, guid: 5339e625f9c3a384289d3b9ad6bda51a, type: 3}
       propertyPath: m_Pivot.x
       value: 0

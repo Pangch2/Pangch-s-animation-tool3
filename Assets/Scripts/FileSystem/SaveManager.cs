@@ -154,44 +154,61 @@ namespace FileSystem
 
         #region  Load Logic
 
-        // public void LoadMCDEFile() => StartCoroutine(LoadMDEFileCoroutine());
-        public async UniTaskVoid LoadMCDEFile()
+        /// <summary>
+        /// 파일 브라우저를 열어 유저에게 MCDEANIM 파일을 선택하게 합니다.
+        /// </summary>
+        public void LoadMCDEFile()
         {
-            if (SavingProgressStatus) return; // 저장/로드 중이면 추가 로드 불가
+            if (SavingProgressStatus) return; // 저장/로드 중이면 실행하지 않음
 
-
-            SavingProgressStatus = true;
             var paths = StandaloneFileBrowser.OpenFilePanel("Select MCDE File",
                 TagUUIDAdder.LauncherPath,
                 MDEFileExtension,
                 false);
 
-            if (paths.Length == 0) return;
-            string filePath = paths[0];
-            CustomLog.Log($"선택된 MDE 파일: {filePath}");
-
-            var ui = GameManager.GetManager<UIManager>();
-            ui.SetLoadingPanel(true);
-            ui.SetLoadingText("Loading MDE File...");
-
-            // 1. 파일 로드 (비동기)
-            // Task<MCDEANIMFile> loadTask = LoadObjectCompressedAsync<MCDEANIMFile>(filePath);
-            // yield return new WaitUntil(() => loadTask.IsCompleted);
-            currentMDEFile = await LoadObjectCompressedAsync<MCDEANIMFile>(filePath); // UniTask로 변경
-            if (currentMDEFile == default)
+            if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
             {
-                CustomLog.LogError($"MDE 파일 로드 실패: {filePath}");
-                ui.SetLoadingPanel(false);
+                // 파일이 선택되면, 경로를 사용하여 로드 프로세스를 시작합니다.
+                LoadMCDEFileFromPath(paths[0]).Forget();
+            }
+        }
+
+        /// <summary>
+        /// 지정된 경로의 MCDEANIM 파일을 비동기적으로 로드하고 처리합니다.
+        /// </summary>
+        /// <param name="filePath">로드할 파일의 전체 경로</param>
+        public async UniTaskVoid LoadMCDEFileFromPath(string filePath)
+        {
+            if (SavingProgressStatus) return; // 저장/로드 중이면 추가 로드 불가
+            if (string.IsNullOrEmpty(filePath))
+            {
+                CustomLog.LogError("파일 경로가 유효하지 않습니다.");
                 return;
             }
 
-            SetMCDEFilePath(filePath); // MDE 파일 경로 설정
+            SavingProgressStatus = true;
+            var ui = GameManager.GetManager<UIManager>();
 
-            // 2. 로드된 데이터 처리 (비동기)
-            CustomLog.Log("MDE 파일 로드 완료. 데이터 처리 시작...");
-            ui.SetLoadingText("Processing MDE Data..."); // 로딩 텍스트 변경
             try
             {
+                CustomLog.Log($"선택된 MDE 파일: {filePath}");
+                
+                ui.SetLoadingPanel(true);
+                ui.SetLoadingText("Loading MDE File...");
+
+                // 1. 파일 로드 (비동기)
+                currentMDEFile = await LoadObjectCompressedAsync<MCDEANIMFile>(filePath);
+                if (currentMDEFile == default)
+                {
+                    CustomLog.LogError($"MDE 파일 로드 실패: {filePath}");
+                    return; // finally 블록에서 UI와 상태를 정리합니다.
+                }
+
+                SetMCDEFilePath(filePath); // MDE 파일 경로 설정
+
+                // 2. 로드된 데이터 처리 (비동기)
+                CustomLog.Log("MDE 파일 로드 완료. 데이터 처리 시작...");
+                ui.SetLoadingText("Processing MDE Data...");
                 await ProcessLoadedMDEFileAsync(currentMDEFile);
             }
             catch (Exception e) // ProcessLoadedMDEFileAsync 호출 자체에서 예외 발생 시

@@ -86,10 +86,21 @@ namespace GameSystem
                 return;
             }
 
-            filesDropped = files;
-
             CustomLog.Log($"{files.Count}개의 파일을 인식했습니다. 1번: {files[0]}");
+            foreach (var file in files)
+            {
+                // 1. Path.GetExtension으로 파일의 실제 확장자를 가져옵니다. (예: ".mdeanim")
+                string extension = Path.GetExtension(file);
 
+                // 2. 대소문자를 무시하고 안전하게 비교합니다.
+                // SaveManager.MDEFileExtension에 "."이 없으므로, 비교할 때 추가해줍니다.
+                if (string.Equals(extension, "." + SaveManager.MDEFileExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    var save = GameManager.GetManager<SaveManager>();
+                    save.LoadMCDEFileFromPath(file).Forget();
+                    return;
+                }
+            }
             // FileLoadManager가 파일/폴더 처리 로직을 모두 담당하도록 전달합니다.
             fileLoadManager.FileDroped(files);
         }

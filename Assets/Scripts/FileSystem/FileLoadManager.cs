@@ -358,6 +358,7 @@ namespace FileSystem
 
         async UniTask<BdObject> AskAndApplyTagUUIDAdder(string path)
         {
+            CursorManager.SetCursor(CursorManager.CursorType.Default);
             // 1) CompletionSource 생성
             var tcs = new UniTaskCompletionSource<BdObject>();
 
@@ -379,7 +380,7 @@ namespace FileSystem
 
             async UniTaskVoid UserCancelDetection()
             {
-                await UniTask.WaitUntil(() => tagUUIDAdder.gameObject.activeSelf == false);
+                await UniTask.WaitUntil(() => tagUUIDAdder.tagAdderPanel.gameObject.activeSelf == false);
 
                 tcs.TrySetCanceled();
                 tagUUIDAdder.OnBDObjectEdited -= Handler;
@@ -392,6 +393,7 @@ namespace FileSystem
             {
                 BdObject editedObject = await tcs.Task;
                 tagUUIDAdder.SetPanelActive(false);
+                CursorManager.SetCursor(CursorManager.CursorType.Loading);
                 return editedObject;
             }
             catch (OperationCanceledException)

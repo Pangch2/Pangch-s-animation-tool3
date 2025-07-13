@@ -25,7 +25,7 @@ namespace FileSystem.Export
         public string fakePlayer = "anim";
         public string scoreboardName = "anim";
         public int startTick = 0;
-        public string packNamespace = "potananim:anim/";
+        public string packNamespace = "mde:anim/";
         public string frameFileName = "frame";
         public bool useFindMode = true;
         public bool datapackExportMode = true;

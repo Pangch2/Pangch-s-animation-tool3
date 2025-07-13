@@ -81,7 +81,7 @@ namespace GameSystem
 
         public void OnLoadButton()
         {
-            _saveManager.LoadMCDEFile().Forget();
+            _saveManager.LoadMCDEFile();
         }
 
         public void OnExportButton()
