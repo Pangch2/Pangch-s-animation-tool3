@@ -21,6 +21,8 @@ public class AnalyticsManager : MonoBehaviour
     public bool isInitialized = false;
     async void Start()
     {
+        if (Application.isEditor) return; // 에디터에서는 초기화하지 않음
+
         await UnityServices.InitializeAsync();
         AnalyticsService.Instance.StartDataCollection();
         isInitialized = true;

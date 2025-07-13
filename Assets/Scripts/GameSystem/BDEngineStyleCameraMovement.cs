@@ -86,64 +86,67 @@ namespace GameSystem
             //if (!CanMoveCamera) return;
             if (UIManager.CurrentUIStatus != UIManager.UIStatus.None) return; // Only when no panel is open
 
-            // Action�� ���� �� �б�
-            var rotatePressed = _rotateAction.ReadValue<float>() > 0.5f;   // ���콺 ���� ��ư
-            var panPressed = _panAction.ReadValue<float>() > 0.5f;         // ���콺 ������ ��ư
-            var lookDelta = _lookDeltaAction.ReadValue<Vector2>();     // ���콺 �̵�
-            var zoomValue = _zoomAction.ReadValue<float>();              // ���콺 ��
+            // Action의 현재 값 읽기
+            var rotatePressed = _rotateAction.ReadValue<float>() > 0.5f;   // 마우스 우클릭 버튼
+            var panPressed = _panAction.ReadValue<float>() > 0.5f;         // 마우스 휠클릭 버튼
+            var lookDelta = _lookDeltaAction.ReadValue<Vector2>();     // 마우스 이동
+            var zoomValue = _zoomAction.ReadValue<float>();              // 마우스 휠
 
-            // --- 1) ȸ�� ---
+            // --- 1) 회전 ---
             if (rotatePressed && lookDelta.sqrMagnitude > 0.0001f)
             {
-                RotateAroundPivot(lookDelta, Time.deltaTime);
+                RotateAroundPivot(lookDelta);
             }
 
-            // --- 2) �� ---
+            // --- 2) 팬 ---
             if (panPressed && lookDelta.sqrMagnitude > 0.0001f)
             {
-                PanCamera(lookDelta, Time.deltaTime);
+                PanCamera(lookDelta);
             }
 
-            // --- 3) �� ---
+            // --- 3) 줌 ---
             if (Mathf.Abs(zoomValue) > 0.0001f)
             {
-                ZoomCamera(zoomValue, Time.deltaTime);
+                ZoomCamera(zoomValue);
             }
         }
 
-        private void RotateAroundPivot(Vector2 delta, float dt)
+        private void RotateAroundPivot(Vector2 delta)
         {
+            // dt(Time.deltaTime)를 제거했으므로 speed는 이제 '감도' 역할을 합니다.
             var speed = rotateSpeed * rotationSpeedRange + minRotationSpeed;
-            var yaw = delta.x * speed * dt;
-            var pitch = -delta.y * speed * dt; // ���� �̵��� ��(-)
+            var yaw = delta.x * speed * 0.01f; // dt 대신 감도 조절을 위한 작은 상수를 곱합니다.
+            var pitch = -delta.y * speed * 0.01f; // 상하 이동은 반대(-)
 
-            // 1) yaw : pivot ���� ���� Up
+            // 1) yaw : pivot 기준 수직 Up
             transform.RotateAround(pivot.position, Vector3.up, yaw);
 
-            // 2) pitch : ī�޶� ���� Right
+            // 2) pitch : 카메라 기준 Right
             transform.RotateAround(pivot.position, transform.right, pitch);
 
-            // 3) �Ÿ� ���� & pivot �ٶ󺸱�
+            // 3) 거리 유지 & pivot 바라보기
             var direction = (transform.position - pivot.position).normalized;
             transform.position = pivot.position + direction * _currentDistance;
             transform.LookAt(pivot);
         }
 
-        private void PanCamera(Vector2 delta, float dt)
+        private void PanCamera(Vector2 delta)
         {
+            // dt(Time.deltaTime)를 제거했으므로 speed는 이제 '감도' 역할을 합니다.
             var speed = panSpeed * panSpeedRange + minPanSpeed;
-            var rightMovement = transform.right * (delta.x * speed * dt);
-            var upMovement = transform.up * (delta.y * speed * dt);
+            var rightMovement = transform.right * (delta.x * speed * 0.01f); // dt 대신 감도 조절을 위한 작은 상수를 곱합니다.
+            var upMovement = transform.up * (delta.y * speed * 0.01f);
             var panMovement = rightMovement + upMovement;
 
             transform.position += panMovement;
             pivot.position += panMovement;
         }
 
-        private void ZoomCamera(float zoomValue, float dt)
+        private void ZoomCamera(float zoomValue)
         {
+            // dt(Time.deltaTime)를 제거했으므로 speed는 이제 '감도' 역할을 합니다.
             var speed = zoomSpeed * zoomSpeedRange + minZoomSpeed;
-            _currentDistance -= zoomValue * speed * dt;
+            _currentDistance -= zoomValue * speed * 0.1f; // dt 대신 감도 조절을 위한 작은 상수를 곱합니다.
             _currentDistance = Mathf.Clamp(_currentDistance, minDistance, maxDistance);
 
             var direction = (transform.position - pivot.position).normalized;

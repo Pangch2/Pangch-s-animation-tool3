@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using SFB;
-using SimpleFileBrowser;
 using TMPro;
 using UnityEngine;
 
@@ -18,23 +18,11 @@ namespace Mainmenu
         const string helpURL = "https://potangaming.tistory.com/319";
 
         // readonly FileBrowser.Filter loadFilter = new FileBrowser.Filter("Files", ".jar");
-        readonly ExtensionFilter extension = new ExtensionFilter("Jar Files", ".jar");
+        // readonly ExtensionFilter extension = new ExtensionFilter("Jar Files", ".jar");
 
         void Start()
         {
             manager = GetComponent<MainmenuManager>();
-            SetupFileBrowser();
-        }
-
-        private void SetupFileBrowser()
-        {
-            FileBrowser.AddQuickLink("Launcher Folder", Application.dataPath + "/../");
-
-            var download = Path.GetDirectoryName(
-                Environment.GetFolderPath(Environment.SpecialFolder.Personal)
-            );
-            FileBrowser.AddQuickLink("Downloads", Path.Combine(download, "Downloads"));
-            FileBrowser.AddQuickLink("Appdata", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
         }
 
         public void OnPanelButton()

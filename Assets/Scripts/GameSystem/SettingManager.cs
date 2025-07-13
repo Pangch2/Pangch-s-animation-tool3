@@ -34,20 +34,29 @@ namespace GameSystem
             {
                 _useNameInfoExtract = value;
                 PlayerPrefs.SetInt("useNameInfoExtract", value ? 1 : 0);
+                PlayerPrefs.Save(); // 변경 사항 저장
             }
         }
         [SerializeField]
-        private bool _useFrameTxtFile = true;
+        private bool _useFxSort = true;
         /// <summary>
         /// 프레임 txt 파일 사용 여부
         /// </summary>
-        public bool UseFrameTxtFile
+        public bool UseFxSort
         {
-            get => _useFrameTxtFile;
+            get => _useFxSort;
             set
             {
-                _useFrameTxtFile = value;
-                PlayerPrefs.SetInt("useFrameTxtFile", value ? 1 : 0);
+                _useFxSort = value;
+                PlayerPrefs.SetInt("useFxSort", value ? 1 : 0);
+                PlayerPrefs.Save(); // 변경 사항 저장
+
+                toggleButtons[(int)SettingToggleType.UseNameInfoExtract].interactable = value;
+                if (!value)
+                {
+                    toggleButtons[(int)SettingToggleType.UseNameInfoExtract].isOn = false;
+                    UseNameInfoExtract = false;
+                }
             }
         }
 
@@ -103,7 +112,7 @@ namespace GameSystem
         enum SettingToggleType
         {
             UseNameInfoExtract, // 0
-            UseFrameTxtFile, // 1
+            UseFxSort, // 1
             // FindMode // 제거 (ExportSettingUI)
         }
 
@@ -126,7 +135,7 @@ namespace GameSystem
             defaultTickInterval = PlayerPrefs.GetInt("defaultTickInterval", defaultTickInterval);
             defaultInterpolation = PlayerPrefs.GetInt("defaultInterpolation", defaultInterpolation);
             UseNameInfoExtract = PlayerPrefs.GetInt("useNameInfoExtract", UseNameInfoExtract ? 1 : 0) == 1;
-            UseFrameTxtFile = PlayerPrefs.GetInt("useFrameTxtFile", UseFrameTxtFile ? 1 : 0) == 1;
+            UseFxSort = PlayerPrefs.GetInt("useFrameTxtFile", UseFxSort ? 1 : 0) == 1;
             tickUnit = PlayerPrefs.GetInt("tickUnit", tickUnit);
             GameManager.GetManager<AnimManager>().TickUnit = 1.0f / tickUnit;
 
@@ -145,7 +154,7 @@ namespace GameSystem
             // --- Export 관련 inputFields 반영 제거 ---
 
             toggleButtons[(int)SettingToggleType.UseNameInfoExtract].isOn = UseNameInfoExtract;
-            toggleButtons[(int)SettingToggleType.UseFrameTxtFile].isOn = UseFrameTxtFile;
+            toggleButtons[(int)SettingToggleType.UseFxSort].isOn = UseFxSort;
             // --- findModeToggle 반영 제거 ---
 
 
@@ -169,11 +178,13 @@ namespace GameSystem
             settingPanel.SetActive(isOn);
             if (isOn)
             {
-                UIManager.CurrentUIStatus |= UIManager.UIStatus.OnSettingPanel;
+                // UIManager.CurrentUIStatus |= UIManager.UIStatus.OnSettingPanel;
+                UIManager.SetUIStatus(UIManager.UIStatus.OnSettingPanel, true);
             }
             else
             {
-                UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnSettingPanel;
+                // UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnSettingPanel;
+                UIManager.SetUIStatus(UIManager.UIStatus.OnSettingPanel, false);
             }
         }
 

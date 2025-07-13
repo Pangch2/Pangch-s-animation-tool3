@@ -66,11 +66,13 @@ namespace Animation.UI
 
             if (!isMouseEnter && UIManager.CurrentUIStatus.HasFlag(UIManager.UIStatus.OnAnimUIPanel))
             {
-                UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnAnimUIPanel;
+                // UIManager.CurrentUIStatus &= ~UIManager.UIStatus.OnAnimUIPanel;
+                UIManager.SetUIStatus(UIManager.UIStatus.OnAnimUIPanel, false);
             }
             else if (isMouseEnter && !UIManager.CurrentUIStatus.HasFlag(UIManager.UIStatus.OnAnimUIPanel))
             {
-                UIManager.CurrentUIStatus |= UIManager.UIStatus.OnAnimUIPanel;
+                // UIManager.CurrentUIStatus |= UIManager.UIStatus.OnAnimUIPanel;
+                UIManager.SetUIStatus(UIManager.UIStatus.OnAnimUIPanel, true);
             }
 
             if (Mouse.current.middleButton.wasPressedThisFrame)

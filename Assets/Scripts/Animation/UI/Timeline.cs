@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -192,11 +193,12 @@ namespace Animation.UI
             OnGridChanged?.Invoke();
         }
 
-        // 마우스 클릭시
+        // 마우스 down 이벤트 처리
         public void OnPointerDown(PointerEventData eventData)
         {
             if (eventData.button == PointerEventData.InputButton.Left)
             {
+                // Debug.Log("Timeline Clicked");
                 isClicking = true;
             }
         }
@@ -209,7 +211,8 @@ namespace Animation.UI
             }
 
             // 마우스 클릭 해제
-            if (Input.GetMouseButtonUp(0))
+            // if (Input.GetMouseButtonUp(0))
+            if (Mouse.current.leftButton.wasReleasedThisFrame)
             {
                 isClicking = false;
                 return;

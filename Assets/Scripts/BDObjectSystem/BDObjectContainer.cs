@@ -2,6 +2,7 @@ using GameSystem;
 using UnityEngine;
 using BDObjectSystem.Display;
 using BDObjectSystem.Utility;
+using System;
 
 namespace BDObjectSystem
 {
@@ -31,37 +32,27 @@ namespace BDObjectSystem
         {
             // 기본 정보 설정
             BdObject = bdObject;
-            gameObject.name = bdObject.name;
+            gameObject.name = bdObject.Name;
             // bdObjectID = bdObject.ID;
 
             // 그룹과 디스플레이 구분 
-            if (!bdObject.isBlockDisplay && !bdObject.isItemDisplay && !bdObject.isTextDisplay) return;
-
-            // 디스플레이 공통부분
-            var typeStart = bdObject.name.IndexOf('[');
-            if (typeStart == -1)
-            {
-                typeStart = bdObject.name.Length;
-            }
-            var modelName = bdObject.name[..typeStart];
-            var state = bdObject.name[typeStart..];
-            state = state.Replace("[", "").Replace("]", "");
+            if (!bdObject.IsBlockDisplay && !bdObject.IsItemDisplay && !bdObject.IsTextDisplay) return;
 
             // 블록 디스플레이
-            if (bdObject.isBlockDisplay)
+            if (bdObject.IsBlockDisplay)
             {
                 var obj = Instantiate(manager.blockDisplay, transform);
-                obj.LoadDisplayModel(modelName, state);
+                obj.LoadDisplayModel(bdObject.ParsedName, bdObject.ParsedState);
                 displayObj = obj;
 
-                // blockDisplay�� ��ġ�� ���� �ϴܿ� ����
+                // blockDisplay의 위치를 바닥 하단에 맞춤
                 obj.transform.localPosition = -obj.AABBBound.min / 2;
             }
             // 아이템 디스플레이
-            else if (bdObject.isItemDisplay)
+            else if (bdObject.IsItemDisplay)
             {
                 var obj = Instantiate(manager.itemDisplay, transform);
-                obj.LoadDisplayModel(modelName, state);
+                obj.LoadDisplayModel(bdObject.ParsedName, bdObject.ParsedState);
                 displayObj = obj;
             }
             // 텍스트 디스플레이 
@@ -74,11 +65,11 @@ namespace BDObjectSystem
             }
         }
 
-        // ��ó��
+        // 마지막에 호출되는 PostProcess
         public void PostProcess(BdObjectContainer[] childArray)
         {
-            // ��ȯ ����� ����
-            SetTransformation(BdObject.transforms);
+            // 좌표 설정
+            SetTransformation(BdObject.Transforms);
             children = childArray;
 
             //if (displayObj == null)
@@ -87,13 +78,56 @@ namespace BDObjectSystem
             //}
         }
 
-        public void SetTransformation(float[] transform) => SetTransformation(AffineTransformation.GetMatrix(transform));
+        public void SetTransformation(float[] transform) => SetTransformation(MatrixHelper.GetMatrix(transform));
 
         public void SetTransformation(in Matrix4x4 mat)
         {
             transformation = mat;
-            AffineTransformation.ApplyMatrixToTransform(transform, transformation);
+            MatrixHelper.ApplyMatrixToTransform(transform, transformation);
         }
 
+        public void ChangeBDObject(BdObject bdObject)
+        {
+            // 1. 새로운 BdObject 정보로 교체합니다.
+            this.BdObject = bdObject;
+            gameObject.name = bdObject.Name;
+
+            // 2. 기존에 있던 디스플레이 모델(블록, 아이템 등)을 파괴합니다.
+            if (displayObj != null)
+            {
+                Destroy(displayObj.gameObject);
+                displayObj = null;
+            }
+
+            // 3. Init 메서드의 로직을 재활용하여 새로운 디스플레이 모델을 생성합니다.
+            // 그룹 객체는 디스플레이가 없으므로 바로 종료합니다.
+            if (!bdObject.IsBlockDisplay && !bdObject.IsItemDisplay && !bdObject.IsTextDisplay) return;
+
+            // BdObjectManager 인스턴스를 가져옵니다.
+            var manager = GameManager.GetManager<BdObjectManager>();
+
+            // 블록 디스플레이
+            if (bdObject.IsBlockDisplay)
+            {
+                var obj = Instantiate(manager.blockDisplay, transform);
+                obj.LoadDisplayModel(bdObject.ParsedName, bdObject.ParsedState);
+                displayObj = obj;
+                obj.transform.localPosition = -obj.AABBBound.min / 2;
+            }
+            // 아이템 디스플레이
+            else if (bdObject.IsItemDisplay)
+            {
+                var obj = Instantiate(manager.itemDisplay, transform);
+                obj.LoadDisplayModel(bdObject.ParsedName, bdObject.ParsedState);
+                displayObj = obj;
+            }
+            // 텍스트 디스플레이
+            else
+            {
+                var obj = Instantiate(manager.textDisplay, transform);
+                obj.Init(bdObject);
+                displayObj = obj;
+            }
+        }
     }
 }

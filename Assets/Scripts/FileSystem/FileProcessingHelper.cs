@@ -23,26 +23,31 @@ namespace FileSystem
         /// <summary>
         /// [Async] 파일 하나를 읽어 BDObject 배열 로드 후, 첫 번째를 반환
         /// </summary>
-        public static async UniTask<BdObject> ProcessFileAsync(string filePath)
+        public static async UniTask<BdObject> ProcessFileAsync(string filePath, bool logJSON = false)
         {
             return await UniTask.RunOnThreadPool(() =>
             {
                 // 1) base64 → gzip 바이트
-                string base64Text = SimpleFileBrowser.FileBrowserHelpers.ReadTextFromFile(filePath);
+                string base64Text = File.ReadAllText(filePath);
                 byte[] gzipData = Convert.FromBase64String(base64Text);
 
                 // 2) gzip 해제 → JSON 문자열
                 string jsonData = DecompressGzip(gzipData);
 
+                if (logJSON)
+                {
+                    CustomLog.UnityLog($"[FileProcessingHelper] JSON Data: {jsonData}", false);
+                }
+
                 // 3) JSON → BdObject 배열 → 첫 번째를 루트로
-                var bdObjects = JsonConvert.DeserializeObject<BdObject[]>(jsonData);
-                if (bdObjects == null || bdObjects.Length == 0)
+                var bdObjectData = JsonConvert.DeserializeObject<BdObjectData[]>(jsonData);
+                if (bdObjectData == null || bdObjectData.Length == 0)
                 {
                     Debug.LogWarning($"BDObject가 비어있음: {filePath}");
                     return null;
                 }
 
-                var bdRoot = bdObjects[0];
+                var bdRoot = new BdObject(bdObjectData[0]);
                 BdObjectHelper.SetParent(null, bdRoot);
 
                 return bdRoot;
@@ -101,37 +106,37 @@ namespace FileSystem
         }
 
         /// <summary>
-        /// 경로 중에 폴더가 있다면 폴더 내의 bdengine 파일을 리스트에 추가하기
-        /// 해당 폴더 경로는 제거됨.
+        /// 경로 중에 폴더가 있다면 폴더 내의 지원되는 모든 파일을 리스트에 추가하기
         /// </summary>
-        /// <param name="paths"></param>
-        public static void GetAllFileFromFolder(ref List<string> paths)
+        /// <param name="paths">파일 및 폴더 경로가 섞인 리스트</param>
+        /// <returns>폴더가 파일로 모두 변환된 새로운 리스트</returns>
+        public static List<string> GetAllFileFromFolder(IEnumerable<string> paths)
         {
-            // 새로운 리스트로 결과를 구성
-            var newPaths = new List<string>();
+            var resultFiles = new List<string>();
+            // FileLoadManager에 정의된 지원 확장자 목록을 가져옵니다.
+            var supportedExtensions = FileLoadManager.FileExtensions;
 
-            for (int i = paths.Count - 1; i >= 0; i--)
+            foreach (var path in paths)
             {
-                var path = paths[i];
-
                 if (Directory.Exists(path))
                 {
-                    var files = Directory.GetFiles(path, "*.bdengine", SearchOption.TopDirectoryOnly);
-
-                    if (files.Length > 0)
+                    // 지원하는 모든 확장자에 대해 파일을 검색하고 결과에 추가합니다.
+                    foreach (var ext in supportedExtensions)
                     {
-                        // 폴더 안의 파일들을 추가
-                        newPaths.AddRange(files);
+                        resultFiles.AddRange(Directory.GetFiles(path, $"*.{ext}", SearchOption.TopDirectoryOnly));
                     }
-
-                    // 폴더는 원본 리스트에서 제거
-                    paths.RemoveAt(i);
+                }
+                else if (File.Exists(path))
+                {
+                    // 단일 파일인 경우, 지원하는 확장자인지 확인 후 추가합니다.
+                    var fileExt = Path.GetExtension(path).TrimStart('.');
+                    if (supportedExtensions.Contains(fileExt, StringComparer.OrdinalIgnoreCase))
+                    {
+                        resultFiles.Add(path);
+                    }
                 }
             }
-
-            // 파일들을 원본 리스트에 추가
-            paths.AddRange(newPaths);
+            return resultFiles;
         }
-
     }
 }

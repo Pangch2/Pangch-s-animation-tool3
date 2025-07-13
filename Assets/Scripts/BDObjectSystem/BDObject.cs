@@ -1,169 +1,151 @@
 using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Linq;
 using BDObjectSystem.Utility;
-using UnityEngine;
-using System;
-
 
 namespace BDObjectSystem
 {
-    //[System.Serializable]
+    /// <summary>
+    /// 런타임에서 사용되는 객체로, 데이터(BdObjectData)를 기반으로 추가 로직과 캐싱된 상태를 가집니다.
+    /// </summary>
     public class BdObject
     {
-        // JSON Property
-        public string name;
-        public string nbt;
-        public bool isBlockDisplay;
-        public bool isItemDisplay;
-        public bool isTextDisplay;
-        public float[] transforms;
+        public BdObjectData Data { get; } // 원본 데이터
 
-        public JObject options;
-        public BdObject[] children;
+        public float[] Transforms => Data.transforms;
+        public string Name => Data.name;
+        public string Nbt => Data.nbt;
+        public bool IsBlockDisplay => Data.isBlockDisplay;
+        public bool IsItemDisplay => Data.isItemDisplay;
+        public bool IsTextDisplay => Data.isTextDisplay;
+        public Dictionary<string, object> ExtraData => Data.ExtraData;
 
-        [JsonExtensionData]
-        public Dictionary<string, object> ExtraData;
+        // --- 런타임 속성 및 관계 ---
+        public BdObject Parent { get; set; }
+        public BdObject[] Children { get; private set; }
 
-        // Additional Property
-        [SerializeField]
-        [JsonIgnore]
+        // --- 캐싱된 속성 ---
         private string _id;
-        [JsonIgnore]
         public string ID => GetID();
-        // [field: JsonIgnore] public string ID { get; set; }
 
-        [JsonIgnore]
-        public BdObject Parent;
+        public bool IsDisplay => Data.isBlockDisplay || Data.isItemDisplay || Data.isTextDisplay;
+        public bool IsHeadDisplay { get; private set; }
 
-        [JsonIgnore]
-        public bool IsDisplay => isBlockDisplay || isItemDisplay || isTextDisplay;
+        private bool _isNameParsed = false;
+        private string _parsedName;
+        private string _parsedState;
 
-        [OnDeserialized]
-        public void OnDeserialized(StreamingContext context)
+        public string ParsedName { get { ParseNameIfNeeded(); return _parsedName; } }
+        public string ParsedState { get { ParseNameIfNeeded(); return _parsedState; } }
+
+        /// <summary>
+        /// 데이터 모델(BdObjectData)을 기반으로 런타임 객체(BdObject)를 생성합니다.
+        /// </summary>
+        public BdObject(BdObjectData data, BdObject parent = null)
         {
-            var uuid = BdObjectHelper.GetUuid(nbt);
+            Data = data;
+            Parent = parent;
+
+            // 자식 객체들도 재귀적으로 생성
+            if (data.children != null)
+            {
+                Children = data.children.Select(childData => new BdObject(childData, this)).ToArray();
+            }
+
+            // 역직렬화 시점에 수행하던 초기화 로직
+            Initialize();
+        }
+
+        internal void Initialize()
+        {
+            // IsHeadDisplay 값 계산
+            IsHeadDisplay = Data.isItemDisplay && (Data.name?.Contains("player_head") ?? false);
+
+            // ID 값 초기화 (UUID 또는 Tag 우선)
+            var uuid = BdObjectHelper.GetUuid(Data.nbt);
             if (!string.IsNullOrEmpty(uuid))
             {
                 _id = uuid;
                 return;
             }
-
-            var tag = BdObjectHelper.GetTags(nbt);
+            var tag = BdObjectHelper.GetTags(Data.nbt);
             if (!string.IsNullOrEmpty(tag))
             {
                 _id = tag;
             }
         }
 
+        private void ParseNameIfNeeded()
+        {
+            if (_isNameParsed) return;
+
+            if (string.IsNullOrEmpty(Data.name))
+            {
+                _parsedName = null;
+                _parsedState = null;
+            }
+            else
+            {
+                var typeStart = Data.name.IndexOf('[');
+                if (typeStart == -1)
+                {
+                    _parsedName = Data.name;
+                    _parsedState = string.Empty;
+                }
+                else
+                {
+                    _parsedName = Data.name[..typeStart];
+                    _parsedState = Data.name[typeStart..].Replace("[", "").Replace("]", "");
+                }
+            }
+            _isNameParsed = true;
+        }
+
+        public string GetHeadTexture()
+        {
+            if (IsHeadDisplay)
+            {
+                return Data.ExtraData.GetValueOrDefault("defaultTextureValue", string.Empty) as string;
+            }
+            return string.Empty; // player_head가 아닌 경우 빈 문자열 반환
+        }
+
         private string GetID()
         {
             if (!string.IsNullOrEmpty(_id)) return _id;
 
-            if (children == null || children.Length == 0)
+            if (Children == null || Children.Length == 0)
             {
                 _id = string.Empty;
             }
             else
             {
-                List<string> childIds = new List<string>();
-                foreach (var child in children)
-                {
-                    childIds.Add(child.GetID()); // 자식의 ID 재귀 호출
-                }
-
-                childIds.Sort(); // 순서 무시
-
-                // 구조 포함된 식별자 생성
-                string groupID = $"[{string.Join(",", childIds)}]";
-
-                // // 자식이 하나일 경우 구분자 추가 (중간 그룹 존재 인식용)
-                // if (childIds.Count == 1)
-                //     groupID += "g";
-
-                _id = groupID;
+                var childIds = Children.Select(child => child.GetID()).ToList();
+                childIds.Sort();
+                _id = $"[{string.Join(",", childIds)}]";
             }
-
             return _id;
         }
 
         public string GetEntityType()
         {
-            return isBlockDisplay ? "block_display" :
-                   isItemDisplay ? "item_display" :
-                   isTextDisplay ? "text_display" : null;
+            return Data.isBlockDisplay ? "block_display" :
+                   Data.isItemDisplay ? "item_display" :
+                   Data.isTextDisplay ? "text_display" : null;
         }
-
+        
+        /// <summary>
+        /// 이 BdObject의 깊은 복사본을 생성합니다.
+        /// 복제된 객체는 원본과 상태를 공유하지 않으며, Parent 속성은 null로 초기화됩니다.
+        /// </summary>
+        /// <returns>완전히 새로운 BdObject 인스턴스입니다.</returns>
         public BdObject Clone()
         {
-            BdObject newObj = new BdObject
-            {
-                name = this.name,
-                nbt = this.nbt,
-                isBlockDisplay = this.isBlockDisplay,
-                isItemDisplay = this.isItemDisplay,
-                isTextDisplay = this.isTextDisplay,
-                _id = this._id, // 기존 _id 값을 복사합니다. GetID()를 통해 필요시 다시 계산될 수 있습니다.
-                Parent = null  // 복제된 객체는 초기에 부모가 없습니다.
-            };
+            // 1. 데이터의 깊은 복사본을 만듭니다.
+            BdObjectData clonedData = Data.Clone();
 
-            // transforms 배열 복제
-            if (this.transforms != null)
-            {
-                newObj.transforms = new float[this.transforms.Length];
-                Array.Copy(this.transforms, newObj.transforms, this.transforms.Length);
-            }
-            else
-            {
-                newObj.transforms = null;
-            }
-
-            // options JObject 복제 (Newtonsoft.Json.Linq.JObject 사용 시)
-            if (this.options != null)
-            {
-                newObj.options = (JObject)this.options.DeepClone();
-            }
-            else
-            {
-                newObj.options = null;
-            }
-
-            // children 배열 복제 (재귀적으로 각 자식 객체도 복제)
-            if (this.children != null)
-            {
-                newObj.children = new BdObject[this.children.Length];
-                for (int i = 0; i < this.children.Length; i++)
-                {
-                    if (this.children[i] != null)
-                    {
-                        BdObject clonedChild = this.children[i].Clone();
-                        clonedChild.Parent = newObj; // 복제된 자식의 부모를 현재 새로 생성된 객체로 설정
-                        newObj.children[i] = clonedChild;
-                    }
-                    else
-                    {
-                        newObj.children[i] = null;
-                    }
-                }
-            }
-            else
-            {
-                newObj.children = null;
-            }
-
-            // ExtraData 딕셔너리 복제 (값은 얕은 복사 -> 수정할 일 없음)
-            if (this.ExtraData != null)
-            {
-                newObj.ExtraData = new Dictionary<string, object>(this.ExtraData);
-            }
-            else
-            {
-                newObj.ExtraData = null;
-            }
-
-            return newObj;
+            // 2. 복제된 데이터를 사용하여 새로운 BdObject 런타임 인스턴스를 생성합니다.
+            // 생성자에서 자식 객체 생성 및 초기화가 모두 처리됩니다.
+            return new BdObject(clonedData);
         }
     }
 }

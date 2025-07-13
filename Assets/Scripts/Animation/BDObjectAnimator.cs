@@ -14,7 +14,7 @@ namespace Animation
         public readonly Dictionary<string, BdObjectContainer> modelDict;
         public readonly Dictionary<string, Matrix4x4> parentMatrixDict = new();
         private readonly HashSet<BdObjectContainer> visitedObjects = new();
-        private Transform noParentTransform;
+        private readonly Transform noParentTransform;
 
         public BDObjectAnimator(BdObjectContainer rootObject)
         {
@@ -121,7 +121,7 @@ namespace Animation
                     {
                         // aFrame, bFrame 각각에서 해당 ID의 행렬을 가져와 보간
                         Matrix4x4 aMatrix = aFrame.GetMatrix(aRef.ID);  
-                        Matrix4x4 bMatrix = bRef.transforms.GetMatrix();
+                        Matrix4x4 bMatrix = bRef.Transforms.GetMatrix();
 
                         Matrix4x4 lerpedMatrix = InterpolateMatrixTRS(aMatrix, bMatrix, ratio);
 
@@ -183,13 +183,13 @@ namespace Animation
 
         #region Matrix4x4 Functions
 
-        private Matrix4x4 ComputeParentWorldMatrix(BdObjectContainer node)
+        private static Matrix4x4 ComputeParentWorldMatrix(BdObjectContainer node)
         {
             Matrix4x4 result = Matrix4x4.identity;
             var current = node.parent;
             while (current != null)
             {
-                result = result * current.transformation; // ← 바꿔야 할 핵심
+                result *= current.transformation;
                 current = current.parent;
             }
             return result;
@@ -274,7 +274,7 @@ namespace Animation
             pureRotation.SetColumn(3, new Vector4(0, 0, 0, 1));
 
             // Quaternion으로 변환 (이미 정규화된 회전 행렬)
-            rot = AffineTransformation.QuaternionFromMatrix(pureRotation);
+            rot = MatrixHelper.QuaternionFromMatrix(pureRotation);
         }
         #endregion
 

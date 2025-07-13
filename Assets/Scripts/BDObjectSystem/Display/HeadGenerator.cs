@@ -32,6 +32,19 @@ namespace BDObjectSystem.Display
         public Texture2D headTexture;
         public string downloadUrl;
 
+        private Action<Texture2D> _textureReadyCallback;
+
+        void OnDestroy()
+        {
+            if (_textureReadyCallback != null)
+            {
+                var data = transform.parent.parent.GetComponent<BdObjectContainer>().BdObject;
+                string base64Texture = data.GetHeadTexture();
+                PlayerHeadTextureCache.RemoveCallback(base64Texture, _textureReadyCallback);
+                _textureReadyCallback = null;
+            }
+        }
+
         public void GenerateHead(string name)
         {
             modelName = "head";
@@ -54,39 +67,78 @@ namespace BDObjectSystem.Display
                 return;
             }
 
-            // StartCoroutine(GenerateHeadCoroutine());
-            GenerateHeadCoroutine().Forget();
+            GenerateHeadCoroutine();
         }
 
-        private async UniTaskVoid GenerateHeadCoroutine()
+        private void GenerateHeadCoroutine()
         {
             GameManager.GetManager<FileLoadManager>().WorkingGenerators.Add(this);
 
             try
             {
-                headTexture = headType switch
+                if (headType == HeadType.Player)
                 {
-                    HeadType.Player => await SetPlayerTexture().Timeout(TimeSpan.FromSeconds(200)),
-                    HeadType.Piglin => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "piglin/piglin.png"),
-                    HeadType.Dragon => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "enderdragon/dragon.png"),
-                    HeadType.Zombie => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "zombie/zombie.png"),
-                    HeadType.Skull => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "skeleton/skeleton.png"),
-                    HeadType.Witherskull => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "skeleton/wither_skeleton.png"),
-                    HeadType.Creeper => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "creeper/creeper.png"),
-                    _ => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "player/wide/steve.png")
-                };
+                    GetPlayerHeadTexture();
+                    // 콜백이 호출될 때까지 기다려야 하므로, 여기서는 바로 반환합니다.
+                    // 텍스처가 준비되면 OnPlayerHeadTextureReady에서 나머지 로직이 처리됩니다.
+                    return;
+                }
+                else
+                {
+                    headTexture = headType switch
+                    {
+                        HeadType.Piglin => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "piglin/piglin.png"),
+                        HeadType.Dragon => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "enderdragon/dragon.png"),
+                        HeadType.Zombie => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "zombie/zombie.png"),
+                        HeadType.Skull => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "skeleton/skeleton.png"),
+                        HeadType.Witherskull => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "skeleton/wither_skeleton.png"),
+                        HeadType.Creeper => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "creeper/creeper.png"),
+                        _ => MinecraftFileManager.GetTextureFile(DefaultTexturePath + "player/wide/steve.png")
+                    };
+                }
 
+                FinishModelGeneration();
             }
             catch (Exception e)
             {
-                CustomLog.LogError("Head Texture Error: " + e.Message);
-                headTexture = MinecraftFileManager.GetTextureFile(DefaultTexturePath + "player/wide/steve.png");
+                if (this != null && gameObject != null) // 오브젝트가 파괴되지 않았을 때만 로그를 남깁니다.
+                {
+                    CustomLog.UnityLog(e);
+                    headTexture = MinecraftFileManager.GetTextureFile(DefaultTexturePath + "player/wide/steve.png");
+                    FinishModelGeneration();
+                }
             }
             finally
             {
-                GameManager.GetManager<FileLoadManager>().WorkingGenerators.Remove(this);
+                if (this != null && GameManager.Instance != null) // 게임이 종료중이 아닐 때
+                    GameManager.GetManager<FileLoadManager>().WorkingGenerators.Remove(this);
+            }
+        }
+
+        private void GetPlayerHeadTexture()
+        {
+            var data = transform.parent.parent.GetComponent<BdObjectContainer>().BdObject;
+            string base64Texture = data.GetHeadTexture();
+            this.downloadUrl = PlayerHeadTextureCache.GetUrlFromBase64(base64Texture);
+
+            _textureReadyCallback = OnPlayerHeadTextureReady;
+            PlayerHeadTextureCache.GetPlayerTexture(base64Texture, _textureReadyCallback);
+        }
+
+        private void OnPlayerHeadTextureReady(Texture2D texture)
+        {
+            if (this == null)
+            {
+                return; // 오브젝트가 파괴된 경우 중단
             }
 
+            headTexture = texture;
+            _textureReadyCallback = null; // 콜백 사용 완료 후 참조 제거
+            FinishModelGeneration();
+        }
+
+        private void FinishModelGeneration()
+        {
             switch (headType)
             {
                 case HeadType.Player:
@@ -117,53 +169,6 @@ namespace BDObjectSystem.Display
             return headTexture;
         }
 
-        private async UniTask<Texture2D> SetPlayerTexture()
-        {
-            // Get Playter Texture
-            var data = transform.parent.parent.GetComponent<BdObjectContainer>().BdObject;
-
-            if (!data.ExtraData.TryGetValue("defaultTextureValue", out var value))
-                return MinecraftFileManager.GetTextureFile(DefaultTexturePath + "player/wide/steve.png");
-
-            var jsonDataBytes = Convert.FromBase64String(value.ToString());
-            var jsonString = Encoding.UTF8.GetString(jsonDataBytes);
-
-            var jsonObject = JObject.Parse(jsonString);
-
-            downloadUrl = jsonObject["textures"]?["SKIN"]?["url"]?.ToString().Replace("http://", "https://");
-
-            using var request = UnityWebRequestTexture.GetTexture(downloadUrl);
-
-            while (true)
-            {
-                await request.SendWebRequest();
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-#if UNITY_EDITOR
-                    CustomLog.LogError("Error: " + request.error);
-#else
-            CustomLog.LogError("Download Fail! Try Again");
-#endif
-                }
-                else
-                {
-                    var downloadedTexture = ((DownloadHandlerTexture)request.downloadHandler).texture;
-
-                    downloadedTexture.filterMode = FilterMode.Point;
-                    downloadedTexture.wrapMode = TextureWrapMode.Clamp;
-                    downloadedTexture.Apply();
-
-                    //SetPlayerSkin(downloadedTexture);
-                    //downloadedTexture.Apply();
-
-                    return downloadedTexture;
-
-                }
-            }
-
-
-        }
-
         [ContextMenu("Save Texture")]
         public void SaveTexture()
         {
@@ -178,6 +183,5 @@ namespace BDObjectSystem.Display
             System.IO.File.WriteAllBytes(path, bytes);
             CustomLog.Log("Head Texture saved to: " + path);
         }
-
     }
 }

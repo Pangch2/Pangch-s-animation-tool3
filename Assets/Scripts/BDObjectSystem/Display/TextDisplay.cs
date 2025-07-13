@@ -52,7 +52,7 @@ namespace BDObjectSystem.Display
             BdObject = obj;
 
             // �ɼ� ����
-            option = new Option(obj.options);
+            option = new Option(obj.Data.options);
 
             SetText();
 
@@ -75,7 +75,7 @@ namespace BDObjectSystem.Display
         private void SetText()
         {
             // �ؽ�Ʈ ����
-            textMesh.text = InsertCharacterBasedLineBreaks(BdObject.name, option.lineLength);
+            textMesh.text = InsertCharacterBasedLineBreaks(BdObject.Name, option.lineLength);
             textMesh.color = new Color(
                 option.color.r,
                 option.color.g,

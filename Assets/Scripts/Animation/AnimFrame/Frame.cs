@@ -8,6 +8,8 @@ using Animation.UI;
 using Animation;
 using System;
 using UnityEngine.InputSystem;
+using BDObjectSystem.Display;
+using Cysharp.Threading.Tasks;
 
 namespace Animation.AnimFrame
 {
@@ -41,6 +43,7 @@ namespace Animation.AnimFrame
         public Dictionary<string, Matrix4x4> worldMatrixDict = null;
         public Dictionary<string, Matrix4x4> modelMatrixDict = new Dictionary<string, Matrix4x4>();
         public Dictionary<string, Matrix4x4> interJumpDict = new Dictionary<string, Matrix4x4>();
+
         public bool IsJump = false;
 
         private Timeline _timeline;
@@ -67,8 +70,29 @@ namespace Animation.AnimFrame
 
             IsModelDiffrent = animObject.animator.RootObject.BdObjectID != info.ID;
 
-            worldMatrixDict = AffineTransformation.GetAllLeafWorldMatrices(info);
+            worldMatrixDict = BdObjectHelper.GetAllLeafWorldMatrices(info);
             SetInter(inter);
+
+            PreloadPlayerHeadTextures();
+        }
+
+        private void PreloadPlayerHeadTextures()
+        {
+            if (leafObjects == null) return;
+
+            foreach (var bdObject in leafObjects.Values)
+            {
+                // 이름에 player_head가 포함되어 있고, 텍스처 정보가 있는지 확인
+                if (bdObject.IsHeadDisplay)
+                {
+                    var textureBase64 = bdObject.GetHeadTexture();
+                    if (!string.IsNullOrEmpty(textureBase64))
+                    {
+                        // 캐시 시스템에 사전 로딩 요청 (Forget()으로 비동기 실행)
+                        PlayerHeadTextureCache.PreloadPlayerHeadTextures(textureBase64);
+                    }
+                }
+            }
         }
 
         public Matrix4x4 GetMatrix(string id)
@@ -81,7 +105,7 @@ namespace Animation.AnimFrame
             {
                 return matrix;
             }
-            CustomLog.UnityLogErr($"Matrix not found for ID: {id}");
+            CustomLog.UnityLog($"Matrix not found for ID: {id}");
             return Matrix4x4.identity;
         }
 
@@ -95,7 +119,7 @@ namespace Animation.AnimFrame
             {
                 return matrix;
             }
-            CustomLog.UnityLogErr($"World Matrix not found for ID: {id}");
+            CustomLog.UnityLog($"World Matrix not found for ID: {id}");
             return Matrix4x4.identity;
         }
 
@@ -239,7 +263,7 @@ namespace Animation.AnimFrame
                                 break;
 
                             Matrix4x4 aMatrix = beforeFrame.GetMatrix(current.ID);
-                            Matrix4x4 bMatrix = current.transforms.GetMatrix();
+                            Matrix4x4 bMatrix = current.Transforms.GetMatrix();
 
                             Matrix4x4 lerpedMatrix = BDObjectAnimator.InterpolateMatrixTRS(aMatrix, bMatrix, ratio);
                             interJumpDict.Add(current.ID, lerpedMatrix);
@@ -282,6 +306,8 @@ namespace Animation.AnimFrame
                 // AnimObjList는 이 정보를 바탕으로 선택 상태를 결정하고,
                 // 필요한 프레임들의 SetSelectedVisual을 호출합니다.
                 _animObjList.HandleFramePointerDown(this, isCtrlPressed, isShiftPressed);
+
+                _animObjList.SelectAnimObject(animObject);
 
                 // 왼쪽 클릭 시 드래그 가능 상태로 만듭니다.
                 // 실제 드래그 동작은 Update 메서드에서 isSelected 상태를 확인 후 처리됩니다.
@@ -327,12 +353,12 @@ namespace Animation.AnimFrame
         {
             if (this.Info == null)
             {
-                CustomLog.UnityLogErr("Cannot duplicate Frame: Original Info is null.");
+                CustomLog.UnityLog("Cannot duplicate Frame: Original Info is null.");
                 return null;
             }
             if (animObject == null)
             {
-                CustomLog.UnityLogErr("Cannot duplicate Frame: animObject is null.");
+                CustomLog.UnityLog("Cannot duplicate Frame: animObject is null.");
                 return null;
             }
 
@@ -342,17 +368,16 @@ namespace Animation.AnimFrame
         }
 
         /// <summary>
-        /// 두 Frame의 leafObjects를 비교하여 이름이 다른 객체들의 리스트를 반환합니다.
+        /// 두 Frame의 leafObjects를 비교하여 이름이 다른 객체들을 리스트에 추가합니다.
+        /// 이름 다름 = 서로 다른 텍스쳐
         /// </summary>
         /// <returns></returns>
-        public static List<string> CompareFrameLeafObjects(Dictionary<string, BdObject> frame1Objects, Dictionary<string, BdObject> frame2Objects)
+        public static void CompareFrameLeafObjects(Dictionary<string, BdObject> frame1Objects, Dictionary<string, BdObject> frame2Objects, List<string> differences)
         {
-            List<string> differences = new List<string>();
-
             if (frame1Objects == null || frame2Objects == null)
             {
-                CustomLog.UnityLogErr("One or both frame objects are null.");
-                return differences;
+                CustomLog.UnityLog("One or both frame objects are null.");
+                return;
             }
 
             foreach (var obj1 in frame1Objects)
@@ -360,13 +385,22 @@ namespace Animation.AnimFrame
                 if (frame2Objects.TryGetValue(obj1.Key, out var obj2))
                 {
                     // 이름이 다르면 differences에 추가
-                    if (obj1.Value != obj2)
+                    if (obj1.Value.Name != obj2.Name)
                     {
                         differences.Add(obj1.Key);
                     }
+                    // 이름이 Head라면 TextureValue 비교
+                    else if (obj1.Value.IsHeadDisplay)
+                    {
+                        string head1 = obj1.Value.GetHeadTexture();
+                        string head2 = obj2.GetHeadTexture();
+                        if (head1 != head2)
+                        {
+                            differences.Add(obj1.Key);
+                        }
+                    }
                 }
             }
-            return differences;
         }
     }
 }

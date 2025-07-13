@@ -14,6 +14,7 @@ namespace BDObjectSystem.Display
 
         public override void LoadDisplayModel(string mName, string state)
         {
+            // TODO: state 처리
             modelName = mName;
             var itemState = MinecraftFileManager.GetJsonData("items/" + mName + ".json");
 
@@ -158,6 +159,10 @@ namespace BDObjectSystem.Display
                 case "minecraft:shield":
                     //CustomLog.Log("Shield: " + baseModel);
                     GenerateUsingBlockModel(baseModel);
+                    break;
+                case "minecraft:player_head":
+                    var playerHead = Instantiate(GameManager.GetManager<BdObjectManager>().headPrefab, transform);
+                    playerHead.GenerateHead("player");
                     break;
 
             }

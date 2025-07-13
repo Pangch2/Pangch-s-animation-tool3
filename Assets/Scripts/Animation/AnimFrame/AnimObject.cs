@@ -9,6 +9,7 @@ using Animation.UI;
 using BDObjectSystem.Utility;
 using FileSystem;
 using Animation;
+using FileSystem.Export;
 
 namespace Animation.AnimFrame
 {
@@ -27,13 +28,17 @@ namespace Animation.AnimFrame
         private AnimObjList _manager;
 
         public BDObjectAnimator animator;
+        public Transform framePanel;
 
         public string tagName = string.Empty;
         public int uuidNumber = -1;
 
-        private readonly HashSet<string> _noID = new HashSet<string>();
-
         public GameObject triggerObject;
+        public GameObject selectPanel;
+        public bool IsSelected => selectPanel.activeSelf;
+
+        public List<string> differentNames = new List<string>();
+        public Frame beforeFrame;
         #endregion
 
         #region Functions
@@ -55,6 +60,9 @@ namespace Animation.AnimFrame
             frames[0] = firstFrame;
 
             AnimManager.TickChanged += OnTickChanged;
+            selectPanel.SetActive(false);
+
+            beforeFrame = firstFrame;
 
             SetTagName(animator.RootObject.BdObject);
         }
@@ -65,11 +73,11 @@ namespace Animation.AnimFrame
             BdObject p = obj;
             while (p.IsDisplay == false)
             {
-                p = p.children[0];
+                p = p.Children[0];
             }
 
-            var tags = BdObjectHelper.GetTags(p.nbt);
-            string uuid = BdObjectHelper.GetUuid(p.nbt);
+            var tags = BdObjectHelper.GetTags(p.Nbt);
+            string uuid = BdObjectHelper.GetUuid(p.Nbt);
 
             if (string.IsNullOrEmpty(tags))
             {
@@ -96,15 +104,16 @@ namespace Animation.AnimFrame
 
         }
 
+        public void SetSelectPanel(bool isOn)
+        {
+            selectPanel.SetActive(isOn);
+        }
+        #endregion
+
         #region Transform
 
         public void OnTickChanged(float tick)
         {
-            if (tick <= 0.01f)
-            {
-                _noID.Clear();
-            }
-
             // get left frame index
             var left = GetLeftFrame(tick);
             if (left < 0) return;
@@ -123,6 +132,27 @@ namespace Animation.AnimFrame
             {
                 SetObjectTransformationInterpolation(tick, left);
             }
+
+            /*
+            모델의 텍스쳐가 바뀌는 경우
+            1. NBT - 아이템의 name, 블록의 name이 바뀌는 경우
+            2. 머리의 텍스쳐 값이 바뀌는 경우
+            */
+
+            // 이전 프레임과 다른 프레임에 도달한 경우
+            if (leftFrame != beforeFrame)
+            {
+                differentNames.Clear();
+                Frame.CompareFrameLeafObjects(beforeFrame?.leafObjects, leftFrame.leafObjects, differentNames);
+
+                foreach (var name in differentNames)
+                {   
+                    ApplyTextureChange(name, leftFrame);
+                }
+            }
+
+            beforeFrame = leftFrame;
+
         }
 
         private void SetObjectTransformationInterpolation(float tick, int indexOf)
@@ -170,23 +200,52 @@ namespace Animation.AnimFrame
                 frame.UpdateInterpolationJump();
             }
         }
+
+        void ApplyTextureChange(string tag, Frame currentFrame)
+        {
+            if (animator.modelDict.TryGetValue(tag, out var container) && currentFrame.leafObjects.TryGetValue(tag, out var bdObject))
+            {
+                // 이름이 다르면 텍스쳐 변경
+                if (container.BdObject.Name != bdObject.Name)
+                {
+                    container.ChangeBDObject(bdObject);
+                }
+                else if (bdObject.IsHeadDisplay)
+                {
+                    // 플레이어 머리 텍스쳐 변경
+                    string frameTexture = bdObject.GetHeadTexture();
+                    string modelTexture = container.BdObject.GetHeadTexture();
+
+                    if (frameTexture != modelTexture)
+                    {
+                        container.ChangeBDObject(bdObject);
+                    }
+                }
+            }
+
+        }
         #endregion
 
 
         #region EditFrame
 
-        // mouse click event
+        // 이름은 클릭이지만 down 이벤트로 처리
         public void OnEventTriggerClick(BaseEventData eventData)
         {
-            // right click
+            // click event
             if (eventData is PointerEventData pointerData)
             {
                 if (pointerData.button == PointerEventData.InputButton.Left)
                 {
                     if (pointerData.pointerCurrentRaycast.gameObject == triggerObject)
                     {
+                        // 선택한 프레임 초기화 
                         _manager.ClearAllSelections();
+
                     }
+                    // 타임 라인에 메세지 전달
+                    _manager.timeline.OnPointerDown(pointerData);
+                    _manager.SelectAnimObject(this);
                 }
                 else
                 {
@@ -199,16 +258,16 @@ namespace Animation.AnimFrame
         }
 
         // add frame with tick and inter
-        public Frame AddFrame(string fileName, BdObject frameInfo, int tick, int inter)
+        public Frame AddFrame(string fileName, BdObject frameInfo, int tick, int inter, bool useDefaultTickInterval = false)
         {
             //Debug.Log("fileName : " + fileName + ", tick : " + tick + ", inter : " + inter);
 
-            var frame = Instantiate(_manager.framePrefab, transform.GetChild(0));
+            var frame = Instantiate(_manager.framePrefab, framePanel);
 
             // if already exists, tick increment
             while (frames.ContainsKey(tick))
             {
-                tick++;
+                tick += useDefaultTickInterval ? GameManager.GetManager<SettingManager>().defaultTickInterval : 1;
             }
 
             frames.Add(tick, frame);
@@ -237,7 +296,7 @@ namespace Animation.AnimFrame
             var fileManager = GameManager.GetManager<FileLoadManager>();
 
             // frame.txt 쓴다면
-            if (setting.UseFrameTxtFile)
+            if (setting.UseFxSort)
             {
                 var frame = BdObjectHelper.ExtractFrame(fileName, "f");
                 if (!string.IsNullOrEmpty(frame))
@@ -272,18 +331,23 @@ namespace Animation.AnimFrame
         {
             if (frames == null) return;
 
+            if (frame == beforeFrame)
+            {
+                beforeFrame = null;
+            }
+
             frames.Remove(frame.tick);
             Destroy(frame.gameObject);
 
             if (frames.Count == 0)
             {
                 RemoveAnimObj();
+                return;
             }
             else if (frame.tick == 0)
             {
                 frames.Values[0].SetTick(0);
             }
-
         }
 
         // remove self
@@ -316,7 +380,6 @@ namespace Animation.AnimFrame
             return true;
         }
         #endregion
-        #endregion
 
         void OnDestroy()
         {
@@ -326,7 +389,7 @@ namespace Animation.AnimFrame
         public async void OnRemoveButtonClicked()
         {
             var uiMan = GameManager.GetManager<UIManager>();
-            bool check = await uiMan.SetPopupPanelAsync("정말로 이 트랙을 삭제하시겠습니까?", bdFileName);
+            bool check = await uiMan.ShowPopupPanelAsync("정말로 이 트랙을 삭제하시겠습니까?", bdFileName);
 
             if (check)
             {
@@ -339,6 +402,58 @@ namespace Animation.AnimFrame
 
         }
 
+        #region Change Frame Texture
+
+        /// <summary>
+        /// 프레임이 BDObject와 모델의 텍스쳐를 비교해서 다른 부분이 있으면 프레임의 텍스쳐로 수정한다.
+        /// </summary>
+        /// <param name="back"></param>
+        /// <param name="now"></param>
+        /// <returns></returns>
+        public void SetDiffrentTexture(Frame current)
+        {
+            var model = animator.modelDict;
+            var bdobject = current.leafObjects;
+
+            foreach (var leaf in bdobject)
+            {
+                var leafID = leaf.Key;
+                var leafObj = leaf.Value;
+
+                if (model.TryGetValue(leafID, out var modelObj))
+                {
+                    if (leafObj.Name != modelObj.name)
+                    {
+                        // 이름 다른 케이스 (블록이 다름)
+                        // TODO: 블록의 텍스쳐를 프레임의 텍스쳐로 변경하는 로직 구현
+                    }
+                    else if (leafObj.IsHeadDisplay)
+                    {
+                        // 플레이어 머리 텍스쳐 변경 케이스
+                        string frameTexture = leafObj.GetHeadTexture();
+                        string modelTexture = modelObj.BdObject.GetHeadTexture();
+
+                        if (frameTexture != modelTexture)
+                        {
+                            // 프레임의 텍스쳐가 모델의 텍스쳐와 다르면 프레임의 텍스쳐로 변경
+                            // TODO: 프레임의 텍스쳐를 변경하는 로직 구현
+
+                        }
+                    }
+                }
+                else
+                {
+                    // 모델에 ID가 없는 경우 소환
+                    // ! 미구현
+                }
+            }
+
+
+
+        }
+
+        #endregion
+
         public int DebugTick;
         [ContextMenu("Debug Find Frame")]
         public void DebugFindFrame()
@@ -346,6 +461,5 @@ namespace Animation.AnimFrame
             var left = GetLeftFrame(DebugTick);
             CustomLog.Log($"DebugFindFrame: {DebugTick} -> {left}, {frames.Values[left].fileName} frames found.");
         }
-
     }
 }

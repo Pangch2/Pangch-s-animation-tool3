@@ -9,7 +9,6 @@ using DG.Tweening;
 using FileSystem;
 using Newtonsoft.Json;
 using SFB;
-using SimpleFileBrowser;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,7 +20,6 @@ namespace BDObjectSystem
     public class TagUUIDAdder : MonoBehaviour
     {
         public static string LauncherPath;
-        readonly ExtensionFilter[] extension = new[] { new ExtensionFilter("BDEngine Files", FileLoadManager.FileExtensions) };
 
         readonly string[] TEXTLIST =
         {
@@ -129,7 +127,9 @@ namespace BDObjectSystem
         public RectTransform panel;
 
         Tween PanelActiveTween;
-        Tweener PanelHideTween;
+        Tween PanelHideTween;
+
+        public RectTransform tagAdderPanel;
 
 
         void Start()
@@ -139,13 +139,18 @@ namespace BDObjectSystem
             addTypeToggles[0].onValueChanged.AddListener((_) => { AddType = ADDTYPE.TAG; });
             addTypeToggles[1].onValueChanged.AddListener((_) => { AddType = ADDTYPE.UUID; });
 
+            
+
             IsReplacingTagToggle.onValueChanged.AddListener((isOn) =>
             {
                 IsReplacingTag = isOn;
             });
 
+            panel.localPosition = new Vector3(panel.localPosition.x, -panel.rect.height * 2f, panel.localPosition.z);
+
             PanelActiveTween = panel.DOLocalMoveY(0, 0.5f).SetEase(Ease.OutBack).SetAutoKill(false).Pause();
-            PanelHideTween = panel.DOLocalMoveY(-panel.rect.height, 0.5f).SetEase(Ease.InQuad).SetAutoKill(false).OnComplete(() => gameObject.SetActive(false)).Pause();
+            PanelHideTween = panel.DOLocalMoveY(-panel.rect.height * 2f, 0.5f).SetEase(Ease.InQuad).SetAutoKill(false).
+                OnComplete(() => tagAdderPanel.gameObject.SetActive(false)).Pause();
             // gameObject.SetActive(false);
         }
 
@@ -153,7 +158,7 @@ namespace BDObjectSystem
         {
             var path = StandaloneFileBrowser.OpenFilePanel("Select File",
                 LauncherPath,
-                extension
+                FileLoadManager.extension
                 , false);
 
             if (path.Length > 0)
@@ -162,16 +167,6 @@ namespace BDObjectSystem
             }
             // await AddFileCoroutine();
         }
-
-        // async UniTask AddFileCoroutine()
-        // {
-        //     FileBrowser.SetFilters(false, loadFilter);
-        //     await FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files).ToUniTask();
-
-        //     if (!FileBrowser.Success) return;
-
-        //     SetFilePath(FileBrowser.Result[0]);
-        // }
 
         public void SetFilePath(string path)
         {
@@ -185,19 +180,17 @@ namespace BDObjectSystem
         {
             if (active)
             {
-                gameObject.SetActive(true);
-                // panel.localPosition = new Vector3(panel.localPosition.x, -panel.rect.height, panel.localPosition.z);
+                tagAdderPanel.gameObject.SetActive(true);
+                
                 PanelActiveTween.Restart();
             }
             else
             {
-                // panel.position = initPos;
                 PanelHideTween.Restart();
             }
 
             IsReplacingTagToggle.isOn = IsReplacingTag;
             addTypeToggles[0].isOn = AddType == ADDTYPE.TAG;
-
         }
 
         void CheckSaveButton()
@@ -236,13 +229,9 @@ namespace BDObjectSystem
             }
             catch (Exception e)
             {
-                CustomLog.UnityLogErr(e.Message);
-            }
-            finally
-            {
+                CustomLog.UnityLog(e.Message);
                 loadingPanel.SetActive(false);
             }
-
         }
 
         public async UniTask ApplyTagOrUUID(BdObject bdobject, bool SaveFile = true)
@@ -270,18 +259,18 @@ namespace BDObjectSystem
                     {
                         var uuidToAdd = $"UUID:[I;{uuidStartNumber},{idx++},0,0]";
                         const string uuidPattern = @"UUID:\[I;(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]";
-                        var matchUUID = Regex.Match(obj.nbt, uuidPattern);
+                        var matchUUID = Regex.Match(obj.Nbt, uuidPattern);
 
                         if (matchUUID.Success)
                         {
                             // 기존 UUID 블록이 있으면 대체
                             string existingUuids = matchUUID.Value;
-                            obj.nbt = obj.nbt.Replace(existingUuids, uuidToAdd);
+                            obj.Data.nbt = obj.Nbt.Replace(existingUuids, uuidToAdd);
                         }
                         else
                         {
                             // 기존 UUID 블록이 없으면 새로 생성
-                            obj.nbt = string.IsNullOrEmpty(obj.nbt) ? uuidToAdd : $"{obj.nbt},{uuidToAdd}";
+                            obj.Data.nbt = string.IsNullOrEmpty(obj.Nbt) ? uuidToAdd : $"{obj.Nbt},{uuidToAdd}";
                         }
                     }
                     else if (AddType == ADDTYPE.TAG)
@@ -290,15 +279,15 @@ namespace BDObjectSystem
                     }
 
                     const string tagPattern = @"Tags:\[([^\]]*)\]";
-                    var match = Regex.Match(obj.nbt, tagPattern);
+                    var match = Regex.Match(obj.Nbt, tagPattern);
 
                     if (IsReplacingTag)
                     {
                         // 기존 Tags 블록을 새 태그로 대체 (대괄호 유지)
-                        obj.nbt = Regex.Replace(obj.nbt, tagPattern, $"Tags:[{tag}]");
-                        if (!match.Success && !obj.nbt.Contains($"Tags:[{tag}]")) // 기존에 없었고 대체도 못했으면 추가
+                        obj.Data.nbt = Regex.Replace(obj.Nbt, tagPattern, $"Tags:[{tag}]");
+                        if (!match.Success && !obj.Nbt.Contains($"Tags:[{tag}]")) // 기존에 없었고 대체도 못했으면 추가
                         {
-                            obj.nbt = string.IsNullOrEmpty(obj.nbt) ? $"Tags:[{tag}]" : $"{obj.nbt},Tags:[{tag}]";
+                            obj.Data.nbt = string.IsNullOrEmpty(obj.Nbt) ? $"Tags:[{tag}]" : $"{obj.Nbt},Tags:[{tag}]";
                         }
                     }
                     else
@@ -308,21 +297,21 @@ namespace BDObjectSystem
                             // 기존 Tags 블록이 있으면 내부 태그 목록에 추가
                             string existingTags = match.Groups[1].Value;
                             string newTags = string.IsNullOrEmpty(existingTags) ? tag : $"{existingTags},{tag}";
-                            obj.nbt = Regex.Replace(obj.nbt, tagPattern, $"Tags:[{newTags}]");
+                            obj.Data.nbt = Regex.Replace(obj.Nbt, tagPattern, $"Tags:[{newTags}]");
                         }
                         else
                         {
                             // 기존 Tags 블록이 없으면 새로 생성
-                            obj.nbt = string.IsNullOrEmpty(obj.nbt) ? $"Tags:[{tag}]" : $"{obj.nbt},Tags:[{tag}]";
+                            obj.Data.nbt = string.IsNullOrEmpty(obj.Nbt) ? $"Tags:[{tag}]" : $"{obj.Nbt},Tags:[{tag}]";
                         }
                     }
 
-                    obj.OnDeserialized(default);
+                    obj.Initialize();
                 }
 
 
-                if (obj.children == null) continue;
-                foreach (var child in obj.children)
+                if (obj.Children == null) continue;
+                foreach (var child in obj.Children)
                 {
                     queue.Enqueue(child);
                 }
@@ -332,7 +321,7 @@ namespace BDObjectSystem
             {
 
                 // 3. File Save
-                string jsonFile = JsonConvert.SerializeObject(new BdObject[] { bdobject }, new JsonSerializerSettings()
+                string jsonFile = JsonConvert.SerializeObject(new BdObjectData[] { bdobject.Data }, new JsonSerializerSettings()
                 {
                     NullValueHandling = NullValueHandling.Ignore,
                     DefaultValueHandling = DefaultValueHandling.Ignore,
@@ -349,13 +338,13 @@ namespace BDObjectSystem
             }
 
 #if UNITY_EDITOR
-            string deugJson = JsonConvert.SerializeObject(new BdObject[] { bdobject }, new JsonSerializerSettings()
+            string debugJson = JsonConvert.SerializeObject(new BdObjectData[] { bdobject.Data }, new JsonSerializerSettings()
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 DefaultValueHandling = DefaultValueHandling.Ignore,
             });
 
-            Debug.Log(deugJson);
+            Debug.Log(debugJson);
 #endif
 
             await UniTask.SwitchToMainThread();
