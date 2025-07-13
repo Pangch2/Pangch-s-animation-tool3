@@ -296,7 +296,7 @@ namespace Animation.AnimFrame
             var fileManager = GameManager.GetManager<FileLoadManager>();
 
             // frame.txt 쓴다면
-            if (setting.UseFrameTxtFile)
+            if (setting.UseFxSort)
             {
                 var frame = BdObjectHelper.ExtractFrame(fileName, "f");
                 if (!string.IsNullOrEmpty(frame))

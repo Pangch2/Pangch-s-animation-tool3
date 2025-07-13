@@ -121,16 +121,16 @@ namespace FileSystem
             // }
 
             // 1) frame.txt 파싱
-            if (settingManager.UseFrameTxtFile)
-            {
-                await TryParseFrameTxtAsync(filePaths, FrameInfo, settingManager);
-            }
+            // if (settingManager.UseFxSort)
+            // {
+            //     await TryParseFrameTxtAsync(filePaths, FrameInfo, settingManager);
+            // }
 
             // GetAllFileFromFolder를 호출하고 결과를 다시 filePaths에 할당
             filePaths = FileProcessingHelper.GetAllFileFromFolder(filePaths);
 
             // 2) f<number> 정렬
-            if (settingManager.UseFrameTxtFile || settingManager.UseNameInfoExtract)
+            if (settingManager.UseFxSort)
             {
                 filePaths = FileProcessingHelper.SortFiles(filePaths);
             }
@@ -192,78 +192,78 @@ namespace FileSystem
             CustomLog.Log($"Import 완료! BDObject 개수: {bdObjManager.bdObjectCount}");
         }
 
-        public async UniTask TryParseFrameTxtAsync(
-            List<string> paths,
-            Dictionary<string, (int, int)> frameInfo,
-            SettingManager settingManager
-        )
-        {
-            frameInfo.Clear();
+        // public async UniTask TryParseFrameTxtAsync(
+        //     List<string> paths,
+        //     Dictionary<string, (int, int)> frameInfo,
+        //     SettingManager settingManager
+        // )
+        // {
+        //     frameInfo.Clear();
 
-            for (int i = 0; i < paths.Count; i++)
-            {
-                if (Directory.Exists(paths[i]))
-                {
-                    var frameFile = Directory.GetFiles(paths[i], "frame.txt").FirstOrDefault();
+        //     for (int i = 0; i < paths.Count; i++)
+        //     {
+        //         if (Directory.Exists(paths[i]))
+        //         {
+        //             var frameFile = Directory.GetFiles(paths[i], "frame.txt").FirstOrDefault();
 
-                    if (!string.IsNullOrEmpty(frameFile))
-                    {
-                        // 1. 로그는 메인 스레드에서 출력
-                        CustomLog.Log("Frame.txt Detected : " + frameFile);
+        //             if (!string.IsNullOrEmpty(frameFile))
+        //             {
+        //                 // 1. 로그는 메인 스레드에서 출력
+        //                 CustomLog.Log("Frame.txt Detected : " + frameFile);
 
-                        // 2. 파싱은 백그라운드로
-                        await UniTask.RunOnThreadPool(() =>
-                        {
-                            ParseFrameFile(frameFile, frameInfo, settingManager);
-                        });
-                        return;
-                    }
-                }
-            }
-        }
+        //                 // 2. 파싱은 백그라운드로
+        //                 await UniTask.RunOnThreadPool(() =>
+        //                 {
+        //                     ParseFrameFile(frameFile, frameInfo, settingManager);
+        //                 });
+        //                 return;
+        //             }
+        //         }
+        //     }
+        // }
 
-        private static void ParseFrameFile(
-            string frameFile,
-            Dictionary<string, (int, int)> frameInfo,
-            SettingManager settingManager
-            )
-        {
-            var lines = File.ReadLines(frameFile);
+        // private static void ParseFrameFile(
+        //     string frameFile,
+        //     Dictionary<string, (int, int)> frameInfo,
+        //     SettingManager settingManager
+        //     )
+        // {
+        //     var lines = File.ReadLines(frameFile);
 
-            foreach (var line in lines)
-            {
-                var parts = line.Split(' ');
+        //     foreach (var line in lines)
+        //     {
+        //         var parts = line.Split(' ');
 
-                string frameKey = null;
-                int sValue = settingManager.defaultTickInterval;
-                int iValue = settingManager.defaultInterpolation;
+        //         string frameKey = null;
+        //         int sValue = settingManager.defaultTickInterval;
+        //         int iValue = settingManager.defaultInterpolation;
 
-                foreach (var part in parts)
-                {
-                    var trimmed = part.Trim();
+        //         foreach (var part in parts)
+        //         {
+        //             var trimmed = part.Trim();
 
-                    if (trimmed.StartsWith("f"))
-                    {
-                        frameKey = trimmed;
-                    }
-                    else if (trimmed.StartsWith("s") &&
-                             int.TryParse(trimmed.Substring(1), out int s))
-                    {
-                        sValue = s;
-                    }
-                    else if (trimmed.StartsWith("i") &&
-                             int.TryParse(trimmed.Substring(1), out int inter))
-                    {
-                        iValue = inter;
-                    }
-                }
+        //             if (trimmed.StartsWith("f"))
+        //             {
+        //                 frameKey = trimmed;
+        //             }
+        //             else if (trimmed.StartsWith("s") &&
+        //                      int.TryParse(trimmed.Substring(1), out int s))
+        //             {
+        //                 sValue = s;
+        //             }
+        //             else if (trimmed.StartsWith("i") &&
+        //                      int.TryParse(trimmed.Substring(1), out int inter))
+        //             {
+        //                 iValue = inter;
+        //             }
+        //         }
 
-                if (!string.IsNullOrEmpty(frameKey))
-                {
-                    frameInfo[frameKey] = (sValue, iValue);
-                }
-            }
-        }
+        //         if (!string.IsNullOrEmpty(frameKey))
+        //         {
+        //             frameInfo[frameKey] = (sValue, iValue);
+        //         }
+        //     }
+        // }
 
         #endregion
 
@@ -411,8 +411,6 @@ namespace FileSystem
             ui.SetLoadingPanel(true);
             try
             {
-
-
                 // 1. 트랙이 없는 경우: 새로운 트랙으로 전체 임포트
                 if (animObjList.animObjects.Count == 0)
                 {
