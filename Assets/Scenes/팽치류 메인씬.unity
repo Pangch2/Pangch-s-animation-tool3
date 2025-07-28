@@ -4738,8 +4738,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 121.21742, y: 1.7044}
-  m_SizeDelta: {x: 180.2001, y: 19.2799}
+  m_AnchoredPosition: {x: 140.2961, y: 1.7044}
+  m_SizeDelta: {x: 218.3574, y: 19.2799}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &977347203
 MonoBehaviour:
@@ -4809,6 +4809,15 @@ MonoBehaviour:
       m_Image: {fileID: 0}
       m_Color: {r: 1, g: 1, b: 1, a: 1}
     - m_Text: "\uC0DD\uC131\uBAA8\uB4DC1: \uB2E4\uC911\uBAA8\uB378"
+      m_Image: {fileID: 0}
+      m_Color: {r: 1, g: 1, b: 1, a: 1}
+    - m_Text: "\uC0DD\uC131\uBAA8\uB4DC3: \uB2E8\uC77C\uBAA8\uB378(at)"
+      m_Image: {fileID: 0}
+      m_Color: {r: 1, g: 1, b: 1, a: 1}
+    - m_Text: "\uC0DD\uC131\uBAA8\uB4DC4: \uB2E4\uC911\uBAA8\uB378(at)"
+      m_Image: {fileID: 0}
+      m_Color: {r: 1, g: 1, b: 1, a: 1}
+    - m_Text: "\uC0DD\uC131\uBAA8\uB4DC5: UUID"
       m_Image: {fileID: 0}
       m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_OnValueChanged:
@@ -8728,7 +8737,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -7.5, y: 0}
+  m_AnchoredPosition: {x: -7.499977, y: 0}
   m_SizeDelta: {x: -35, y: -13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1949149061
