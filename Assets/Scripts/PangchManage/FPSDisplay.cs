@@ -1,4 +1,4 @@
-using UnityEngine;
+    using UnityEngine;
 //using System.IO;
 
 public class FrameRateLimiterAndFPSDisplay : MonoBehaviour
@@ -28,6 +28,7 @@ public class FrameRateLimiterAndFPSDisplay : MonoBehaviour
         //화면크기 설정
         Screen.SetResolution(900, 550, false);
         // 현재 해상도의 refreshRateRatio에서 실제 주사율 계산
+        //asd
         Resolution currentRes = Screen.currentResolution;
         float refreshRate = (float)currentRes.refreshRateRatio.numerator / currentRes.refreshRateRatio.denominator;
         int targetFPS = Mathf.CeilToInt(refreshRate) + 10;
