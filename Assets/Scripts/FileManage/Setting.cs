@@ -27,22 +27,22 @@ public class Setting
     public int startScoreValue = 1;
 
     //너가 가장 중요해 임마 너 입력 안하면 딴놈들 다 무용지물이여
-    public string pangchFolderPath;
+    public string pangchFolderPath;//1
 
-    public string datapackSavePath;
-    public string selectDatapackName = "Pangch's Animation Datapack";
-    public string scoreTempPlayerName;
-    public string scoreObjectName;
-    public string scoreSaveName = "frame";
-    public string scoreSavePath;
-    public string frameSavePath;
+    public string outputSavePath;//2
+    //public string selectDatapackName = "Pangch's Animation Datapack";
+    public string scoreTempPlayerName;//3
+    public string scoreObjectName;//4
+    //public string scoreSaveName = "frame";
+    //public string scoreSavePath;
+    //public string frameSavePath;
     public void SaveToFile(string path)
     {
         try
         {
             using Stream stream = File.OpenWrite(path);
             new DataContractJsonSerializer(typeof(Setting)).WriteObject(stream, this);
-            Console.WriteLine("Datapack Save Path: " + datapackSavePath);
+            Console.WriteLine("Datapack Save Path: " + outputSavePath);
         }
         catch
         {

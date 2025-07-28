@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.IO;
+//using System.IO;
 
 public class FrameRateLimiterAndFPSDisplay : MonoBehaviour
 {
@@ -13,17 +13,17 @@ public class FrameRateLimiterAndFPSDisplay : MonoBehaviour
     void Start()
     {
         // "팽치류 result" 폴더가 없으면 생성
-        string folderName = "팽치류 result";
-        string folderPath = Path.Combine(Application.dataPath, folderName);
-        if (!Directory.Exists(folderPath))
-        {
-            Directory.CreateDirectory(folderPath);
-            Debug.Log($"폴더 생성됨: {folderPath}");
-        }
-        else
-        {
-            Debug.Log($"폴더 이미 존재함: {folderPath}");
-        }
+        //string folderName = "팽치류 result";
+        //string folderPath = Path.Combine(Application.dataPath, folderName);
+        //if (!Directory.Exists(folderPath))
+        //{
+        //    Directory.CreateDirectory(folderPath);
+        //    Debug.Log($"폴더 생성됨: {folderPath}");
+        //}
+        //else
+        //{
+        //    Debug.Log($"폴더 이미 존재함: {folderPath}");
+        //}
 
         //화면크기 설정
         Screen.SetResolution(900, 550, false);
