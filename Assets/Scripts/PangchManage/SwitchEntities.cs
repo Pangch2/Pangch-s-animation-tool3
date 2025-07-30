@@ -1,10 +1,11 @@
 using UnityEngine;
 using DG.Tweening;
+using System.Collections.Generic;
 
 public class SwitchEntities : MonoBehaviour
 {
-    public GameObject objectToDisable;
-    public GameObject objectToEnable;
+    public List<GameObject> objectsToDisable = new List<GameObject>();
+    public List<GameObject> objectsToEnable = new List<GameObject>();
 
     [Header("애니메이션 설정")]
     [Tooltip("애니메이션 재생 시간 (초)")]
@@ -31,33 +32,36 @@ public class SwitchEntities : MonoBehaviour
 
     public void SwitchObjects()
     {
-        if (objectToDisable != null)
+        foreach (var obj in objectsToDisable)
         {
-            var cg = GetOrAddCanvasGroup(objectToDisable);
+            if (obj != null)
+            {
+                var cg = GetOrAddCanvasGroup(obj);
 
-            // 애니메이션: 알파 감소 및 크기 축소
-            DOTween.Sequence()
-                .Join(cg.DOFade(startAlpha, animationDuration).SetEase(alphaEaseType))
-                .Join(objectToDisable.transform.DOScale(startScale, animationDuration).SetEase(scaleEaseType))
-                .OnComplete(() => objectToDisable.SetActive(false));
+                DOTween.Sequence()
+                    .Join(cg.DOFade(startAlpha, animationDuration).SetEase(alphaEaseType))
+                    .Join(obj.transform.DOScale(startScale, animationDuration).SetEase(scaleEaseType))
+                    .OnComplete(() => obj.SetActive(false));
+            }
         }
 
-        if (objectToEnable != null)
+        foreach (var obj in objectsToEnable)
         {
-            objectToEnable.SetActive(true);
-            objectToEnable.transform.localScale = Vector3.one * startScale;
+            if (obj != null)
+            {
+                obj.SetActive(true);
+                obj.transform.localScale = Vector3.one * startScale;
 
-            var cg = GetOrAddCanvasGroup(objectToEnable);
-            cg.alpha = startAlpha;
+                var cg = GetOrAddCanvasGroup(obj);
+                cg.alpha = startAlpha;
 
-            // 애니메이션: 알파 증가 및 크기 증가
-            DOTween.Sequence()
-                .Join(objectToEnable.transform.DOScale(1f, animationDuration).SetEase(scaleEaseType))
-                .Join(cg.DOFade(endAlpha, animationDuration).SetEase(alphaEaseType));
+                DOTween.Sequence()
+                    .Join(obj.transform.DOScale(1f, animationDuration).SetEase(scaleEaseType))
+                    .Join(cg.DOFade(endAlpha, animationDuration).SetEase(alphaEaseType));
+            }
         }
     }
 
-    // 캔버스 그룹이 없으면 추가해주는 헬퍼 함수
     private CanvasGroup GetOrAddCanvasGroup(GameObject obj)
     {
         var cg = obj.GetComponent<CanvasGroup>();

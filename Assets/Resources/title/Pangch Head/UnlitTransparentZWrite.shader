@@ -9,8 +9,8 @@
     {
         Tags { "Queue"="Transparent" "RenderType"="Transparent" }
         Lighting Off
-        ZWrite On                          // ✅ 깊이 정보 기록 (뚫려보임 방지)
-        Blend SrcAlpha OneMinusSrcAlpha    // ✅ 알파 블렌딩
+        ZWrite Off
+        Blend SrcAlpha OneMinusSrcAlpha
 
         Pass
         {
